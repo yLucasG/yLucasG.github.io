@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Atirador de Respostas</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bangers&display=swap');
+    body {
+      background-color: #2c3e50;
+      color: #ecf0f1;
+      font-family: 'Bangers', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      height: 100vh;
+      margin: 0;
+      overflow: hidden;
+      text-align: center;
+      user-select: none;
+      cursor: none;
+    }
+
+    #game-container {
+      width: 95%;
+      max-width: 1000px;
+      height: 80vh;
+      background-color: #34495e;
+      border: 5px solid #bdc3c7;
+      border-radius: 15px;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+      position: relative;
+      overflow: hidden;
+    }
+
+    #question-box {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #f39c12;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 1.5rem;
+      color: #2c3e50;
+      z-index: 10;
+      border: 2px solid #e67e22;
+    }
+
+    #score-box {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background-color: #27ae60;
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 1.2rem;
+      z-index: 10;
+    }
+
+    #timer-box {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: #c0392b;
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 1.2rem;
+      z-index: 10;
+    }
+
+    .balloon {
+      position: absolute;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 110px;
+      height: 110px;
+      font-size: 0.8rem;
+      text-align: center;
+      padding: 10px;
+      border-radius: 50%;
+      color: #ecf0f1;
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+      cursor: pointer;
+      transition: transform 0.1s ease-out;
+    }
+
+    .hit-effect {
+      animation: burst 0.5s ease-out forwards;
+    }
+
+    @keyframes burst {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.5); opacity: 0.5; }
+      100% { transform: scale(2); opacity: 0; }
+    }
+
+    #start-screen, #end-screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(44, 62, 80, 0.9);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 20;
+    }
+
+    #start-button, #restart-button {
+      padding: 15px 30px;
+      font-size: 1.5rem;
+      font-family: 'Bangers', sans-serif;
+      color: #ecf0f1;
+      background-color: #3498db;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    #start-button:hover, #restart-button:hover {
+      background-color: #2980b9;
+    }
+    #final-score {
+      font-size: 3rem;
+      color: #2ecc71;
+    }
+
+    /* Arma em forma de triângulo */
+    #bow-container {
+        position: absolute;
+        top: 50%;
+        left: 20px;
+        width: 60px; /* Largura do losango */
+        height: 60px; /* Altura do losango */
+        background-color: #e67e22; /* Cor do losango */
+        transform: translateY(-50%) rotate(100deg); /* Gira 45 graus para formar o losango */
+        transform-origin: 50% 50%; /* Rotação a partir do centro */
+        z-index: 15;
+        pointer-events: none;
+    }
+
+    .arrow {
+        position: absolute;
+        width: 15px; /* Tamanho da bolinha */
+        height: 15px; /* Tamanho da bolinha */
+        background-color: #ecf0f1; /* Cor da bolinha */
+        border-radius: 50%; /* Transforma o quadrado em círculo */
+        pointer-events: none;
+    }
+
+    #power-bar-container {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      width: 200px;
+      height: 10px;
+      background-color: #555;
+      border-radius: 50px;
+      overflow: hidden;
+      z-index: 15;
+    }
+
+    #power-bar {
+      width: 0;
+      height: 100%;
+      background-color: #f39c12;
+      transition: width 0.1s linear;
+    }
+
+    /* Popups de acerto/erro */
+    .popup {
+      position: absolute;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 2rem;
+      padding: 20px 40px;
+      border-radius: 15px;
+      z-index: 30;
+      animation: popupAnim 1s ease forwards;
+    }
+    .popup.success {
+      background-color: #2ecc71;
+      color: white;
+    }
+    .popup.error {
+      background-color: #e74c3c;
+      color: white;
+      border: 3px dashed yellow;
+    }
+    @keyframes popupAnim {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+      30% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+    }
+  </style>
+</head>
+<body>
+  <h1>Atirador de Respostas: TIC</h1>
+  <div id="game-container">
+    <div id="start-screen">
+      <h2>Pronto para aprender?</h2>
+      <p>Segure a barra de espaço para carregar a flecha e solte para atirar!</p>
+      <p>Use as setas do teclado (↑ ↓) para mirar.</p>
+      <p>Acerte o balão com a resposta correta para ganhar pontos.</p>
+      <button id="start-button">Começar</button>
+    </div>
+    <div id="end-screen" style="display:none;">
+      <h2>Tempo Esgotado!</h2>
+      <p>Sua pontuação final:</p>
+      <div id="final-score">0</div>
+      <button id="restart-button">Jogar Novamente</button>
+    </div>
+    <div id="question-box"></div>
+    <div id="score-box">Pontuação: 0</div>
+    <div id="timer-box">Tempo: 60</div>
+    <div id="power-bar-container">
+      <div id="power-bar"></div>
+    </div>
+    <div id="bow-container"></div>
+  </div>
+
+  <script>
+    const gameContainer = document.getElementById('game-container');
+    const startScreen = document.getElementById('start-screen');
+    const endScreen = document.getElementById('end-screen');
+    const startButton = document.getElementById('start-button');
+    const restartButton = document.getElementById('restart-button');
+    const questionBox = document.getElementById('question-box');
+    const scoreBox = document.getElementById('score-box');
+    const timerBox = document.getElementById('timer-box');
+    const finalScoreDisplay = document.getElementById('final-score');
+    const powerBar = document.getElementById('power-bar');
+    const bow = document.getElementById('bow-container');
+
+    let score = 0;
+    let time = 60;
+    let timerInterval;
+    let currentQuestion;
+    let powerCharge = 0;
+    let isCharging = false;
+    let gameActive = false;
+    let aimAngle = 0;
+    let shooting = false;
+
+    const questionsAndAnswers = [
+    { question: "Segundo a apostila, o que é uma organização?", correctAnswer: "Um conjunto de pessoas que se unem para alcançar objetivos comuns.", wrongAnswers: ["Um grupo de indivíduos que atuam de forma isolada para gerar lucro.", "Uma estrutura rígida que impede o fluxo de atividades e recursos.", "Um sistema exclusivamente tecnológico para processar dados."] },
+    { question: "Quais são os três níveis de decisão dentro de uma organização, de acordo com a apostila?", correctAnswer: "Operacional, Tático e Estratégico.", wrongAnswers: ["Funcional, Gerencial e Direcional.", "Interno, Externo e Corporativo.", "De curto, médio e longo prazo."] },
+    { question: "No contexto da PMPE, o que o nível operacional de decisão envolve?", correctAnswer: "Ações e tomadas de decisão relacionadas às atividades diárias, como atendimento a ocorrências e elaboração de relatórios de serviço.", wrongAnswers: ["A definição da direção geral da corporação a longo prazo.", "A alocação de recursos em diferentes departamentos.", "A gestão de contratos de tecnologia da informação."] },
+    { question: "Qual é a definição de um sistema, conforme o material?", correctAnswer: "Um conjunto de elementos inter-relacionados que trabalham juntos para alcançar um objetivo comum.", wrongAnswers: ["Uma coleção de dados brutos e não processados.", "Uma lista de regras e procedimentos para a tomada de decisões.", "Um software isolado que executa uma única tarefa."] },
+    { question: "A Pirâmide do Conhecimento é composta por quais níveis?", correctAnswer: "Dados, Informação, Conhecimento e Sabedoria.", wrongAnswers: ["Números, Análise, Conclusão e Planejamento.", "Fatos, Relatórios, Experiência e Inteligência.", "Dados Brutos, Dados Processados, Informações Úteis e Sabedoria."] },
+    { question: "O que a Tecnologia da Informação (TI) representa em uma organização?", correctAnswer: "O uso de sistemas, dispositivos e processos para coletar, armazenar, processar e distribuir informações.", wrongAnswers: ["Apenas o uso de computadores e softwares.", "Somente a comunicação digital interna da empresa.", "O hardware e o software que sustentam a empresa."] },
+    { question: "No contexto da PMPE, qual a principal responsabilidade da Diretoria de Tecnologia e Inovação (DTEC)?", correctAnswer: "A gestão dos recursos de TI e de equipamentos de telecomunicações de todas as unidades da PMPE.", wrongAnswers: ["O monitoramento de viaturas e patrulhas.", "A gestão dos recursos de TI da Secretaria de Defesa Social.", "A realização de estudos e análises de cenários criminais."] },
+    { question: "A que se referem as fontes de dados fechadas?", correctAnswer: "Aquelas restritas a grupos específicos ou empresas, com acesso limitado ou controlado.", wrongAnswers: ["Fontes de dados que não podem ser acessadas de forma alguma.", "Dados coletados por terceiros e que estão disponíveis publicamente.", "Dados que requerem apenas o número de um protocolo para acesso."] },
+    { question: "O que é o Sistema Polícia Ágil?", correctAnswer: "Uma plataforma que centraliza e facilita consultas de dados em tempo real para as forças de segurança pública.", wrongAnswers: ["Um aplicativo para rastrear o tempo de resposta a ocorrências.", "Um sistema de gestão de recursos humanos da PMPE.", "Uma base de dados aberta para qualquer cidadão consultar informações."] },
+    { question: "Quais são os dois tipos de fontes de dados fechadas mencionadas na apostila?", correctAnswer: "Autorização Judicial e Restrição de Acesso.", wrongAnswers: ["Fontes públicas e privadas.", "Fontes primárias e secundárias.", "Fontes internas e externas."] },
+    { question: "Qual a finalidade da Agência Estadual de Tecnologia da Informação (ATI)?", correctAnswer: "Coordenar a implementação do Modelo de Informática Pública no estado.", wrongAnswers: ["Gerenciar todos os sistemas de informação da PMPE.", "Desenvolver softwares para o Ministério da Justiça.", "Ser o elo entre a PMPE e o Corpo de Bombeiros."] },
+    { question: "O que são os subsistemas de informação, de acordo com o Módulo 3?", correctAnswer: "Conjuntos de partes interdependentes que se relacionam para compor um sistema maior.", wrongAnswers: ["Módulos de um sistema que operam de forma isolada.", "Tecnologias que não se comunicam entre si.", "Dados brutos e não processados em uma organização."] },
+    { question: "Para que o PM Conectado é usado, de acordo com o Módulo 5?", correctAnswer: "Para planejar e executar operações em grandes eventos, com monitoramento em tempo real da localização das patrulhas.", wrongAnswers: ["Para gerenciar o cadastro civil e criminal de suspeitos.", "Para emitir certidões de ocorrências online.", "Para gerenciar o consumo de energia e água das OMEs."] },
+    { question: "Qual a principal característica da Rede LAN (Local Area Network)?", correctAnswer: "São as redes internas dos órgãos da SDS e Unidades Operacionais da PMPE.", wrongAnswers: ["Uma rede que abrange um país ou continente.", "Uma rede que interliga computadores em distâncias metropolitanas.", "Uma rede que necessita do serviço PE Conectado para funcionar."] },
+    { question: "O que a função `check-in` no PM Conectado permite?", correctAnswer: "Que o PM informe que já se encontra no local de atuação em eventos com lançamentos não controlados.", wrongAnswers: ["Registrar uma ocorrência diretamente no CIODS.", "Enviar um pedido de apoio para a central de operações.", "Acessar o sistema BOEPM."] },
+    { question: "Qual a função do Sistema Integrado de Administração Prisional (SIAP)?", correctAnswer: "Gerenciar os recursos das áreas do Sistema Prisional de Pernambuco.", wrongAnswers: ["Consultar mandados de prisão emitidos pelo TJPE.", "Acessar dados de registros de veículos.", "Gerenciar o cadastro de policiais militares."] },
+    { question: "Para que serve o Sistema Boletim de Ocorrência Eletrônico (BOEPM)?", correctAnswer: "Registrar as ocorrências policiais pela PMPE, que podem ser importadas para o sistema INFOPOL.", wrongAnswers: ["Consultar dados de foragidos da justiça.", "Acessar o Banco Nacional de Medidas Penais e Prisões.", "Gerenciar os uniformes dos policiais militares."] },
+    { question: "O que é o SINESP Cidadão?", correctAnswer: "Um aplicativo que permite ao cidadão consultar informações sobre veículos, pessoas desaparecidas, mandados de prisão e procurados.", wrongAnswers: ["Um sistema de monitoramento de viaturas da PMPE.", "Um sistema restrito aos profissionais de segurança pública.", "Uma base de dados para registros de ocorrências criminais."] },
+    { question: "No Sistema Polícia Ágil, como o acesso a todos os módulos é liberado para o usuário?", correctAnswer: "Depende do serviço desempenhado pelo policial e da autorização da chefia imediata.", wrongAnswers: ["É liberado automaticamente após o cadastro.", "Basta solicitar um código de acesso ao gestor do sistema.", "O acesso é liberado por meio de um e-mail."] },
+    { question: "Qual a função do Sistema de Análise Criminal e Estatística (SACE)?", correctAnswer: "Auxiliar a tomada de decisões nas áreas de planejamento estratégico, controle gerencial e operacional.", wrongAnswers: ["Gerenciar as viaturas da PMPE.", "Registrar boletins de ocorrência.", "Gerenciar o consumo de água e energia nas OMEs."] }
+];
+
+    function startGame() {
+      score = 0;
+      time = 60;
+      scoreBox.textContent = `Pontuação: ${score}`;
+      timerBox.textContent = `Tempo: ${time}`;
+      startScreen.style.display = 'none';
+      endScreen.style.display = 'none';
+      gameActive = true;
+      aimAngle = 0;
+      bow.style.transform = `rotate(${aimAngle}deg)`;
+
+      currentQuestion = getRandomQuestion();
+      displayQuestion(currentQuestion);
+      createBalloonsForQuestion();
+
+      timerInterval = setInterval(() => {
+        time--;
+        timerBox.textContent = `Tempo: ${time}`;
+        if (time <= 0) {
+          endGame();
+        }
+      }, 1000);
+    }
+
+    function endGame() {
+      gameActive = false;
+      clearInterval(timerInterval);
+      finalScoreDisplay.textContent = score;
+      endScreen.style.display = 'flex';
+      gameContainer.querySelectorAll('.balloon').forEach(balloon => balloon.remove());
+    }
+
+    startButton.addEventListener('click', startGame);
+    restartButton.addEventListener('click', startGame);
+
+    function getRandomQuestion() {
+      return questionsAndAnswers[Math.floor(Math.random() * questionsAndAnswers.length)];
+    }
+
+    function displayQuestion(question) {
+      questionBox.textContent = question.question;
+    }
+
+    function createBalloonsForQuestion() {
+      gameContainer.querySelectorAll('.balloon').forEach(b => b.remove());
+      const allAnswers = [
+        { text: currentQuestion.correctAnswer, correct: true },
+        ...currentQuestion.wrongAnswers.map(ans => ({ text: ans, correct: false }))
+      ].sort(() => Math.random() - 0.5);
+
+      allAnswers.forEach((answer, i) => {
+        const balloon = document.createElement('div');
+        balloon.className = 'balloon';
+        balloon.textContent = answer.text;
+        balloon.style.backgroundColor = "#2ecc71";
+        balloon.style.top = `${20 + i * 120}px`;
+        balloon.style.right = `${150 + (i % 2) * 200}px`;
+        balloon.setAttribute('data-correct', answer.correct);
+        gameContainer.appendChild(balloon);
+      });
+    }
+
+    let chargeInterval;
+    document.addEventListener('keydown', (e) => {
+      if (!gameActive || shooting) return;
+      if (e.code === 'Space' && !isCharging) {
+        isCharging = true;
+        powerCharge = 0;
+        chargeInterval = setInterval(() => {
+          if (powerCharge < 100) {
+            powerCharge += 2;
+            powerBar.style.width = `${powerCharge}%`;
+          }
+        }, 20);
+      } else if (e.code === 'ArrowUp') {
+        aimAngle = Math.max(-90, aimAngle - 5);
+        bow.style.transform = `rotate(${aimAngle}deg)`;
+      } else if (e.code === 'ArrowDown') {
+        aimAngle = Math.min(90, aimAngle + 5);
+        bow.style.transform = `rotate(${aimAngle}deg)`;
+      }
+    });
+
+    document.addEventListener('keyup', (e) => {
+      if (!gameActive || shooting) return;
+      if (e.code === 'Space' && isCharging) {
+        isCharging = false;
+        shooting = true;
+        clearInterval(chargeInterval);
+        shootArrow(powerCharge, aimAngle);
+        powerCharge = 0;
+        powerBar.style.width = '0%';
+      }
+    });
+
+    function shootArrow(power, angle) {
+      const arrowElement = document.createElement('div');
+      arrowElement.classList.add('arrow');
+      gameContainer.appendChild(arrowElement);
+
+      const bowRect = bow.getBoundingClientRect();
+      const gameRect = gameContainer.getBoundingClientRect();
+      const startX = bowRect.left - gameRect.left + bowRect.height / 2;
+      const startY = bowRect.top - gameRect.top + bowRect.width / 2;
+      const rad = angle * Math.PI / 180;
+      let currentX = startX;
+      let currentY = startY;
+      const speed = 5 + power * 0.3;
+      const dx = Math.cos(rad) * speed;
+      const dy = Math.sin(rad) * speed;
+
+      arrowElement.style.transform = `rotate(${angle - 90}deg)`; // A flecha deve ter o mesmo ângulo do triângulo
+      arrowElement.style.left = `${currentX}px`;
+      arrowElement.style.top = `${currentY}px`;
+
+      const arrowAnimation = setInterval(() => {
+        currentX += dx;
+        currentY += dy;
+        arrowElement.style.left = `${currentX}px`;
+        arrowElement.style.top = `${currentY}px`;
+
+        const hitTarget = checkCollision(currentX + 25, currentY + 2.5);
+        if (hitTarget) {
+          clearInterval(arrowAnimation);
+          arrowElement.remove();
+          shooting = false;
+
+          if (hitTarget.getAttribute('data-correct') === 'true') {
+            score += 10;
+            time += 5;
+            scoreBox.textContent = `Pontuação: ${score}`;
+            timerBox.textContent = `Tempo: ${time}`;
+            hitTarget.classList.add('hit-effect');
+            showPopup("Acertou! +10", true);
+            setTimeout(() => {
+              hitTarget.remove();
+              currentQuestion = getRandomQuestion();
+              displayQuestion(currentQuestion);
+              createBalloonsForQuestion();
+            }, 500);
+          } else {
+            score -= 5;
+            scoreBox.textContent = `Pontuação: ${score}`;
+            hitTarget.classList.add('hit-effect');
+            showPopup("Errou! -5", false);
+            setTimeout(() => hitTarget.remove(), 500);
+          }
+        }
+
+        if (currentX > gameContainer.clientWidth || currentX < 0 || currentY > gameContainer.clientHeight || currentY < 0) {
+          clearInterval(arrowAnimation);
+          arrowElement.remove();
+          shooting = false;
+        }
+      }, 16);
+    }
+
+    function showPopup(text, success) {
+      const popup = document.createElement('div');
+      popup.className = `popup ${success ? 'success' : 'error'}`;
+      popup.textContent = text;
+      gameContainer.appendChild(popup);
+      setTimeout(() => popup.remove(), 1000);
+    }
+
+    function checkCollision(x, y) {
+      const targets = gameContainer.querySelectorAll('.balloon');
+      for (let i = 0; i < targets.length; i++) {
+        const rect = targets[i].getBoundingClientRect();
+        const gameRect = gameContainer.getBoundingClientRect();
+        const targetX = rect.left - gameRect.left + rect.width / 2;
+        const targetY = rect.top - gameRect.top + rect.height / 2;
+        const targetRadius = rect.width / 2;
+        const distance = Math.sqrt((targetX - x) ** 2 + (targetY - y) ** 2);
+        if (distance < targetRadius) return targets[i];
+      }
+      return null;
+    }
+  </script>
+</body>
+</html>
+>
