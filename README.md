@@ -1,1 +1,1 @@
-jogo sobre tic
+jogo sobre sqmv
