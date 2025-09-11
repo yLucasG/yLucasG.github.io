@@ -96,6 +96,8 @@
         height: clamp(48px, 12vw, 80px);
         font-size: clamp(0.9rem, 1.5vw, 0.9rem);
         padding: 5px;
+        position: absolute;
+        top: 1px;
       }
       #mobile-controls.visible button {
         width: 44px;
@@ -888,7 +890,7 @@ function positionLandscapeBalloons(balloons) {
 
   // espaçamento vertical entre balões
   const gapDiag = isMobile 
-    ? Math.floor(gameH * 0.15) // mais próximos no celular
+    ? Math.floor(gameH * 0.01) // mais próximos no celular
     : Math.floor(gameH * 0.22); // padrão no desktop
 
   // distância do topo
@@ -1088,6 +1090,7 @@ window.onload = function() {
 </body>
 
 </html>
+
 
 
 
