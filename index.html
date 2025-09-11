@@ -877,21 +877,38 @@ function positionDefaultBalloons(balloons) {
     balloon.style.opacity = "1";
   });
 }
+// posicionamento diagonal (desktop e celular)
 function positionLandscapeBalloons(balloons) {
   if (!balloons.length) return;
   const gameW = gameContainer.clientWidth;
   const gameH = gameContainer.clientHeight;
-  const gapDiag = Math.floor(gameH * 0.25);
-  const startTop = Math.floor(gameH * 0);
-  const startLeft = Math.floor(gameW * 0.7);
+
+  const isMobile = window.innerWidth <= 768; // detecta celular
+
+  // espaçamento vertical entre balões
+  const gapDiag = isMobile 
+    ? Math.floor(gameH * 0.15) // mais próximos no celular
+    : Math.floor(gameH * 0.22); // padrão no desktop
+
+  // distância do topo
+  const startTop = isMobile 
+    ? Math.floor(gameH * 0.35) // mais embaixo no celular
+    : Math.floor(gameH * 0.2); // padrão no desktop
+
+  // distância da lateral direita
+  const startLeft = isMobile 
+    ? Math.floor(gameW * 0.6) // ajusta para caber bem no celular
+    : Math.floor(gameW * 0.7); // padrão no desktop
+
   balloons.forEach((balloon, i) => {
     balloon.style.position = "absolute";
-    balloon.style.left = `${startLeft + i * 20}px`;
-    balloon.style.top = `${startTop + i * gapDiag}px`;
+    balloon.style.left = `${startLeft + i * 15}px`; // leve inclinação
+    balloon.style.top = `${startTop + i * gapDiag}px`; // diagonal descendo
     balloon.style.right = "auto";
     balloon.style.opacity = "1";
   });
 }
+
 window.addEventListener('resize', () => {
   const balloons = Array.from(gameContainer.querySelectorAll('.balloon'));
   if (!balloons.length) return;
@@ -1070,5 +1087,6 @@ window.onload = function() {
 </body>
 
 </html>
+
 
 
