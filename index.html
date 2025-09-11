@@ -99,11 +99,15 @@
         position: absolute;
         top: 1px;
       }
+      #score {
+        font-size: 0.6rem; /* menor texto */
+      }
       #mobile-controls.visible button {
         width: 44px;
         height: 44px;
         font-size: 0.95rem;
         margin: 2px;
+        bottom: 20px;
       }
       #question-box {
         font-size: 0.2rem !important;
@@ -119,6 +123,9 @@
         width: 15vw;
         height: 15vw;
         font-size: 2vw;
+      }
+      #score {
+        font-size: 0.6rem; /* menor texto */
       }
       #game-container {
         height: 90vh;
@@ -895,7 +902,7 @@ function positionLandscapeBalloons(balloons) {
 
   // distância do topo
   const startTop = isMobile 
-    ? Math.floor(gameH * 0.35) // mais embaixo no celular
+    ? Math.floor(gameH * 0.55) // mais embaixo no celular
     : Math.floor(gameH * 0.2); // padrão no desktop
 
   // distância da lateral direita
@@ -1090,6 +1097,7 @@ window.onload = function() {
 </body>
 
 </html>
+
 
 
 
