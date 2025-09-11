@@ -21,7 +21,6 @@
       user-select: none;
       cursor: none;
     }
-
     #game-container {
       width: 95%;
       max-width: 1000px;
@@ -33,7 +32,6 @@
       position: relative;
       overflow: hidden;
     }
-
     #question-box {
       position: absolute;
       top: 10px;
@@ -49,7 +47,6 @@
       z-index: 10;
       border: 2px solid #e67e22;
     }
-
     #score-box {
       position: absolute;
       top: 10px;
@@ -60,7 +57,6 @@
       font-size: 1.2rem;
       z-index: 10;
     }
-
     #timer-box {
       position: absolute;
       top: 10px;
@@ -71,7 +67,6 @@
       font-size: 1.2rem;
       z-index: 10;
     }
-
     .balloon {
       position: absolute;
       display: flex;
@@ -91,66 +86,49 @@
       cursor: pointer;
       transition: transform 0.1s ease-out;
     }
-    /* Ajustes gerais para os botões mobile (seletor existente no seu HTML) */
-#mobile-controls button {
-  margin: 6px; /* espaçamento padrão entre botões */
-  box-sizing: border-box;
-}
-
-/* iPhone em modo paisagem / telas baixas em geral */
+    #mobile-controls button {
+      margin: 6px;
+      box-sizing: border-box;
+    }
     @media (max-height: 500px) and (orientation: landscape) {
       .balloon {
-        /* ficam consideravelmente menores */
         width: clamp(48px, 12vw, 80px);
         height: clamp(48px, 12vw, 80px);
         font-size: clamp(0.45rem, 2vw, 0.7rem);
       }
-
-      /* botões de controle menores e com menos espaço entre eles */
       #mobile-controls.visible button {
         width: 44px;
         height: 44px;
         font-size: 0.95rem;
         margin: 2px;
       }
-
-      /* pergunta bem menor conforme pediu */
       #question-box {
         font-size: 0.5rem !important;
         padding: 6px 8px;
       }
-
-      /* se quiser reduzir levemente a arma */
       #bow-container {
         transform-origin: 50% 50%;
-        /* só aplica redução visual (atenção: rotação do arco é aplicada dinamicamente via JS também) */
         transform: scale(0.85);
       }
     }
-    
-
     @media (max-width: 600px) {
       .balloon {
         width: 15vw;
         height: 15vw;
         font-size: 3.5vw;
       }
-
       #game-container {
-        height: 70vh; /* deixa mais espaço pro HUD no mobile */
+        height: 70vh;
         }
     }
-
     .hit-effect {
       animation: burst 0.5s ease-out forwards;
     }
-
     @keyframes burst {
       0% { transform: scale(1); opacity: 1; }
       50% { transform: scale(1.5); opacity: 0.5; }
       100% { transform: scale(2); opacity: 0; }
     }
-
     #start-screen, #end-screen {
       position: absolute;
       top: 0;
@@ -164,7 +142,6 @@
       align-items: center;
       z-index: 20;
     }
-
     #start-button, #restart-button {
       padding: 15px 30px;
       font-size: 1.5rem;
@@ -176,7 +153,6 @@
       cursor: pointer;
       transition: background-color 0.3s;
     }
-
     #start-button:hover, #restart-button:hover {
       background-color: #2980b9;
     }
@@ -184,30 +160,26 @@
       font-size: 3rem;
       color: #2ecc71;
     }
-
-    /* Arma em forma de triângulo */
     #bow-container {
         position: absolute;
         top: 50%;
         left: 20px;
-        width: 60px; /* Largura do losango */
-        height: 60px; /* Altura do losango */
-        background-color: #e67e22; /* Cor do losango */
-        transform: translateY(-50%) rotate(100deg); /* Gira 45 graus para formar o losango */
-        transform-origin: 50% 50%; /* Rotação a partir do centro */
+        width: 60px;
+        height: 60px;
+        background-color: #e67e22;
+        transform: translateY(-50%) rotate(100deg);
+        transform-origin: 50% 50%;
         z-index: 15;
         pointer-events: none;
     }
-
     .arrow {
         position: absolute;
-        width: 15px; /* Tamanho da bolinha */
-        height: 15px; /* Tamanho da bolinha */
-        background-color: #ecf0f1; /* Cor da bolinha */
-        border-radius: 50%; /* Transforma o quadrado em círculo */
+        width: 15px;
+        height: 15px;
+        background-color: #ecf0f1;
+        border-radius: 50%;
         pointer-events: none;
     }
-
     #power-bar-container {
       position: absolute;
       bottom: 20px;
@@ -219,7 +191,6 @@
       overflow: hidden;
       z-index: 15;
     }
-
     #power-bar {
       width: 0;
       height: 100%;
@@ -237,9 +208,8 @@
       z-index: 20;
     }
     #mobile-controls.visible {
-      display: flex; /* Classe para exibir os controles */
+      display: flex;
     }
-
     #mobile-controls button {
       width: 60px;
       height: 60px;
@@ -254,18 +224,14 @@
       cursor: pointer;
       transition: background-color 0.3s;
     }
-
     #mobile-controls button:active {
       background-color: #2980b9;
     }
-
     #shoot-btn {
       height: 120px;
       font-size: 1.5rem;
       border-radius: 10px;
     }
-
-    /* Popups de acerto/erro */
     .popup {
       position: absolute;
       top: 40%;
@@ -336,7 +302,6 @@ const finalScoreDisplay = document.getElementById('final-score');
 const powerBar = document.getElementById('power-bar');
 const bow = document.getElementById('bow-container');
 
-// Novos elementos para mobile
 const mobileControls = document.getElementById('mobile-controls');
 const aimUpBtn = document.getElementById('aim-up-btn');
 const aimDownBtn = document.getElementById('aim-down-btn');
@@ -351,7 +316,7 @@ let isCharging = false;
 let gameActive = false;
 let aimAngle = 0;
 let shooting = false;
-let aimInterval; // Variável para controlar o movimento da mira no mobile
+let aimInterval;
 
 const questionsAndAnswers = [
   {
@@ -359,8 +324,7 @@ const questionsAndAnswers = [
     correctAnswer: "Um estado de bem-estar no qual uma pessoa é capaz de lidar com os estresses normais da vida, ser produtiva no trabalho e contribuir para a sua comunidade.",
     wrongAnswers: [
       "Apenas a ausência de doenças mentais, sem considerar fatores sociais.",
-      "A capacidade de um indivíduo de se isolar de situações estressantes para manter a sanidade.",
-      "O estado de completo bem-estar físico e social, ignorando o bem-estar emocional."
+      "A capacidade de um indivíduo de se isolar de situações estressantes para manter a sanidade."
     ],
   },
   {
@@ -368,22 +332,20 @@ const questionsAndAnswers = [
     correctAnswer: "Sobrecarga de trabalho, que é um fator de risco para o adoecimento físico e psíquico do profissional.",
     wrongAnswers: [
       "Um aumento na eficiência e na produtividade, pois há menos pessoas para gerenciar.",
-      "Uma diminuição nos índices de absenteísmo, já que os policiais se sentem mais essenciais.",
-      "Um aumento na autonomia, levando a uma redução no estresse ocupacional."
+      "Uma diminuição nos índices de absenteísmo, já que os policiais se sentem mais essenciais."
     ],
   },
   {
     question: "A qualidade de vida é um conceito que se modifica conforme as circunstâncias externas e internas. Qual termo a apostila usa para descrever isso?",
     correctAnswer: "Contingencial.",
-    wrongAnswers: ["Estático.", "Imutável.", "Patológico."],
+    wrongAnswers: ["Estático.", "Imutável."],
   },
   {
     question: "Segundo a OMS, o que a qualidade de vida abrange?",
     correctAnswer: "Saúde física, bem-estar psicológico, relações sociais e fatores ambientais.",
     wrongAnswers: [
       "Apenas a saúde física e a ausência de doenças.",
-      "Exclusivamente a satisfação material e financeira.",
-      "Somente o sucesso profissional e o reconhecimento social."
+      "Exclusivamente a satisfação material e financeira."
     ],
   },
   {
@@ -391,8 +353,7 @@ const questionsAndAnswers = [
     correctAnswer: "Experiências de realização pessoal e de possibilidade de desenvolvimento dos potenciais individuais.",
     wrongAnswers: [
       "A ausência de qualquer estado afetivo negativo.",
-      "Um alto rendimento financeiro que permite adquirir bens.",
-      "Um estado de apatia e falta de emoção."
+      "Um alto rendimento financeiro que permite adquirir bens."
     ],
   },
   {
@@ -400,8 +361,7 @@ const questionsAndAnswers = [
     correctAnswer: "Aspectos físicos, ambientais e psicológicos do local de trabalho.",
     wrongAnswers: [
       "Apenas a remuneração justa e os benefícios oferecidos pela empresa.",
-      "Somente a segurança no emprego e a supervisão competente.",
-      "Exclusivamente os aspectos biológicos e sociais do trabalhador."
+      "Somente a segurança no emprego e a supervisão competente."
     ],
   },
   {
@@ -409,8 +369,7 @@ const questionsAndAnswers = [
     correctAnswer: "Workshops, treinamentos para gestão do estresse e oferta de suporte psicológico.",
     wrongAnswers: [
       "Adoção de um regime disciplinar rígido e inflexível.",
-      "Incentivo à competição entre os colaboradores para aumentar a produtividade.",
-      "Apenas a conscientização sobre a importância da saúde mental, sem ações práticas."
+      "Incentivo à competição entre os colaboradores para aumentar a produtividade."
     ],
   },
   {
@@ -418,8 +377,7 @@ const questionsAndAnswers = [
     correctAnswer: "Vitimização policial por problemas de saúde mental (transtornos mentais e sofrimento psíquico).",
     wrongAnswers: [
       "Falta de reconhecimento social do trabalho policial.",
-      "Altos índices de absenteísmo e presenteísmo.",
-      "Elevados números de reformas por transtornos mentais."
+      "Altos índices de absenteísmo e presenteísmo."
     ],
   },
   {
@@ -427,8 +385,7 @@ const questionsAndAnswers = [
     correctAnswer: "As causas que alimentam o problema principal.",
     wrongAnswers: [
       "Os efeitos visíveis do problema.",
-      "A descrição do problema em si.",
-      "As soluções para o problema."
+      "A descrição do problema em si."
     ],
   },
   {
@@ -436,8 +393,7 @@ const questionsAndAnswers = [
     correctAnswer: "Uma reação psicofisiológica muito complexa que tem em sua gênese a necessidade de o organismo fazer face a algo que ameace sua homeostase interna.",
     wrongAnswers: [
       "Uma reação exclusivamente psicológica a um evento traumático.",
-      "Uma reação que só ocorre em situações de risco de morte.",
-      "Uma sensação de cansaço extremo que se resolve com descanso."
+      "Uma reação que só ocorre em situações de risco de morte."
     ],
   },
   {
@@ -445,8 +401,7 @@ const questionsAndAnswers = [
     correctAnswer: "Ansiedade, depressão e transtorno bipolar.",
     wrongAnswers: [
       "Transtorno do pânico, fobias e estresse agudo.",
-      "Transtorno obsessivo-compulsivo (TOC) e depressão sazonal.",
-      "Esquizofrenia e transtorno de personalidade limítrofe."
+      "Transtorno obsessivo-compulsivo (TOC) e depressão sazonal."
     ],
   },
   {
@@ -454,8 +409,7 @@ const questionsAndAnswers = [
     correctAnswer: "Excesso de trabalho.",
     wrongAnswers: [
       "Falta de reconhecimento profissional.",
-      "Problemas financeiros na vida pessoal.",
-      "Conflitos com colegas de trabalho."
+      "Problemas financeiros na vida pessoal."
     ],
   },
   {
@@ -463,22 +417,20 @@ const questionsAndAnswers = [
     correctAnswer: "Cansaço excessivo, dor de cabeça frequente e dores musculares.",
     wrongAnswers: [
       "Aumento repentino de peso e euforia.",
-      "Apetite diminuído e insônia.",
-      "Aumento de energia e concentração."
+      "Apetite diminuído e insônia."
     ],
   },
   {
     question: "A depressão é uma doença psiquiátrica crônica e pode ser recorrente. Qual a prevalência de depressão ao longo da vida no Brasil, segundo o material?",
     correctAnswer: "Em torno de 15,5%.",
-    wrongAnswers: ["Aproximadamente 10,4%.", "Cerca de 4,4%.", "Mais de 25%."],
+    wrongAnswers: ["Aproximadamente 10,4%.", "Cerca de 4,4%."],
   },
   {
     question: "Quais são os neurotransmissores envolvidos na regulação da atividade motora, apetite, sono e humor?",
     correctAnswer: "Noradrenalina, Serotonina e Dopamina.",
     wrongAnswers: [
       "Adrenalina, Glicose e Endorfina.",
-      "Acetilcolina, Melatonina e Cortisol.",
-      "Histamina, GABA e Glutamato."
+      "Acetilcolina, Melatonina e Cortisol."
     ],
   },
   {
@@ -486,8 +438,7 @@ const questionsAndAnswers = [
     correctAnswer: "Momentos de euforia e depressão repentinamente.",
     wrongAnswers: [
       "Apenas estados de tristeza profunda e apatia.",
-      "Somente momentos de alta produtividade e concentração.",
-      "Estados de calma e serenidade."
+      "Somente momentos de alta produtividade e concentração."
     ],
   },
   {
@@ -495,8 +446,7 @@ const questionsAndAnswers = [
     correctAnswer: "O tipo 1 apresenta pelo menos um episódio maníaco, enquanto o tipo 2 manifesta com mais frequência episódios de depressão e hipomania.",
     wrongAnswers: [
       "O tipo 1 é mais sutil, enquanto o tipo 2 é mais grave e evidente.",
-      "O tipo 1 é diagnosticado em jovens, enquanto o tipo 2 é em adultos.",
-      "O tipo 1 é causado por fatores genéticos, enquanto o tipo 2 é por traumas."
+      "O tipo 1 é diagnosticado em jovens, enquanto o tipo 2 é em adultos."
     ],
   },
   {
@@ -504,8 +454,7 @@ const questionsAndAnswers = [
     correctAnswer: "Quando é tão intensa e duradoura que interfere com as atividades normais da pessoa.",
     wrongAnswers: [
       "Quando a pessoa está em uma situação de perigo iminente.",
-      "Quando ocorre apenas em momentos estressantes.",
-      "Quando ela se manifesta como uma resposta de luta ou fuga."
+      "Quando ocorre apenas em momentos estressantes."
     ],
   },
   {
@@ -513,8 +462,7 @@ const questionsAndAnswers = [
     correctAnswer: "Reações intensas e disfuncionais que ocorrem após um evento extremamente traumático e duram mais de um mês.",
     wrongAnswers: [
       "Um transtorno de ansiedade que dura menos de um mês após o trauma.",
-      "Uma reação normal a um evento estressante, sem consequências a longo prazo.",
-      "Um estado de bem-estar que se manifesta após superar uma crise."
+      "Uma reação normal a um evento estressante, sem consequências a longo prazo."
     ],
   },
   {
@@ -522,8 +470,7 @@ const questionsAndAnswers = [
     correctAnswer: "Suicídio.",
     wrongAnswers: [
       "Confrontos em serviço.",
-      "Confrontos na folga.",
-      "Acidentes de trânsito."
+      "Confrontos na folga."
     ],
   },
   {
@@ -531,8 +478,7 @@ const questionsAndAnswers = [
     correctAnswer: "O ato em que o policial é vítima de violência letal ou não.",
     wrongAnswers: [
       "Apenas as mortes e lesões de policiais em serviço.",
-      "A exposição a altos níveis de estresse e cobranças.",
-      "A rejeição social e o preconceito contra a profissão."
+      "A exposição a altos níveis de estresse e cobranças."
     ],
   },
   {
@@ -540,8 +486,7 @@ const questionsAndAnswers = [
     correctAnswer: "Em duas dimensões: objetiva (mortes e lesões) e subjetiva (ameaças, assédio moral e discriminação).",
     wrongAnswers: [
       "Como um problema exclusivo da saúde pública, sem relação com a segurança.",
-      "Como um fenômeno que só ocorre em serviço.",
-      "Em três categorias: física, mental e social."
+      "Como um fenômeno que só ocorre em serviço."
     ],
   },
   {
@@ -549,8 +494,7 @@ const questionsAndAnswers = [
     correctAnswer: "É uma característica que a PMPE compartilha com outras forças de segurança no Brasil e no mundo.",
     wrongAnswers: [
       "Não existe estigma na PMPE, pois o tema é tratado abertamente.",
-      "O estigma é um problema exclusivo da população civil e não afeta policiais.",
-      "O estigma tem diminuído significativamente nos últimos anos, tornando a busca por ajuda fácil."
+      "O estigma é um problema exclusivo da população civil e não afeta policiais."
     ],
   },
   {
@@ -558,8 +502,7 @@ const questionsAndAnswers = [
     correctAnswer: "Identificar e compreender as causas fundamentais de um problema complexo.",
     wrongAnswers: [
       "Avaliar o desempenho individual dos policiais.",
-      "Desenvolver estatísticas de criminalidade.",
-      "Mapear a hierarquia e as relações sociais em uma organização."
+      "Desenvolver estatísticas de criminalidade."
     ],
   },
   {
@@ -567,22 +510,20 @@ const questionsAndAnswers = [
     correctAnswer: "Núcleo de Saúde Mental Ten Cel PM Aline Maria Lopes dos Prazeres de Luna.",
     wrongAnswers: [
       "Núcleo de Apoio Psicológico Coronel Tibério César dos Santos.",
-      "Núcleo de Assistência Social Major José Edir Paixão de Sousa.",
-      "Núcleo de Saúde Mental Cabo Onivan Elias de Oliveira."
+      "Núcleo de Assistência Social Major José Edir Paixão de Sousa."
     ],
   },
   {
     question: "O Programa de Suporte entre Pares da PMPE é chamado de...?",
     correctAnswer: "Tamojunto (TMJ).",
-    wrongAnswers: ["Focais.", "Pró-Vida.", "Escuta Susp."],
+    wrongAnswers: ["Focais.", "Pró-Vida."],
   },
   {
     question: "Qual a principal missão do Núcleo de Saúde Mental (NSM PMPE)?",
     correctAnswer: "Realizar a gestão da Política Pública de Saúde Mental da Corporação.",
     wrongAnswers: [
       "Apenas prestar atendimento psicológico e psiquiátrico.",
-      "Monitorar o estresse ocupacional dos policiais em serviço.",
-      "Distribuir medicamentos para os policiais ativos e veteranos."
+      "Monitorar o estresse ocupacional dos policiais em serviço."
     ],
   },
   {
@@ -590,8 +531,7 @@ const questionsAndAnswers = [
     correctAnswer: "Policiais do quadro de praças, voluntários e treinados para orientar e ouvir os colegas de trabalho.",
     wrongAnswers: [
       "Oficiais e comandantes responsáveis por aplicar a disciplina.",
-      "Apenas psicólogos e psiquiatras que fazem parte do NSM PMPE.",
-      "Profissionais de outras OMEs que fazem o monitoramento."
+      "Apenas psicólogos e psiquiatras que fazem parte do NSM PMPE."
     ],
   },
   {
@@ -599,22 +539,20 @@ const questionsAndAnswers = [
     correctAnswer: "Ameaças, assédio moral, humilhação no trabalho e discriminação por ser profissional de segurança pública.",
     wrongAnswers: [
       "Somente lesões e mortes de policiais em serviço.",
-      "Adoecimento físico e mental em decorrência de situações traumáticas.",
-      "O uso de álcool e substâncias como forma de escape."
+      "Adoecimento físico e mental em decorrência de situações traumáticas."
     ],
   },
   {
     question: "De acordo com o Anuário Brasileiro de Segurança Pública 2024, qual a proporção de policiais civis e militares do gênero masculino que morreram vítimas de CVLI em 2023?",
     correctAnswer: "96%.",
-    wrongAnswers: ["4%.", "71,6%.", "69,7%."],
+    wrongAnswers: ["4%.", "71,6%."],
   },
   {
     question: "O que a cultura de 'invulnerabilidade' na polícia pode causar?",
     correctAnswer: "Favorecer a invisibilidade do trauma e o aprofundamento dos sintomas de adoecimento mental.",
     wrongAnswers: [
       "Um aumento na resiliência e na capacidade de lidar com o estresse.",
-      "Melhora na comunicação e nos vínculos entre os policiais.",
-      "Maior busca por ajuda profissional para resolver problemas pessoais."
+      "Melhora na comunicação e nos vínculos entre os policiais."
     ],
   },
   {
@@ -622,8 +560,7 @@ const questionsAndAnswers = [
     correctAnswer: "Tentativa prévia de suicídio e doença mental.",
     wrongAnswers: [
       "Falta de reconhecimento e remuneração inadequada.",
-      "Uso de álcool e dependência química.",
-      "Conflitos familiares e desemprego."
+      "Uso de álcool e dependência química."
     ],
   },
   {
@@ -631,8 +568,7 @@ const questionsAndAnswers = [
     correctAnswer: "A crise existencial de quem hesita entre dois extremos: viver ou morrer.",
     wrongAnswers: [
       "A falta de vontade de viver, sem nenhuma esperança.",
-      "A decisão firme e irreversível de tirar a própria vida.",
-      "O sentimento de culpa dos familiares enlutados."
+      "A decisão firme e irreversível de tirar a própria vida."
     ],
   },
   {
@@ -640,8 +576,7 @@ const questionsAndAnswers = [
     correctAnswer: "Marginalizar as pessoas e desencorajar a busca por ajuda profissional.",
     wrongAnswers: [
       "Aumentar a conscientização sobre a importância do tratamento.",
-      "Criar uma cultura de aceitação e apoio nos ambientes de trabalho.",
-      "Aumentar a eficácia e o acesso aos serviços de saúde."
+      "Criar uma cultura de aceitação e apoio nos ambientes de trabalho."
     ],
   },
   {
@@ -649,8 +584,7 @@ const questionsAndAnswers = [
     correctAnswer: "O estresse rotineiro no ambiente de trabalho.",
     wrongAnswers: [
       "Problemas financeiros e de moradia.",
-      "Distúrbios do sono e traumas de infância.",
-      "Incidentes críticos e contato com a violência."
+      "Distúrbios do sono e traumas de infância."
     ],
   },
   {
@@ -658,8 +592,7 @@ const questionsAndAnswers = [
     correctAnswer: "Busca de um estilo de vida saudável, incluindo dieta equilibrada e atividade física regular.",
     wrongAnswers: [
       "Apenas o uso de medicação e psicoterapia.",
-      "Evitar completamente qualquer tipo de estresse na vida.",
-      "Isolamento social para evitar situações de risco."
+      "Evitar completamente qualquer tipo de estresse na vida."
     ],
   },
   {
@@ -667,8 +600,7 @@ const questionsAndAnswers = [
     correctAnswer: "Oferecer assistência com equipe multidisciplinar, focada na prevenção e reabilitação de patologias.",
     wrongAnswers: [
       "Apenas atender as demandas administrativas dos policiais.",
-      "Realizar a gestão de diárias e benefícios para os dependentes.",
-      "Oferecer somente atendimento psicológico e psiquiátrico."
+      "Realizar a gestão de diárias e benefícios para os dependentes."
     ],
   },
   {
@@ -676,8 +608,7 @@ const questionsAndAnswers = [
     correctAnswer: "Serviço de psicoterapia on-line e gratuito.",
     wrongAnswers: [
       "Atendimento presencial em unidades de saúde da PMPE.",
-      "Treinamentos e workshops sobre gestão de estresse.",
-      "Serviço de apoio jurídico e social."
+      "Treinamentos e workshops sobre gestão de estresse."
     ],
   },
   {
@@ -685,8 +616,7 @@ const questionsAndAnswers = [
     correctAnswer: "Fortalecer o tabu sobre a saúde mental e aprofundar o sofrimento dos policiais.",
     wrongAnswers: [
       "Diminuir a incidência de transtornos mentais.",
-      "Incentivar os policiais a buscar ajuda profissional.",
-      "Aumentar o senso de virilidade e força no grupo."
+      "Incentivar os policiais a buscar ajuda profissional."
     ],
   },
   {
@@ -694,8 +624,7 @@ const questionsAndAnswers = [
     correctAnswer: "Oferecer atendimento psicológico presencial e apoio de médico psiquiatra para os policiais e seus dependentes.",
     wrongAnswers: [
       "Gerenciar as aposentadorias e reformas por problemas de saúde.",
-      "Apenas capacitar líderes para identificar problemas psicológicos.",
-      "Promover ações educativas para a comunidade."
+      "Apenas capacitar líderes para identificar problemas psicológicos."
     ],
   },
   {
@@ -703,8 +632,7 @@ const questionsAndAnswers = [
     correctAnswer: "Reduzir o estigma e aumentar a busca por ajuda profissional.",
     wrongAnswers: [
       "Aumentar a competitividade entre os policiais.",
-      "Criar uma cultura de silêncio sobre o sofrimento.",
-      "Ignorar os mitos sobre a temática."
+      "Criar uma cultura de silêncio sobre o sofrimento."
     ],
   },
   {
@@ -712,8 +640,7 @@ const questionsAndAnswers = [
     correctAnswer: "O Transtorno de Estresse Agudo dura menos de um mês, enquanto o TEPT dura mais de um mês.",
     wrongAnswers: [
       "O Transtorno de Estresse Agudo é mais grave que o TEPT.",
-      "O TEPT só ocorre em militares, enquanto o Transtorno de Estresse Agudo pode ocorrer em qualquer pessoa.",
-      "O Transtorno de Estresse Agudo é causado por um único evento, e o TEPT por vários."
+      "O TEPT só ocorre em militares, enquanto o Transtorno de Estresse Agudo pode ocorrer em qualquer pessoa."
     ],
   },
   {
@@ -721,8 +648,7 @@ const questionsAndAnswers = [
     correctAnswer: "O Núcleo de Apoio ao Dependente Químico, que acolhe e trata policiais militares dependentes de substâncias psicoativas.",
     wrongAnswers: [
       "Um centro de atendimento médico e fisioterapêutico.",
-      "Um grupo de apoio a familiares de policiais com transtornos mentais.",
-      "O setor responsável pela gestão de recursos humanos na PMPE."
+      "Um grupo de apoio a familiares de policiais com transtornos mentais."
     ],
   },
   {
@@ -730,8 +656,7 @@ const questionsAndAnswers = [
     correctAnswer: "Reconhecer fatores que impactam a saúde mental, promover autocuidado e buscar ajuda profissional, se necessário.",
     wrongAnswers: [
       "Tornar-se um especialista em psicoterapia.",
-      "Atuar como psicólogo de sobreaviso para ocorrências traumáticas.",
-      "Identificar e punir colegas que demonstrem fraqueza emocional."
+      "Atuar como psicólogo de sobreaviso para ocorrências traumáticas."
     ],
   },
   {
@@ -739,8 +664,7 @@ const questionsAndAnswers = [
     correctAnswer: "A busca por uma visão integral e ética do ser humano em seu relacionamento com as organizações.",
     wrongAnswers: [
       "Apenas a satisfação individual com o trabalho executado.",
-      "A produtividade e a qualidade do trabalho em detrimento do bem-estar.",
-      "O interesse exclusivo dos funcionários por remuneração e benefícios."
+      "A produtividade e a qualidade do trabalho em detrimento do bem-estar."
     ],
   },
   {
@@ -748,8 +672,7 @@ const questionsAndAnswers = [
     correctAnswer: "Cresceu 26,2% no mesmo período, superando a soma de mortes em confronto em serviço e fora de serviço.",
     wrongAnswers: [
       "Apresentou uma queda de 18,1% em relação ao ano anterior.",
-      "Foi menor que as mortes em confronto em serviço e fora de serviço.",
-      "Não foi divulgada, devido ao sigilo institucional."
+      "Foi menor que as mortes em confronto em serviço e fora de serviço."
     ],
   },
   {
@@ -757,8 +680,7 @@ const questionsAndAnswers = [
     correctAnswer: "A oscilação e a indecisão de uma pessoa em crise suicida, que hesita entre viver e morrer.",
     wrongAnswers: [
       "A certeza absoluta de que uma pessoa quer morrer.",
-      "A ausência total de vontade de viver ou morrer.",
-      "O desejo exclusivo de querer viver e não ter coragem de buscar ajuda."
+      "A ausência total de vontade de viver ou morrer."
     ],
   },
   {
@@ -766,8 +688,7 @@ const questionsAndAnswers = [
     correctAnswer: "Ao silêncio sobre o sofrimento, ao tabu sobre a saúde mental e à invisibilidade do trauma.",
     wrongAnswers: [
       "Ao fortalecimento dos vínculos sociais entre os policiais.",
-      "À maior busca por ajuda profissional e ao acolhimento.",
-      "À formação de um profissional que não sente medo ou dor."
+      "À maior busca por ajuda profissional e ao acolhimento."
     ],
   },
   {
@@ -775,8 +696,7 @@ const questionsAndAnswers = [
     correctAnswer: "Zelar pelo tratamento humanizado, discrição, respeito, dignidade e sigilo das informações.",
     wrongAnswers: [
       "Compartilhar as informações pessoais dos colegas com a chefia.",
-      "Fornecer diagnóstico e tratamento psicológico para os colegas.",
-      "Convocar os policiais para o NSM PMPE sem a devida autorização."
+      "Fornecer diagnóstico e tratamento psicológico para os colegas."
     ],
   },
   {
@@ -784,8 +704,7 @@ const questionsAndAnswers = [
     correctAnswer: "80% das pessoas com casos severos de saúde mental estão sem tratamento.",
     wrongAnswers: [
       "A maioria dos casos severos de saúde mental recebe tratamento adequado.",
-      "O Brasil está no topo do ranking mundial de tratamento de saúde mental.",
-      "Não há dados suficientes para determinar a porcentagem de pessoas sem tratamento."
+      "O Brasil está no topo do ranking mundial de tratamento de saúde mental."
     ],
   },
   {
@@ -793,8 +712,7 @@ const questionsAndAnswers = [
     correctAnswer: "Homens (96%), negros (69,7%) com faixa etária entre 35 e 54 anos (71,6%).",
     wrongAnswers: [
       "Mulheres (4%), brancas (29,4%) com idade entre 18 e 24 anos (0,7%).",
-      "Homens (96%), brancos (29,4%) com idade acima de 60 anos (6%).",
-      "Mulheres (4%), amarelas (0,8%) com idade entre 25 e 29 anos (3%)."
+      "Homens (96%), brancos (29,4%) com idade acima de 60 anos (6%)."
     ],
   },
   {
@@ -802,8 +720,7 @@ const questionsAndAnswers = [
     correctAnswer: "O trabalho policial como uma atividade que mobiliza o corpo, a inteligência e a própria pessoa, ou seja, um trabalhador que sente e se afeta.",
     wrongAnswers: [
       "A polícia como um 'braço armado do estado', que não sente emoções.",
-      "Que o trabalho policial é a única causa do adoecimento mental.",
-      "Apenas o impacto do estresse rotineiro no trabalho policial."
+      "Que o trabalho policial é a única causa do adoecimento mental."
     ],
   },
   {
@@ -811,8 +728,7 @@ const questionsAndAnswers = [
     correctAnswer: "A falta de reconhecimento social e o preconceito da população sobre a profissão.",
     wrongAnswers: [
       "O uso de equipamentos e armamentos modernos.",
-      "A autonomia no atendimento a ocorrências.",
-      "A possibilidade de crescimento na carreira."
+      "A autonomia no atendimento a ocorrências."
     ],
   },
   {
@@ -820,8 +736,7 @@ const questionsAndAnswers = [
     correctAnswer: "A arma de tiro, que, com as pontas nas duas extremidades, representa os dois triângulos com as bases unidas.",
     wrongAnswers: [
       "O projétil de disparo que se move na direção oposta ao ângulo do triângulo.",
-      "Um obstáculo no jogo que o jogador deve evitar.",
-      "O inimigo do jogador, que aparece na tela para ser atingido."
+      "Um obstáculo no jogo que o jogador deve evitar."
     ],
   },
   {
@@ -829,8 +744,7 @@ const questionsAndAnswers = [
     correctAnswer: "O problema principal.",
     wrongAnswers: [
       "As causas do problema.",
-      "Os efeitos visíveis do problema.",
-      "As soluções para o problema."
+      "Os efeitos visíveis do problema."
     ],
   },
   {
@@ -838,8 +752,7 @@ const questionsAndAnswers = [
     correctAnswer: "Um acordo para não expressar medos e desconfortos, violando a estratégia e não sendo bem visto pelo grupo.",
     wrongAnswers: [
       "Uma forma de manter a hierarquia e o respeito entre os colegas.",
-      "Uma maneira de fortalecer os laços de amizade e camaradagem.",
-      "Um recurso para evitar a punição e o afastamento do serviço."
+      "Uma maneira de fortalecer os laços de amizade e camaradagem."
     ],
   },
   {
@@ -847,8 +760,7 @@ const questionsAndAnswers = [
     correctAnswer: "Capacitar policiais para atuarem na política de suporte entre pares.",
     wrongAnswers: [
       "Realizar a gestão da saúde física dos policiais.",
-      "Oferecer atendimento psicológico online gratuito para o efetivo.",
-      "Conceder licenças médicas para policiais com problemas de saúde mental."
+      "Oferecer atendimento psicológico online gratuito para o efetivo."
     ],
   },
   {
@@ -856,8 +768,7 @@ const questionsAndAnswers = [
     correctAnswer: "Um estado de completo bem-estar físico, mental e social, e não somente a ausência de enfermidades.",
     wrongAnswers: [
       "A ausência total de doenças físicas e mentais.",
-      "O estado de bem-estar apenas físico e social.",
-      "Um estado de adaptação a fatores estressantes."
+      "O estado de bem-estar apenas físico e social."
     ],
   },
   {
@@ -865,8 +776,7 @@ const questionsAndAnswers = [
     correctAnswer: "Atendimento de psicoterapia presencial, com apoio de médico psiquiatra, e atendimentos pós-trauma.",
     wrongAnswers: [
       "Apenas o serviço de plantões psicológicos para casos de emergência.",
-      "Apenas o atendimento online gratuito para todo o efetivo.",
-      "O serviço de teleatendimento para policiais e seus dependentes."
+      "Apenas o atendimento online gratuito para todo o efetivo."
     ],
   },
   {
@@ -874,12 +784,49 @@ const questionsAndAnswers = [
     correctAnswer: "O grau em que os membros da organização são capazes de satisfazer suas necessidades pessoais pelo trabalho e se sentirem satisfeitos e felizes.",
     wrongAnswers: [
       "Apenas a produtividade e a qualidade no trabalho.",
-      "O respeito pelos bem-estar das pessoas do ponto de vista biológico.",
-      "A soma de todos os componentes de um sistema."
+      "O respeito pelos bem-estar das pessoas do ponto de vista biológico."
     ],
   }
 ];
 
+// ----------- ALTERAÇÃO PARA 3 BALÕES -----------
+function createBalloonsForQuestion() {
+  // remove existentes
+  gameContainer.querySelectorAll('.balloon').forEach(b => b.remove());
+
+  // sempre só 2 erradas
+  const wrongs = currentQuestion.wrongAnswers.slice(0, 2);
+  const allAnswers = [
+    { text: currentQuestion.correctAnswer, correct: true },
+    ...wrongs.map(ans => ({ text: ans, correct: false }))
+  ].sort(() => Math.random() - 0.5);
+
+  allAnswers.forEach((answer) => {
+    const balloon = document.createElement('div');
+    balloon.className = 'balloon';
+    balloon.textContent = answer.text;
+    balloon.style.backgroundColor = "#2ecc71";
+    balloon.setAttribute('data-correct', answer.correct);
+    balloon.style.opacity = '0';
+    gameContainer.appendChild(balloon);
+  });
+
+  requestAnimationFrame(() => {
+    const balloons = Array.from(gameContainer.querySelectorAll('.balloon'));
+    const isLandscapeMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+      && window.innerWidth > window.innerHeight
+      && window.innerHeight <= 500;
+
+    if (isLandscapeMobile) {
+      positionLandscapeBalloons(balloons);
+    } else {
+      positionDefaultBalloons(balloons);
+    }
+  });
+}
+// -----------------------------------------------
+
+// ... todo o restante do código permanece igual!
 function startGame() {
   score = 0;
   time = 120;
@@ -903,7 +850,6 @@ function startGame() {
     }
   }, 1000);
 }
-
 function endGame() {
   gameActive = false;
   clearInterval(timerInterval);
@@ -911,87 +857,41 @@ function endGame() {
   endScreen.style.display = 'flex';
   gameContainer.querySelectorAll('.balloon').forEach(balloon => balloon.remove());
 }
-
 startButton.addEventListener('click', startGame);
 restartButton.addEventListener('click', startGame);
-
 function getRandomQuestion() {
   return questionsAndAnswers[Math.floor(Math.random() * questionsAndAnswers.length)];
 }
-
 function displayQuestion(question) {
   questionBox.textContent = question.question;
 }
-
-function createBalloonsForQuestion() {
-  // remove existentes
-  gameContainer.querySelectorAll('.balloon').forEach(b => b.remove());
-
-  const allAnswers = [
-    { text: currentQuestion.correctAnswer, correct: true },
-    ...currentQuestion.wrongAnswers.map(ans => ({ text: ans, correct: false }))
-  ].sort(() => Math.random() - 0.5);
-
-  // cria os elementos sem posicionar (vamos posicionar depois)
-  allAnswers.forEach((answer) => {
-    const balloon = document.createElement('div');
-    balloon.className = 'balloon';
-    balloon.textContent = answer.text;
-    balloon.style.backgroundColor = "#2ecc71";
-    balloon.setAttribute('data-correct', answer.correct);
-    balloon.style.opacity = '0'; // aparecerá após posicionamento
-    gameContainer.appendChild(balloon);
-  });
-
-  // aguarda o layout para obter tamanhos corretos
-  requestAnimationFrame(() => {
-    const balloons = Array.from(gameContainer.querySelectorAll('.balloon'));
-    const isLandscapeMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
-      && window.innerWidth > window.innerHeight
-      && window.innerHeight <= 500;
-
-    if (isLandscapeMobile) {
-      positionLandscapeBalloons(balloons);
-    } else {
-      positionDefaultBalloons(balloons);
-    }
-  });
-}
-
-// posicionamento quando NÃO é landscape mobile (comportamento parecido com seu original,
-// mas com proteção para não extrapolar bordas)
 function positionDefaultBalloons(balloons) {
-  const gapY = 120; // distância vertical entre balões
-  let topStart = 0; // onde começa no topo
-  let rightPos = 120; // distância da borda direita
-
+  const gapY = 120;
+  let topStart = 0;
+  let rightPos = 120;
   balloons.forEach((balloon, i) => {
     balloon.style.position = "absolute";
     balloon.style.left = "auto";
     balloon.style.right = `${rightPos}px`;
-    balloon.style.top = `${topStart + i * gapY}px`; // vai descendo um embaixo do outro
+    balloon.style.top = `${topStart + i * gapY}px`;
     balloon.style.opacity = "1";
   });
 }
-
-// posicionamento diagonal (tela pequena em paisagem)
 function positionLandscapeBalloons(balloons) {
   if (!balloons.length) return;
   const gameW = gameContainer.clientWidth;
   const gameH = gameContainer.clientHeight;
-  const gapDiag = Math.floor(gameH * 0.25); // passo vertical para diagonal
-  const startTop = Math.floor(gameH * 0); // começa mais em cima
-  const startLeft = Math.floor(gameW * 0.7); // todos mais para a direita
-
+  const gapDiag = Math.floor(gameH * 0.25);
+  const startTop = Math.floor(gameH * 0);
+  const startLeft = Math.floor(gameW * 0.7);
   balloons.forEach((balloon, i) => {
     balloon.style.position = "absolute";
-    balloon.style.left = `${startLeft + i * 20}px`; // levemente à direita a cada balão
-    balloon.style.top = `${startTop + i * gapDiag}px`; // diagonal descendo
+    balloon.style.left = `${startLeft + i * 20}px`;
+    balloon.style.top = `${startTop + i * gapDiag}px`;
     balloon.style.right = "auto";
     balloon.style.opacity = "1";
   });
 }
-// Reposiciona se a orientação/tamanho mudar (útil ao rotacionar o telefone)
 window.addEventListener('resize', () => {
   const balloons = Array.from(gameContainer.querySelectorAll('.balloon'));
   if (!balloons.length) return;
@@ -1004,7 +904,6 @@ window.addEventListener('resize', () => {
     positionDefaultBalloons(balloons);
   }
 });
-
 function shootArrow(power, angle) {
   const arrowElement = document.createElement('div');
   arrowElement.classList.add('arrow');
@@ -1066,7 +965,6 @@ function shootArrow(power, angle) {
     }
   }, 16);
 }
-
 function showPopup(text, success) {
   const popup = document.createElement('div');
   popup.className = `popup ${success ? 'success' : 'error'}`;
@@ -1074,7 +972,6 @@ function showPopup(text, success) {
   gameContainer.appendChild(popup);
   setTimeout(() => popup.remove(), 1000);
 }
-
 function checkCollision(x, y) {
   const targets = gameContainer.querySelectorAll('.balloon');
   for (let i = 0; i < targets.length; i++) {
@@ -1088,16 +985,10 @@ function checkCollision(x, y) {
   }
   return null;
 }
-
-// Lógica de detecção de dispositivo e eventos
 window.onload = function() {
   const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-  
   if (isMobile) {
-    // É um dispositivo móvel
     mobileControls.classList.add('visible');
-    
-    // Configura os eventos de toque
     aimUpBtn.addEventListener('touchstart', (e) => {
       e.preventDefault();
       if (!gameActive || shooting) return;
@@ -1109,7 +1000,6 @@ window.onload = function() {
     aimUpBtn.addEventListener('touchend', () => {
       clearInterval(aimInterval);
     });
-
     aimDownBtn.addEventListener('touchstart', (e) => {
       e.preventDefault();
       if (!gameActive || shooting) return;
@@ -1121,7 +1011,6 @@ window.onload = function() {
     aimDownBtn.addEventListener('touchend', () => {
       clearInterval(aimInterval);
     });
-
     shootBtn.addEventListener('touchstart', (e) => {
       e.preventDefault();
       if (!gameActive || shooting || isCharging) return;
@@ -1145,8 +1034,6 @@ window.onload = function() {
       powerBar.style.width = '0%';
     });
   } else {
-    // É um desktop ou outro dispositivo
-    // Mantém os eventos de teclado originais
     document.addEventListener('keydown', (e) => {
       if (!gameActive || shooting) return;
       if (e.code === 'Space' && !isCharging) {
@@ -1166,7 +1053,6 @@ window.onload = function() {
         bow.style.transform = `rotate(${aimAngle}deg)`;
       }
     });
-
     document.addEventListener('keyup', (e) => {
       if (!gameActive || shooting) return;
       if (e.code === 'Space' && isCharging) {
@@ -1183,4 +1069,3 @@ window.onload = function() {
   </script>
 </body>
 </html>
->
