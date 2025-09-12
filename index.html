@@ -115,7 +115,6 @@
       word-wrap: break-word;
       overflow-wrap: break-word;
       height: auto;
-      width: 150px;
     }
     #bow-container {
       position: absolute;
@@ -160,10 +159,9 @@
       #bow-container {
         bottom: 25px;
       }
-      .balloon {
-        width: 250px; /* Largura fixa para desktop */
-        height: auto;
-      }
+      .balloon {
+        width: 250px;
+      }
     }
     @media (max-width: 600px) {
         #question-box {
@@ -617,13 +615,13 @@
         balloon.textContent = ans;
         balloon.dataset.answer = ans;
         
-        let spacing;
-        if (window.innerWidth <= 600) {
-            spacing = 100;
-        } else {
-            spacing = 200;
-        }
-        balloon.style.left = `${50 + i * spacing}px`;
+        const containerWidth = gameContainer.clientWidth;
+        const balloonWidth = (window.innerWidth <= 600) ? 100 : 250;
+        const numBalloons = answers.length;
+        const totalBalloonWidth = balloonWidth * numBalloons;
+        const totalSpacing = containerWidth - totalBalloonWidth;
+        const spacingUnit = totalSpacing / (numBalloons + 1);
+        balloon.style.left = `${spacingUnit + i * (balloonWidth + spacingUnit)}px`;
         
         balloon.style.bottom = "10px";
         gameContainer.appendChild(balloon);
