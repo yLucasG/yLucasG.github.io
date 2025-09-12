@@ -733,7 +733,11 @@
             function lidarComAcerto(balao) {
                 if (balao.dataset.answer === currentQuestion.correctAnswer) {
                     score += 10;
+                    time += 10; // Adiciona 10 segundos ao tempo
+            
                     scoreBox.textContent = `Pontuação: ${score}`;
+                    timerBox.textContent = `Tempo: ${time}s`;
+                    
                     balao.remove();
                     // Limpa todos os balões para carregar a próxima pergunta
                     activeBalloons.forEach(b => clearInterval(b.animationInterval));
@@ -746,7 +750,6 @@
                     balao.remove();
                 }
             }
-
             function iniciarTimer() {
                 if (timerInterval) clearInterval(timerInterval);
                 timerInterval = setInterval(() => {
@@ -827,3 +830,4 @@
     </script>
 </body>
 </html>
+
