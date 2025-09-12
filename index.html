@@ -1,764 +1,751 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Atirador de Respostas</title>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Bangers&display=swap');
-    body {
-      background-color: #2c3e50;
-      color: #ecf0f1;
-      font-family: 'Bangers', sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      height: 100vh;
-      margin: 0;
-      overflow: hidden;
-      text-align: center;
-      user-select: none;
-      cursor: none;
-    }
-    #game-container {
-      width: 95%;
-      max-width: 1000px;
-      height: 80vh;
-      background-color: #34495e;
-      border: 5px solid #bdc3c7;
-      border-radius: 15px;
-      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
-      position: relative;
-      overflow: hidden;
-      display: none;
-    }
-    #start-screen, #end-screen {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      background-color: #34495e;
-      border-radius: 10px;
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-      border: 2px solid #ecf0f1;
-    }
-    h1 {
-      font-size: 2.5rem;
-      color: #f39c12;
-      margin-bottom: 20px;
-    }
-    button {
-      font-family: 'Bangers', sans-serif;
-      font-size: 1.5rem;
-      padding: 10px 20px;
-      border-radius: 5px;
-      border: none;
-      background-color: #27ae60;
-      color: #fff;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-    button:hover {
-      background-color: #2ecc71;
-    }
-    .score-display {
-      font-size: 1.5rem;
-      margin-top: 15px;
-    }
-    #question-box {
-      position: absolute;
-      top: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: #f39c12;
-      padding: 5px 15px;
-      border-radius: 10px;
-      font-size: 0.8rem;
-      text-align: center;
-      margin: 10px 0;
-      color: #2c3e50;
-      z-index: 10;
-      border: 2px solid #e67e22;
-    }
-    #score-box {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      background-color: #27ae60;
-      padding: 5px 10px;
-      border-radius: 5px;
-      font-size: 1rem;
-      z-index: 10;
-    }
-    #timer-box {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background-color: #c0392b;
-      padding: 5px 10px;
-      border-radius: 5px;
-      font-size: 1rem;
-      z-index: 10;
-    }
-    .balloon {
-      position: absolute;
-      background-color: #9b59b6;
-      border: 2px solid #8e44ad;
-      color: #fff;
-      padding: 10px;
-      border-radius: 50px;
-      text-align: center;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-      white-space: normal; /* Permite a quebra de linha normal */
-      word-wrap: break-word; /* Quebra palavras longas que não cabem */
-      overflow-wrap: break-word; /* Outra propriedade para quebrar palavras */
-      height: auto; /* A altura do balão se ajusta ao conteúdo */
-    }
-    #bow-container {
-      position: absolute;
-      bottom: 25px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 100px;
-      height: 100px;
-      display: flex;
-      justify-content: center;
-      align-items: flex-end;
-      z-index: 20;
-    }
-    .bow {
-      width: 50px;
-      height: 50px;
-      background-color: #d35400;
-      border-radius: 50%;
-    }
-    .projectile {
-      position: absolute;
-      bottom: 75px;
-      width: 10px;
-      height: 10px;
-      background-color: #e67e22;
-      border-radius: 50%;
-      z-index: 15;
-    }
-    #mobile-controls {
-      display: none;
-      position: fixed;
-      bottom: 10px;
-      width: 90%;
-      justify-content: space-between;
-      z-index: 30;
-    }
-    #mobile-controls button {
-      width: 45%;
-      padding: 15px;
-    }
-    @media (min-width: 601px) {
-  #bow-container {
-    bottom: 25px; /* Altura da arma no desktop */
-  }
-}
-
-    /* Estilos para mobile */
-    @media (max-width: 600px) {
-        #question-box {
-            font-size: 0.7rem;
-            padding: 5px 10px;
-        }
-        #score-box, #timer-box {
-            font-size: 0.7rem;
-            padding: 3px 8px;
-        }
-        .balloon {
-            width: 100px;
-            height: 40px;
-            font-size: 0.6rem;
-            padding: 5px;
-        }
-    }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Atirador de Respostas</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bangers&display=swap');
+    body {
+      background-color: #2c3e50;
+      color: #ecf0f1;
+      font-family: 'Bangers', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      height: 100vh;
+      margin: 0;
+      overflow: hidden;
+      text-align: center;
+      user-select: none;
+      cursor: none;
+    }
+    #game-container {
+      width: 95%;
+      max-width: 1000px;
+      height: 80vh;
+      background-color: #34495e;
+      border: 5px solid #bdc3c7;
+      border-radius: 15px;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+      position: relative;
+      overflow: hidden;
+      display: none;
+    }
+    #start-screen, #end-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background-color: #34495e;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      border: 2px solid #ecf0f1;
+    }
+    h1 {
+      font-size: 2.5rem;
+      color: #f39c12;
+      margin-bottom: 20px;
+    }
+    button {
+      font-family: 'Bangers', sans-serif;
+      font-size: 1.5rem;
+      padding: 10px 20px;
+      border-radius: 5px;
+      border: none;
+      background-color: #27ae60;
+      color: #fff;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #2ecc71;
+    }
+    .score-display {
+      font-size: 1.5rem;
+      margin-top: 15px;
+    }
+    #question-box {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #f39c12;
+      padding: 5px 15px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      text-align: center;
+      margin: 10px 0;
+      color: #2c3e50;
+      z-index: 10;
+      border: 2px solid #e67e22;
+    }
+    #score-box {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background-color: #27ae60;
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 1rem;
+      z-index: 10;
+    }
+    #timer-box {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: #c0392b;
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 1rem;
+      z-index: 10;
+    }
+    .balloon {
+      position: absolute;
+      background-color: #9b59b6;
+      border: 2px solid #8e44ad;
+      color: #fff;
+      padding: 10px;
+      border-radius: 50px;
+      text-align: center;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      white-space: normal;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      height: auto;
+    }
+    #bow-container {
+      position: absolute;
+      bottom: 25px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100px;
+      height: 100px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      z-index: 20;
+    }
+    .bow {
+      width: 50px;
+      height: 50px;
+      background-color: #d35400;
+      border-radius: 50%;
+    }
+    .projectile {
+      position: absolute;
+      bottom: 75px;
+      width: 10px;
+      height: 10px;
+      background-color: #e67e22;
+      border-radius: 50%;
+      z-index: 15;
+    }
+    #mobile-controls {
+      display: none;
+      position: fixed;
+      bottom: 10px;
+      width: 90%;
+      justify-content: space-between;
+      z-index: 30;
+    }
+    #mobile-controls button {
+      width: 45%;
+      padding: 15px;
+    }
+    @media (min-width: 601px) {
+      #bow-container {
+        bottom: 25px;
+      }
+    }
+    @media (max-width: 600px) {
+        #question-box {
+            font-size: 0.7rem;
+            padding: 5px 10px;
+        }
+        #score-box, #timer-box {
+            font-size: 0.7rem;
+            padding: 3px 8px;
+        }
+        .balloon {
+            width: 100px;
+            height: 40px;
+            font-size: 0.6rem;
+            padding: 5px;
+        }
+    }
+  </style>
 </head>
 <body>
-  <div id="start-screen">
-    <h1>Atirador de Respostas</h1>
-    <p>Atire nos balões para responder as perguntas!</p>
-    <button id="start-button">Iniciar Jogo</button>
-  </div>
+  <div id="start-screen">
+    <h1>Atirador de Respostas</h1>
+    <p>Atire nos balões para responder as perguntas!</p>
+    <button id="start-button">Iniciar Jogo</button>
+  </div>
 
-  <div id="game-container" style="display: none;">
-    <div id="question-box"></div>
-    <div id="score-box"></div>
-    <div id="timer-box"></div>
-    <div id="bow-container">
-      <div class="bow"></div>
-    </div>
-  </div>
+  <div id="game-container" style="display: none;">
+    <div id="question-box"></div>
+    <div id="score-box"></div>
+    <div id="timer-box"></div>
+    <div id="bow-container">
+      <div class="bow"></div>
+    </div>
+  </div>
 
-  <div id="end-screen" style="display: none;">
-    <h1>Fim de Jogo!</h1>
-    <p class="score-display">Sua Pontuação Final: <span id="final-score">0</span></p>
-    <button id="restart-button">Jogar Novamente</button>
-  </div>
+  <div id="end-screen" style="display: none;">
+    <h1>Fim de Jogo!</h1>
+    <p class="score-display">Sua Pontuação Final: <span id="final-score">0</span></p>
+    <button id="restart-button">Jogar Novamente</button>
+  </div>
 
-  <div id="mobile-controls" style="display: none;">
-    <button id="left-button">⬅️</button>
-    <button id="shoot-button">Disparar</button>
-    <button id="right-button">➡️</button>
-  </div>
-  
-  <script>
-    const gameContainer = document.getElementById('game-container');
-    const startScreen = document.getElementById('start-screen');
-    const endScreen = document.getElementById('end-screen');
-    const startButton = document.getElementById('start-button');
-    const restartButton = document.getElementById('restart-button');
-    const questionBox = document.getElementById('question-box');
-    const scoreBox = document.getElementById('score-box');
-    const timerBox = document.getElementById('timer-box');
-    const finalScoreDisplay = document.getElementById('final-score');
-    const bow = document.getElementById('bow-container');
-    
-    const mobileControls = document.getElementById('mobile-controls');
-    const leftButton = document.getElementById('left-button');
-    const rightButton = document.getElementById('right-button');
-    const shootButton = document.getElementById('shoot-button');
-    
-    let score = 0;
-    let time = 60;
-    let timerInterval;
-    let currentQuestion;
-    let gameActive = false;
-    let shooting = false;
-    
-    const questionsAndAnswers = [
-      {
-        question: "Como a Organização Mundial da Saúde (OMS) define saúde mental?",
-        correctAnswer: "Um estado de bem-estar no qual uma pessoa é capaz de lidar com os estresses normais da vida, ser produtiva no trabalho e contribuir para a sua comunidade.",
-        wrongAnswers: [
-          "Apenas a ausência de doenças mentais, sem considerar fatores sociais.",
-          "A capacidade de um indivíduo de se isolar de situações estressantes para manter a sanidade."
-        ],
-      },
-      {
-        question: "O que o déficit de efetivo nas corporações pode causar, segundo a pesquisa da SENASP?",
-        correctAnswer: "Sobrecarga de trabalho, que é um fator de risco para o adoecimento físico e psíquico do profissional.",
-        wrongAnswers: [
-          "Um aumento na eficiência e na produtividade, pois há menos pessoas para gerenciar.",
-          "Uma diminuição nos índices de absenteísmo, já que os policiais se sentem mais essenciais."
-        ],
-      },
-      {
-        question: "A qualidade de vida é um conceito que se modifica conforme as circunstâncias externas e internas. Qual termo a apostila usa para descrever isso?",
-        correctAnswer: "Contingencial.",
-        wrongAnswers: ["Estático.", "Imutável."],
-      },
-      {
-        question: "Segundo a OMS, o que a qualidade de vida abrange?",
-        correctAnswer: "Saúde física, bem-estar psicológico, relações sociais e fatores ambientais.",
-        wrongAnswers: [
-          "Apenas a saúde física e a ausência de doenças.",
-          "Exclusivamente a satisfação material e financeira."
-        ],
-      },
-      {
-        question: "O bem-estar, em uma perspectiva psicológica, é resultado de quê?",
-        correctAnswer: "Experiências de realização pessoal e de possibilidade de desenvolvimento dos potenciais individuais.",
-        wrongAnswers: [
-          "A ausência de qualquer estado afetivo negativo.",
-          "Um alto rendimento financeiro que permite adquirir bens."
-        ],
-      },
-      {
-        question: "O que a expressão 'Qualidade de Vida no Trabalho (QVT)' envolve atualmente?",
-        correctAnswer: "Aspectos físicos, ambientais e psicológicos do local de trabalho.",
-        wrongAnswers: [
-          "Apenas a remuneração justa e os benefícios oferecidos pela empresa.",
-          "Somente a segurança no emprego e a supervisão competente."
-        ],
-      },
-      {
-        question: "A promoção de programas de saúde mental nas organizações pode incluir quais ações?",
-        correctAnswer: "Workshops, treinamentos para gestão do estresse e oferta de suporte psicológico.",
-        wrongAnswers: [
-          "Adoção de um regime disciplinar rígido e inflexível.",
-          "Incentivo à competição entre os colaboradores para aumentar a produtividade."
-        ],
-      },
-      {
-        question: "Qual o problema central mapeado na 'Árvore do Problema' no contexto da PMPE?",
-        correctAnswer: "Vitimização policial por problemas de saúde mental (transtornos mentais e sofrimento psíquico).",
-        wrongAnswers: [
-          "Falta de reconhecimento social do trabalho policial.",
-          "Altos índices de absenteísmo e presenteísmo."
-        ],
-      },
-      {
-        question: "Na 'Árvore do Problema', o que as 'raízes' representam?",
-        correctAnswer: "As causas que alimentam o problema principal.",
-        wrongAnswers: [
-          "Os efeitos visíveis do problema.",
-          "A descrição do problema em si."
-        ],
-      },
-      {
-        question: "Qual a definição de estresse dada pela apostila?",
-        correctAnswer: "Uma reação psicofisiológica muito complexa que tem em sua gênese a necessidade de o organismo fazer face a algo que ameace sua homeostase interna.",
-        wrongAnswers: [
-          "Uma reação exclusivamente psicológica a um evento traumático.",
-          "Uma reação que só ocorre em situações de risco de morte."
-        ],
-      },
-      {
-        question: "Quais são os principais transtornos mentais entre policiais militares de Pernambuco, segundo o Núcleo de Saúde Mental da PMPE (NSM PMPE)?",
-        correctAnswer: "Ansiedade, depressão e transtorno bipolar.",
-        wrongAnswers: [
-          "Transtorno do pânico, fobias e estresse agudo.",
-          "Transtorno obsessivo-compulsivo (TOC) e depressão sazonal."
-        ],
-      },
-      {
-        question: "Qual a principal causa da Síndrome de Burnout?",
-        correctAnswer: "Excesso de trabalho.",
-        wrongAnswers: [
-          "Falta de reconhecimento profissional.",
-          "Problemas financeiros na vida pessoal."
-        ],
-      },
-      {
-        question: "Quais são alguns dos sintomas físicos da Síndrome de Burnout?",
-        correctAnswer: "Cansaço excessivo, dor de cabeça frequente e dores musculares.",
-        wrongAnswers: [
-          "Aumento repentino de peso e euforia.",
-          "Apetite diminuído e insônia."
-        ],
-      },
-      {
-        question: "A depressão é uma doença psiquiátrica crônica e pode ser recorrente. Qual a prevalência de depressão ao longo da vida no Brasil, segundo o material?",
-        correctAnswer: "Em torno de 15,5%.",
-        wrongAnswers: ["Aproximadamente 10,4%.", "Cerca de 4,4%."],
-      },
-      {
-        question: "Quais são os neurotransmissores envolvidos na regulação da atividade motora, apetite, sono e humor?",
-        correctAnswer: "Noradrenalina, Serotonina e Dopamina.",
-        wrongAnswers: [
-          "Adrenalina, Glicose e Endorfina.",
-          "Acetilcolina, Melatonina e Cortisol."
-        ],
-      },
-      {
-        question: "O transtorno bipolar é caracterizado por alterações de humor que levam a pessoa a oscilar entre quais estados?",
-        correctAnswer: "Momentos de euforia e depressão repentinamente.",
-        wrongAnswers: [
-          "Apenas estados de tristeza profunda e apatia.",
-          "Somente momentos de alta produtividade e concentração."
-        ],
-      },
-      {
-        question: "Qual a principal diferença entre o transtorno bipolar tipo 1 e o tipo 2?",
-        correctAnswer: "O tipo 1 apresenta pelo menos um episódio maníaco, enquanto o tipo 2 manifesta com mais frequência episódios de depressão e hipomania.",
-        wrongAnswers: [
-          "O tipo 1 é mais sutil, enquanto o tipo 2 é mais grave e evidente.",
-          "O tipo 1 é diagnosticado em jovens, enquanto o tipo 2 é em adultos."
-        ],
-      },
-      {
-        question: "Quando a ansiedade é considerada um transtorno?",
-        correctAnswer: "Quando é tão intensa e duradoura que interfere com as atividades normais da pessoa.",
-        wrongAnswers: [
-          "Quando a pessoa está em uma situação de perigo iminente.",
-          "Quando ocorre apenas em momentos estressantes."
-        ],
-      },
-      {
-        question: "O que é o Transtorno de Estresse Pós-Traumático (TEPT)?",
-        correctAnswer: "Reações intensas e disfuncionais que ocorrem após um evento extremamente traumático e duram mais de um mês.",
-        wrongAnswers: [
-          "Um transtorno de ansiedade que dura menos de um mês após o trauma.",
-          "Uma reação normal a um evento estressante, sem consequências a longo prazo."
-        ],
-      },
-      {
-        question: "De acordo com o Anuário Brasileiro de Segurança Pública 2023, qual foi a maior causa de morte de policiais militares em 2023?",
-        correctAnswer: "Suicídio.",
-        wrongAnswers: [
-          "Confrontos em serviço.",
-          "Confrontos na folga."
-        ],
-      },
-      {
-        question: "Qual a definição de vitimização policial, segundo a apostila?",
-        correctAnswer: "O ato em que o policial é vítima de violência letal ou não.",
-        wrongAnswers: [
-          "Apenas as mortes e lesões de policiais em serviço.",
-          "A exposição a altos níveis de estresse e cobranças."
-        ],
-      },
-      {
-        question: "Como o coronel da reserva Alan Fernandes classifica a vitimização policial?",
-        correctAnswer: "Em duas dimensões: objetiva (mortes e lesões) e subjetiva (ameaças, assédio moral e discriminação).",
-        wrongAnswers: [
-          "Como um problema exclusivo da saúde pública, sem relação com a segurança.",
-          "Como um fenômeno que só ocorre em serviço."
-        ],
-      },
-      {
-        question: "O que a apostila afirma sobre o estigma em torno da saúde mental nas corporações policiais?",
-        correctAnswer: "É uma característica que a PMPE compartilha com outras forças de segurança no Brasil e no mundo.",
-        wrongAnswers: [
-          "Não existe estigma na PMPE, pois o tema é tratado abertamente.",
-          "O estigma é um problema exclusivo da população civil e não afeta policiais."
-        ],
-      },
-      {
-        question: "O que a 'Árvore do Problema' é utilizada para fazer?",
-        correctAnswer: "Identificar e compreender as causas fundamentais de um problema complexo.",
-        wrongAnswers: [
-          "Avaliar o desempenho individual dos policiais.",
-          "Desenvolver estatísticas de criminalidade."
-        ],
-      },
-      {
-        question: "Qual o nome do Núcleo de Saúde Mental da PMPE, em homenagem a uma oficial combatente e psicóloga?",
-        correctAnswer: "Núcleo de Saúde Mental Ten Cel PM Aline Maria Lopes dos Prazeres de Luna.",
-        wrongAnswers: [
-          "Núcleo de Apoio Psicológico Coronel Tibério César dos Santos.",
-          "Núcleo de Assistência Social Major José Edir Paixão de Sousa."
-        ],
-      },
-      {
-        question: "O Programa de Suporte entre Pares da PMPE é chamado de...?",
-        correctAnswer: "Tamojunto (TMJ).",
-        wrongAnswers: ["Focais.", "Pró-Vida."],
-      },
-      {
-        question: "Qual a principal missão do Núcleo de Saúde Mental (NSM PMPE)?",
-        correctAnswer: "Realizar a gestão da Política Pública de Saúde Mental da Corporação.",
-        wrongAnswers: [
-          "Apenas prestar atendimento psicológico e psiquiátrico.",
-          "Monitorar o estresse ocupacional dos policiais em serviço."
-        ],
-      },
-      {
-        question: "Quem são os 'Focais' do Programa Tamojunto?",
-        correctAnswer: "Policiais do quadro de praças, voluntários e treinados para orientar e ouvir os colegas de trabalho.",
-        wrongAnswers: [
-          "Oficiais e comandantes responsáveis por aplicar a disciplina.",
-          "Apenas psicólogos e psiquiatras que fazem parte do NSM PMPE."
-        ],
-      },
-      {
-        question: "Em que consiste a vitimização subjetiva, segundo Alan Fernandes?",
-        correctAnswer: "Ameaças, assédio moral, humilhação no trabalho e discriminação por ser profissional de segurança pública.",
-        wrongAnswers: [
-          "Somente lesões e mortes de policiais em serviço.",
-          "Adoecimento físico e mental em decorrência de situações traumáticas."
-        ],
-      },
-      {
-        question: "De acordo com o Anuário Brasileiro de Segurança Pública 2024, qual a proporção de policiais civis e militares do gênero masculino que morreram vítimas de CVLI em 2023?",
-        correctAnswer: "96%.",
-        wrongAnswers: ["4%.", "71,6%."],
-      },
-      {
-        question: "O que a cultura de 'invulnerabilidade' na polícia pode causar?",
-        correctAnswer: "Favorecer a invisibilidade do trauma e o aprofundamento dos sintomas de adoecimento mental.",
-        wrongAnswers: [
-          "Um aumento na resiliência e na capacidade de lidar com o estresse.",
-          "Melhora na comunicação e nos vínculos entre os policiais."
-        ],
-      },
-      {
-        question: "Quais os dois maiores fatores de risco para suicídio, segundo a Associação Brasileira de Psiquiatria (ABP)?",
-        correctAnswer: "Tentativa prévia de suicídio e doença mental.",
-        wrongAnswers: [
-          "Falta de reconhecimento e remuneração inadequada.",
-          "Uso de álcool e dependência química."
-        ],
-      },
-      {
-        question: "A ambivalência, no estudo do suicídio, refere-se a quê?",
-        correctAnswer: "A crise existencial de quem hesita entre dois extremos: viver ou morrer.",
-        wrongAnswers: [
-          "A falta de vontade de viver, sem nenhuma esperança.",
-          "A decisão firme e irreversível de tirar a própria vida."
-        ],
-      },
-      {
-        question: "Segundo a OMS, o que os estigmas da saúde mental levam a fazer?",
-        correctAnswer: "Marginalizar as pessoas e desencorajar a busca por ajuda profissional.",
-        wrongAnswers: [
-          "Aumentar a conscientização sobre a importância do tratamento.",
-          "Criar uma cultura de aceitação e apoio nos ambientes de trabalho."
-        ],
-      },
-      {
-        question: "Qual a principal causa do estresse crônico que afeta policiais americanos, de acordo com um estudo citado no anuário?",
-        correctAnswer: "O estresse rotineiro no ambiente de trabalho.",
-        wrongAnswers: [
-          "Problemas financeiros e de moradia.",
-          "Distúrbios do sono e traumas de infância."
-        ],
-      },
-      {
-        question: "O que a prevenção da depressão, de acordo com a apostila, envolve?",
-        correctAnswer: "Busca de um estilo de vida saudável, incluindo dieta equilibrada e atividade física regular.",
-        wrongAnswers: [
-          "Apenas o uso de medicação e psicoterapia.",
-          "Evitar completamente qualquer tipo de estresse na vida."
-        ],
-      },
-      {
-        question: "Qual o objetivo do Complexo de Qualidade de Vida da PMPE?",
-        correctAnswer: "Oferecer assistência com equipe multidisciplinar, focada na prevenção e reabilitação de patologias.",
-        wrongAnswers: [
-          "Apenas atender as demandas administrativas dos policiais.",
-          "Realizar a gestão de diárias e benefícios para os dependentes."
-        ],
-      },
-      {
-        question: "O que o projeto 'Escuta SUSP' oferece aos profissionais de segurança pública?",
-        correctAnswer: "Serviço de psicoterapia on-line e gratuito.",
-        wrongAnswers: [
-          "Atendimento presencial em unidades de saúde da PMPE.",
-          "Treinamentos e workshops sobre gestão de estresse."
-        ],
-      },
-      {
-        question: "A cultura de 'naturalização de situações estressantes' na polícia pode ter qual efeito?",
-        correctAnswer: "Fortalecer o tabu sobre a saúde mental e aprofundar o sofrimento dos policiais.",
-        wrongAnswers: [
-          "Diminuir a incidência de transtornos mentais.",
-          "Incentivar os policiais a buscar ajuda profissional."
-        ],
-      },
-      {
-        question: "Qual a função do Gabinete de Psicologia da FCAS?",
-        correctAnswer: "Oferecer atendimento psicológico presencial e apoio de médico psiquiatra para os policiais e seus dependentes.",
-        wrongAnswers: [
-          "Gerenciar as aposentadorias e reformas por problemas de saúde.",
-          "Apenas capacitar líderes para identificar problemas psicológicos."
-        ],
-      },
-      {
-        question: "O que o `letramento em saúde mental` pode ajudar a fazer?",
-        correctAnswer: "Reduzir o estigma e aumentar a busca por ajuda profissional.",
-        wrongAnswers: [
-          "Aumentar a competitividade entre os policiais.",
-          "Criar uma cultura de silêncio sobre o sofrimento."
-        ],
-      },
-      {
-        question: "Qual a principal diferença entre o Transtorno de Estresse Agudo e o Transtorno de Estresse Pós-Traumático (TEPT)?",
-        correctAnswer: "O Transtorno de Estresse Agudo dura menos de um mês, enquanto o TEPT dura mais de um mês.",
-        wrongAnswers: [
-          "O Transtorno de Estresse Agudo é mais grave que o TEPT.",
-          "O TEPT só ocorre em militares, enquanto o Transtorno de Estresse Agudo pode ocorrer em qualquer pessoa."
-        ],
-      },
-      {
-        question: "O que é o NADEQ PMPE?",
-        correctAnswer: "O Núcleo de Apoio ao Dependente Químico, que acolhe e trata policiais militares dependentes de substâncias psicoativas.",
-        wrongAnswers: [
-          "Um centro de atendimento médico e fisioterapêutico.",
-          "Um grupo de apoio a familiares de policiais com transtornos mentais."
-        ],
-      },
-      {
-        question: "A disciplina `Saúde Mental e Qualidade de Vida` busca capacitar o futuro Oficial da PMPE a...?",
-        correctAnswer: "Reconhecer fatores que impactam a saúde mental, promover autocuidado e buscar ajuda profissional, se necessário.",
-        wrongAnswers: [
-          "Tornar-se um especialista em psicoterapia.",
-          "Atuar como psicólogo de sobreaviso para ocorrências traumáticas."
-        ],
-      },
-      {
-        question: "O que o conceito de QVT (Qualidade de Vida no Trabalho) envolve, segundo a apostila?",
-        correctAnswer: "A busca por uma visão integral e ética do ser humano em seu relacionamento com as organizações.",
-        wrongAnswers: [
-          "Apenas a produtividade e a qualidade no trabalho.",
-          "O respeito pelos bem-estar das pessoas do ponto de vista biológico."
-        ],
-      }
-    ];
+  <div id="mobile-controls" style="display: none;">
+    <button id="left-button">⬅️</button>
+    <button id="shoot-button">Disparar</button>
+    <button id="right-button">➡️</button>
+  </div>
+  
+  <script>
+    const gameContainer = document.getElementById('game-container');
+    const startScreen = document.getElementById('start-screen');
+    const endScreen = document.getElementById('end-screen');
+    const startButton = document.getElementById('start-button');
+    const restartButton = document.getElementById('restart-button');
+    const questionBox = document.getElementById('question-box');
+    const scoreBox = document.getElementById('score-box');
+    const timerBox = document.getElementById('timer-box');
+    const finalScoreDisplay = document.getElementById('final-score');
+    const bow = document.getElementById('bow-container');
+    
+    const mobileControls = document.getElementById('mobile-controls');
+    const leftButton = document.getElementById('left-button');
+    const rightButton = document.getElementById('right-button');
+    const shootButton = document.getElementById('shoot-button');
+    
+    let score = 0;
+    let time = 60;
+    let timerInterval;
+    let currentQuestion;
+    let gameActive = false;
+    let shooting = false;
+    
+    const questionsAndAnswers = [
+      {
+        question: "Como a Organização Mundial da Saúde (OMS) define saúde mental?",
+        correctAnswer: "Um estado de bem-estar no qual uma pessoa é capaz de lidar com os estresses normais da vida, ser produtiva no trabalho e contribuir para a sua comunidade.",
+        wrongAnswers: [
+          "Apenas a ausência de doenças mentais, sem considerar fatores sociais.",
+          "A capacidade de um indivíduo de se isolar de situações estressantes para manter a sanidade."
+        ],
+      },
+      {
+        question: "O que o déficit de efetivo nas corporações pode causar, segundo a pesquisa da SENASP?",
+        correctAnswer: "Sobrecarga de trabalho, que é um fator de risco para o adoecimento físico e psíquico do profissional.",
+        wrongAnswers: [
+          "Um aumento na eficiência e na produtividade, pois há menos pessoas para gerenciar.",
+          "Uma diminuição nos índices de absenteísmo, já que os policiais se sentem mais essenciais."
+        ],
+      },
+      {
+        question: "A qualidade de vida é um conceito que se modifica conforme as circunstâncias externas e internas. Qual termo a apostila usa para descrever isso?",
+        correctAnswer: "Contingencial.",
+        wrongAnswers: ["Estático.", "Imutável."],
+      },
+      {
+        question: "Segundo a OMS, o que a qualidade de vida abrange?",
+        correctAnswer: "Saúde física, bem-estar psicológico, relações sociais e fatores ambientais.",
+        wrongAnswers: [
+          "Apenas a saúde física e a ausência de doenças.",
+          "Exclusivamente a satisfação material e financeira."
+        ],
+      },
+      {
+        question: "O bem-estar, em uma perspectiva psicológica, é resultado de quê?",
+        correctAnswer: "Experiências de realização pessoal e de possibilidade de desenvolvimento dos potenciais individuais.",
+        wrongAnswers: [
+          "A ausência de qualquer estado afetivo negativo.",
+          "Um alto rendimento financeiro que permite adquirir bens."
+        ],
+      },
+      {
+        question: "O que a expressão 'Qualidade de Vida no Trabalho (QVT)' envolve atualmente?",
+        correctAnswer: "Aspectos físicos, ambientais e psicológicos do local de trabalho.",
+        wrongAnswers: [
+          "Apenas a remuneração justa e os benefícios oferecidos pela empresa.",
+          "Somente a segurança no emprego e a supervisão competente."
+        ],
+      },
+      {
+        question: "A promoção de programas de saúde mental nas organizações pode incluir quais ações?",
+        correctAnswer: "Workshops, treinamentos para gestão do estresse e oferta de suporte psicológico.",
+        wrongAnswers: [
+          "Adoção de um regime disciplinar rígido e inflexível.",
+          "Incentivo à competição entre os colaboradores para aumentar a produtividade."
+        ],
+      },
+      {
+        question: "Qual o problema central mapeado na 'Árvore do Problema' no contexto da PMPE?",
+        correctAnswer: "Vitimização policial por problemas de saúde mental (transtornos mentais e sofrimento psíquico).",
+        wrongAnswers: [
+          "Falta de reconhecimento social do trabalho policial.",
+          "Altos índices de absenteísmo e presenteísmo."
+        ],
+      },
+      {
+        question: "Na 'Árvore do Problema', o que as 'raízes' representam?",
+        correctAnswer: "As causas que alimentam o problema principal.",
+        wrongAnswers: [
+          "Os efeitos visíveis do problema.",
+          "A descrição do problema em si."
+        ],
+      },
+      {
+        question: "Qual a definição de estresse dada pela apostila?",
+        correctAnswer: "Uma reação psicofisiológica muito complexa que tem em sua gênese a necessidade de o organismo fazer face a algo que ameace sua homeostase interna.",
+        wrongAnswers: [
+          "Uma reação exclusivamente psicológica a um evento traumático.",
+          "Uma reação que só ocorre em situações de risco de morte."
+        ],
+      },
+      {
+        question: "Quais são os principais transtornos mentais entre policiais militares de Pernambuco, segundo o Núcleo de Saúde Mental da PMPE (NSM PMPE)?",
+        correctAnswer: "Ansiedade, depressão e transtorno bipolar.",
+        wrongAnswers: [
+          "Transtorno do pânico, fobias e estresse agudo.",
+          "Transtorno obsessivo-compulsivo (TOC) e depressão sazonal."
+        ],
+      },
+      {
+        question: "Qual a principal causa da Síndrome de Burnout?",
+        correctAnswer: "Excesso de trabalho.",
+        wrongAnswers: [
+          "Falta de reconhecimento profissional.",
+          "Problemas financeiros na vida pessoal."
+        ],
+      },
+      {
+        question: "Quais são alguns dos sintomas físicos da Síndrome de Burnout?",
+        correctAnswer: "Cansaço excessivo, dor de cabeça frequente e dores musculares.",
+        wrongAnswers: [
+          "Aumento repentino de peso e euforia.",
+          "Apetite diminuído e insônia."
+        ],
+      },
+      {
+        question: "A depressão é uma doença psiquiátrica crônica e pode ser recorrente. Qual a prevalência de depressão ao longo da vida no Brasil, segundo o material?",
+        correctAnswer: "Em torno de 15,5%.",
+        wrongAnswers: ["Aproximadamente 10,4%.", "Cerca de 4,4%."],
+      },
+      {
+        question: "Quais são os neurotransmissores envolvidos na regulação da atividade motora, apetite, sono e humor?",
+        correctAnswer: "Noradrenalina, Serotonina e Dopamina.",
+        wrongAnswers: [
+          "Adrenalina, Glicose e Endorfina.",
+          "Acetilcolina, Melatonina e Cortisol."
+        ],
+      },
+      {
+        question: "O transtorno bipolar é caracterizado por alterações de humor que levam a pessoa a oscilar entre quais estados?",
+        correctAnswer: "Momentos de euforia e depressão repentinamente.",
+        wrongAnswers: [
+          "Apenas estados de tristeza profunda e apatia.",
+          "Somente momentos de alta produtividade e concentração."
+        ],
+      },
+      {
+        question: "Qual a principal diferença entre o transtorno bipolar tipo 1 e o tipo 2?",
+        correctAnswer: "O tipo 1 apresenta pelo menos um episódio maníaco, enquanto o tipo 2 manifesta com mais frequência episódios de depressão e hipomania.",
+        wrongAnswers: [
+          "O tipo 1 é mais sutil, enquanto o tipo 2 é mais grave e evidente.",
+          "O tipo 1 é diagnosticado em jovens, enquanto o tipo 2 é em adultos."
+        ],
+      },
+      {
+        question: "Quando a ansiedade é considerada um transtorno?",
+        correctAnswer: "Quando é tão intensa e duradoura que interfere com as atividades normais da pessoa.",
+        wrongAnswers: [
+          "Quando a pessoa está em uma situação de perigo iminente.",
+          "Quando ocorre apenas em momentos estressantes."
+        ],
+      },
+      {
+        question: "O que é o Transtorno de Estresse Pós-Traumático (TEPT)?",
+        correctAnswer: "Reações intensas e disfuncionais que ocorrem após um evento extremamente traumático e duram mais de um mês.",
+        wrongAnswers: [
+          "Um transtorno de ansiedade que dura menos de um mês após o trauma.",
+          "Uma reação normal a um evento estressante, sem consequências a longo prazo."
+        ],
+      },
+      {
+        question: "De acordo com o Anuário Brasileiro de Segurança Pública 2023, qual foi a maior causa de morte de policiais militares em 2023?",
+        correctAnswer: "Suicídio.",
+        wrongAnswers: [
+          "Confrontos em serviço.",
+          "Confrontos na folga."
+        ],
+      },
+      {
+        question: "Qual a definição de vitimização policial, segundo a apostila?",
+        correctAnswer: "O ato em que o policial é vítima de violência letal ou não.",
+        wrongAnswers: [
+          "Apenas as mortes e lesões de policiais em serviço.",
+          "A exposição a altos níveis de estresse e cobranças."
+        ],
+      },
+      {
+        question: "Como o coronel da reserva Alan Fernandes classifica a vitimização policial?",
+        correctAnswer: "Em duas dimensões: objetiva (mortes e lesões) e subjetiva (ameaças, assédio moral e discriminação).",
+        wrongAnswers: [
+          "Como um problema exclusivo da saúde pública, sem relação com a segurança.",
+          "Como um fenômeno que só ocorre em serviço."
+        ],
+      },
+      {
+        question: "O que a apostila afirma sobre o estigma em torno da saúde mental nas corporações policiais?",
+        correctAnswer: "É uma característica que a PMPE compartilha com outras forças de segurança no Brasil e no mundo.",
+        wrongAnswers: [
+          "Não existe estigma na PMPE, pois o tema é tratado abertamente.",
+          "O estigma é um problema exclusivo da população civil e não afeta policiais."
+        ],
+      },
+      {
+        question: "O que a 'Árvore do Problema' é utilizada para fazer?",
+        correctAnswer: "Identificar e compreender as causas fundamentais de um problema complexo.",
+        wrongAnswers: [
+          "Avaliar o desempenho individual dos policiais.",
+          "Desenvolver estatísticas de criminalidade."
+        ],
+      },
+      {
+        question: "Qual o nome do Núcleo de Saúde Mental da PMPE, em homenagem a uma oficial combatente e psicóloga?",
+        correctAnswer: "Núcleo de Saúde Mental Ten Cel PM Aline Maria Lopes dos Prazeres de Luna.",
+        wrongAnswers: [
+          "Núcleo de Apoio Psicológico Coronel Tibério César dos Santos.",
+          "Núcleo de Assistência Social Major José Edir Paixão de Sousa."
+        ],
+      },
+      {
+        question: "O Programa de Suporte entre Pares da PMPE é chamado de...?",
+        correctAnswer: "Tamojunto (TMJ).",
+        wrongAnswers: ["Focais.", "Pró-Vida."],
+      },
+      {
+        question: "Qual a principal missão do Núcleo de Saúde Mental (NSM PMPE)?",
+        correctAnswer: "Realizar a gestão da Política Pública de Saúde Mental da Corporação.",
+        wrongAnswers: [
+          "Apenas prestar atendimento psicológico e psiquiátrico.",
+          "Monitorar o estresse ocupacional dos policiais em serviço."
+        ],
+      },
+      {
+        question: "Quem são os 'Focais' do Programa Tamojunto?",
+        correctAnswer: "Policiais do quadro de praças, voluntários e treinados para orientar e ouvir os colegas de trabalho.",
+        wrongAnswers: [
+          "Oficiais e comandantes responsáveis por aplicar a disciplina.",
+          "Apenas psicólogos e psiquiatras que fazem parte do NSM PMPE."
+        ],
+      },
+      {
+        question: "Em que consiste a vitimização subjetiva, segundo Alan Fernandes?",
+        correctAnswer: "Ameaças, assédio moral, humilhação no trabalho e discriminação por ser profissional de segurança pública.",
+        wrongAnswers: [
+          "Somente lesões e mortes de policiais em serviço.",
+          "Adoecimento físico e mental em decorrência de situações traumáticas."
+        ],
+      },
+      {
+        question: "De acordo com o Anuário Brasileiro de Segurança Pública 2024, qual a proporção de policiais civis e militares do gênero masculino que morreram vítimas de CVLI em 2023?",
+        correctAnswer: "96%.",
+        wrongAnswers: ["4%.", "71,6%."],
+      },
+      {
+        question: "O que a cultura de 'invulnerabilidade' na polícia pode causar?",
+        correctAnswer: "Favorecer a invisibilidade do trauma e o aprofundamento dos sintomas de adoecimento mental.",
+        wrongAnswers: [
+          "Um aumento na resiliência e na capacidade de lidar com o estresse.",
+          "Melhora na comunicação e nos vínculos entre os policiais."
+        ],
+      },
+      {
+        question: "Quais os dois maiores fatores de risco para suicídio, segundo a Associação Brasileira de Psiquiatria (ABP)?",
+        correctAnswer: "Tentativa prévia de suicídio e doença mental.",
+        wrongAnswers: [
+          "Falta de reconhecimento e remuneração inadequada.",
+          "Uso de álcool e dependência química."
+        ],
+      },
+      {
+        question: "A ambivalência, no estudo do suicídio, refere-se a quê?",
+        correctAnswer: "A crise existencial de quem hesita entre dois extremos: viver ou morrer.",
+        wrongAnswers: [
+          "A falta de vontade de viver, sem nenhuma esperança.",
+          "A decisão firme e irreversível de tirar a própria vida."
+        ],
+      },
+      {
+        question: "Segundo a OMS, o que os estigmas da saúde mental levam a fazer?",
+        correctAnswer: "Marginalizar as pessoas e desencorajar a busca por ajuda profissional.",
+        wrongAnswers: [
+          "Aumentar a conscientização sobre a importância do tratamento.",
+          "Criar uma cultura de aceitação e apoio nos ambientes de trabalho."
+        ],
+      },
+      {
+        question: "Qual a principal causa do estresse crônico que afeta policiais americanos, de acordo com um estudo citado no anuário?",
+        correctAnswer: "O estresse rotineiro no ambiente de trabalho.",
+        wrongAnswers: [
+          "Problemas financeiros e de moradia.",
+          "Distúrbios do sono e traumas de infância."
+        ],
+      },
+      {
+        question: "O que a prevenção da depressão, de acordo com a apostila, envolve?",
+        correctAnswer: "Busca de um estilo de vida saudável, incluindo dieta equilibrada e atividade física regular.",
+        wrongAnswers: [
+          "Apenas o uso de medicação e psicoterapia.",
+          "Evitar completamente qualquer tipo de estresse na vida."
+        ],
+      },
+      {
+        question: "Qual o objetivo do Complexo de Qualidade de Vida da PMPE?",
+        correctAnswer: "Oferecer assistência com equipe multidisciplinar, focada na prevenção e reabilitação de patologias.",
+        wrongAnswers: [
+          "Apenas atender as demandas administrativas dos policiais.",
+          "Realizar a gestão de diárias e benefícios para os dependentes."
+        ],
+      },
+      {
+        question: "O que o projeto 'Escuta SUSP' oferece aos profissionais de segurança pública?",
+        correctAnswer: "Serviço de psicoterapia on-line e gratuito.",
+        wrongAnswers: [
+          "Atendimento presencial em unidades de saúde da PMPE.",
+          "Treinamentos e workshops sobre gestão de estresse."
+        ],
+      },
+      {
+        question: "A cultura de 'naturalização de situações estressantes' na polícia pode ter qual efeito?",
+        correctAnswer: "Fortalecer o tabu sobre a saúde mental e aprofundar o sofrimento dos policiais.",
+        wrongAnswers: [
+          "Diminuir a incidência de transtornos mentais.",
+          "Incentivar os policiais a buscar ajuda profissional."
+        ],
+      },
+      {
+        question: "Qual a função do Gabinete de Psicologia da FCAS?",
+        correctAnswer: "Oferecer atendimento psicológico presencial e apoio de médico psiquiatra para os policiais e seus dependentes.",
+        wrongAnswers: [
+          "Gerenciar as aposentadorias e reformas por problemas de saúde.",
+          "Apenas capacitar líderes para identificar problemas psicológicos."
+        ],
+      },
+      {
+        question: "O que o `letramento em saúde mental` pode ajudar a fazer?",
+        correctAnswer: "Reduzir o estigma e aumentar a busca por ajuda profissional.",
+        wrongAnswers: [
+          "Aumentar a competitividade entre os policiais.",
+          "Criar uma cultura de silêncio sobre o sofrimento."
+        ],
+      },
+      {
+        question: "Qual a principal diferença entre o Transtorno de Estresse Agudo e o Transtorno de Estresse Pós-Traumático (TEPT)?",
+        correctAnswer: "O Transtorno de Estresse Agudo dura menos de um mês, enquanto o TEPT dura mais de um mês.",
+        wrongAnswers: [
+          "O Transtorno de Estresse Agudo é mais grave que o TEPT.",
+          "O TEPT só ocorre em militares, enquanto o Transtorno de Estresse Agudo pode ocorrer em qualquer pessoa."
+        ],
+      },
+      {
+        question: "O que é o NADEQ PMPE?",
+        correctAnswer: "O Núcleo de Apoio ao Dependente Químico, que acolhe e trata policiais militares dependentes de substâncias psicoativas.",
+        wrongAnswers: [
+          "Um centro de atendimento médico e fisioterapêutico.",
+          "Um grupo de apoio a familiares de policiais com transtornos mentais."
+        ],
+      },
+      {
+        question: "A disciplina `Saúde Mental e Qualidade de Vida` busca capacitar o futuro Oficial da PMPE a...?",
+        correctAnswer: "Reconhecer fatores que impactam a saúde mental, promover autocuidado e buscar ajuda profissional, se necessário.",
+        wrongAnswers: [
+          "Tornar-se um especialista em psicoterapia.",
+          "Atuar como psicólogo de sobreaviso para ocorrências traumáticas."
+        ],
+      },
+      {
+        question: "O que o conceito de QVT (Qualidade de Vida no Trabalho) envolve, segundo a apostila?",
+        correctAnswer: "A busca por uma visão integral e ética do ser humano em seu relacionamento com as organizações.",
+        wrongAnswers: [
+          "Apenas a produtividade e a qualidade no trabalho.",
+          "O respeito pelos bem-estar das pessoas do ponto de vista biológico."
+        ],
+      }
+    ];
 
-    function startGame() {
-      startScreen.style.display = 'none';
-      gameContainer.style.display = 'block';
-      mobileControls.style.display = 'flex';
-      score = 0;
-      time = 60;
-      scoreBox.textContent = `Pontuação: ${score}`;
-      timerBox.textContent = `Tempo: ${time}s`;
-      gameActive = true;
-      loadQuestion();
-      startTimer();
-    }
+    function startGame() {
+      startScreen.style.display = 'none';
+      gameContainer.style.display = 'block';
+      mobileControls.style.display = 'flex';
+      score = 0;
+      time = 60;
+      scoreBox.textContent = `Pontuação: ${score}`;
+      timerBox.textContent = `Tempo: ${time}s`;
+      gameActive = true;
+      loadQuestion();
+      startTimer();
+    }
 
-    function loadQuestion() {
-      gameContainer.querySelectorAll('.balloon').forEach(b => b.remove());
-      if (questionsAndAnswers.length === 0) {
-        endGame();
-        return;
-      }
-      currentQuestion = questionsAndAnswers[Math.floor(Math.random() * questionsAndAnswers.length)];
-      questionBox.textContent = currentQuestion.question;
-    
-      const answers = [currentQuestion.correctAnswer, ...currentQuestion.wrongAnswers];
-      answers.sort(() => Math.random() - 0.5);
-    
-      // Verifica o tamanho da tela e ajusta o espaçamento
-      let spacing;
-      if (window.innerWidth <= 600) {
-          spacing = 100; // Espaçamento para o celular
-      } else {
-          spacing = 170; // Espaçamento para o computador
-      }
-    
-      answers.forEach((ans, i) => {
-        const balloon = document.createElement('div');
-        balloon.classList.add('balloon');
-        balloon.textContent = ans;
-        balloon.dataset.answer = ans;
-        
-        // Aplica o espaçamento dinâmico
-        balloon.style.left = `${(gameContainer.clientWidth / answers.length) * i + ((gameContainer.clientWidth / answers.length - 150) / 2) + 50}px`;
-        
-        balloon.style.bottom = "10px";
-        gameContainer.appendChild(balloon);
-        moveBalloon(balloon);
-      });
-    }
+    function loadQuestion() {
+      gameContainer.querySelectorAll('.balloon').forEach(b => b.remove());
+      if (questionsAndAnswers.length === 0) {
+        endGame();
+        return;
+      }
+      currentQuestion = questionsAndAnswers[Math.floor(Math.random() * questionsAndAnswers.length)];
+      questionBox.textContent = currentQuestion.question;
+    
+      const answers = [currentQuestion.correctAnswer, ...currentQuestion.wrongAnswers];
+      answers.sort(() => Math.random() - 0.5);
+    
+      answers.forEach((ans, i) => {
+        const balloon = document.createElement('div');
+        balloon.classList.add('balloon');
+        balloon.textContent = ans;
+        balloon.dataset.answer = ans;
+       
+        // Nova linha para posicionar os balões dinamicamente
+        balloon.style.left = `${(gameContainer.clientWidth / answers.length) * i + (gameContainer.clientWidth / answers.length - balloon.offsetWidth) / 2}px`;
+        
+        balloon.style.bottom = "10px";
+        gameContainer.appendChild(balloon);
+        moveBalloon(balloon);
+      });
+    }
 
-    function moveBalloon(balloon) {
-      let bottom = 10;
-      const interval = setInterval(() => {
-        if (!gameActive) {
-          clearInterval(interval);
-          return;
-        }
-        bottom += 0.5;
-        balloon.style.bottom = `${bottom}px`;
-        if (bottom > gameContainer.clientHeight) {
-          balloon.remove();
-          clearInterval(interval);
-          if (balloon.dataset.answer === currentQuestion.correctAnswer) {
-              endGame();
-          }
-        }
-      }, 30);
-    }
-    
-    function shootProjectile() {
-      if (!gameActive || shooting) return;
-      shooting = true;
-    
-      const projectile = document.createElement('div');
-      projectile.classList.add('projectile');
-      const bowRect = bow.getBoundingClientRect();
-      const containerRect = gameContainer.getBoundingClientRect();
-    
-      projectile.style.left = `${bowRect.left + bowRect.width / 2 - containerRect.left - 5}px`;
-      projectile.style.bottom = "75px";
-      gameContainer.appendChild(projectile);
-    
-      let bottom = 75;
-      const interval = setInterval(() => {
-        bottom += 5;
-        projectile.style.bottom = `${bottom}px`;
-    
-        document.querySelectorAll('.balloon').forEach(balloon => {
-          const projRect = projectile.getBoundingClientRect();
-          const balloonRect = balloon.getBoundingClientRect();
-          if (
-            projRect.left < balloonRect.right &&
-            projRect.right > balloonRect.left &&
-            projRect.top < balloonRect.bottom &&
-            projRect.bottom > balloonRect.top
-          ) {
-            if (balloon.dataset.answer === currentQuestion.correctAnswer) {
-              score += 10;
-              scoreBox.textContent = `Pontuação: ${score}`;
-              loadQuestion();
-            } else {
-              score -= 5;
-              scoreBox.textContent = `Pontuação: ${score}`;
-            }
-            balloon.remove();
-            projectile.remove();
-            clearInterval(interval);
-            shooting = false;
-          }
-        });
-    
-        if (bottom > gameContainer.clientHeight) {
-          projectile.remove();
-          clearInterval(interval);
-          shooting = false;
-        }
-      }, 20);
-    }
+    function moveBalloon(balloon) {
+      let bottom = 10;
+      const interval = setInterval(() => {
+        if (!gameActive) {
+          clearInterval(interval);
+          return;
+        }
+        bottom += 0.5;
+        balloon.style.bottom = `${bottom}px`;
+        if (bottom > gameContainer.clientHeight) {
+          balloon.remove();
+          clearInterval(interval);
+          if (balloon.dataset.answer === currentQuestion.correctAnswer) {
+              endGame();
+          }
+        }
+      }, 30);
+    }
+    
+    function shootProjectile() {
+      if (!gameActive || shooting) return;
+      shooting = true;
+    
+      const projectile = document.createElement('div');
+      projectile.classList.add('projectile');
+      const bowRect = bow.getBoundingClientRect();
+      const containerRect = gameContainer.getBoundingClientRect();
+    
+      projectile.style.left = `${bowRect.left + bowRect.width / 2 - containerRect.left - 5}px`;
+      projectile.style.bottom = "75px";
+      gameContainer.appendChild(projectile);
+    
+      let bottom = 75;
+      const interval = setInterval(() => {
+        bottom += 5;
+        projectile.style.bottom = `${bottom}px`;
+    
+        document.querySelectorAll('.balloon').forEach(balloon => {
+          const projRect = projectile.getBoundingClientRect();
+          const balloonRect = balloon.getBoundingClientRect();
+          if (
+            projRect.left < balloonRect.right &&
+            projRect.right > balloonRect.left &&
+            projRect.top < balloonRect.bottom &&
+            projRect.bottom > balloonRect.top
+          ) {
+            if (balloon.dataset.answer === currentQuestion.correctAnswer) {
+              score += 10;
+              scoreBox.textContent = `Pontuação: ${score}`;
+              loadQuestion();
+            } else {
+              score -= 5;
+              scoreBox.textContent = `Pontuação: ${score}`;
+            }
+            balloon.remove();
+            projectile.remove();
+            clearInterval(interval);
+            shooting = false;
+          }
+        });
+    
+        if (bottom > gameContainer.clientHeight) {
+          projectile.remove();
+          clearInterval(interval);
+          shooting = false;
+        }
+      }, 20);
+    }
 
-    function startTimer() {
-      timerInterval = setInterval(() => {
-        if (!gameActive) {
-          clearInterval(timerInterval);
-          return;
-        }
-        time--;
-        timerBox.textContent = `Tempo: ${time}s`;
-        if (time <= 0) {
-          clearInterval(timerInterval);
-          endGame();
-        }
-      }, 1000);
-    }
+    function startTimer() {
+      timerInterval = setInterval(() => {
+        if (!gameActive) {
+          clearInterval(timerInterval);
+          return;
+        }
+        time--;
+        timerBox.textContent = `Tempo: ${time}s`;
+        if (time <= 0) {
+          clearInterval(timerInterval);
+          endGame();
+        }
+      }, 1000);
+    }
 
-    function endGame() {
-      gameActive = false;
-      gameContainer.style.display = 'none';
-      mobileControls.style.display = 'none';
-      endScreen.style.display = 'block';
-      finalScoreDisplay.textContent = score;
-    }
+    function endGame() {
+      gameActive = false;
+      gameContainer.style.display = 'none';
+      mobileControls.style.display = 'none';
+      endScreen.style.display = 'block';
+      finalScoreDisplay.textContent = score;
+    }
 
-    // ===== CONTROLES =====
-    startButton.addEventListener('click', startGame);
+    // ===== CONTROLES =====
+    startButton.addEventListener('click', startGame);
 
-    restartButton.addEventListener('click', () => {
-      endScreen.style.display = 'none';
-      startGame();
-    });
+    restartButton.addEventListener('click', () => {
+      endScreen.style.display = 'none';
+      startGame();
+    });
 
-    leftButton.addEventListener('click', () => {
-      let left = parseInt(bow.style.left || (gameContainer.clientWidth / 2 - bow.clientWidth / 2));
-      if (left > 0) bow.style.left = `${left - 20}px`;
-    });
-    
-    rightButton.addEventListener('click', () => {
-      let left = parseInt(bow.style.left || (gameContainer.clientWidth / 2 - bow.clientWidth / 2));
-      if (left < gameContainer.clientWidth - bow.clientWidth) bow.style.left = `${left + 20}px`;
-    });
+    leftButton.addEventListener('click', () => {
+      let left = parseInt(bow.style.left || (gameContainer.clientWidth / 2 - bow.clientWidth / 2));
+      if (left > 0) bow.style.left = `${left - 20}px`;
+    });
+    
+    rightButton.addEventListener('click', () => {
+      let left = parseInt(bow.style.left || (gameContainer.clientWidth / 2 - bow.clientWidth / 2));
+      if (left < gameContainer.clientWidth - bow.clientWidth) bow.style.left = `${left + 20}px`;
+    });
 
-    shootButton.addEventListener('click', shootProjectile);
-    
-    document.addEventListener('keydown', (e) => {
-      if (!gameActive) return;
-      let left = parseInt(bow.style.left || (gameContainer.clientWidth / 2 - bow.clientWidth / 2));
-    
-      if (e.key === "ArrowLeft" && left > 0) {
-        bow.style.left = `${left - 20}px`;
-      } else if (e.key === "ArrowRight" && left < gameContainer.clientWidth - bow.clientWidth) {
-        bow.style.left = `${left + 20}px`;
-      } else if (e.key === " " || e.key === "ArrowUp") {
-        e.preventDefault();
-        shootProjectile();
-      }
-    });
-  </script>
+    shootButton.addEventListener('click', shootProjectile);
+    
+    document.addEventListener('keydown', (e) => {
+      if (!gameActive) return;
+      let left = parseInt(bow.style.left || (gameContainer.clientWidth / 2 - bow.clientWidth / 2));
+    
+      if (e.key === "ArrowLeft" && left > 0) {
+        bow.style.left = `${left - 20}px`;
+      } else if (e.key === "ArrowRight" && left < gameContainer.clientWidth - bow.clientWidth) {
+        bow.style.left = `${left + 20}px`;
+      } else if (e.key === " " || e.key === "ArrowUp") {
+        e.preventDefault();
+        shootProjectile();
+      }
+    });
+  </script>
 </body>
 </html>
-
-
-
