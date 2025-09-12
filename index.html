@@ -1,6 +1,4 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
+<html lang="pt-br" style="--vsc-domain: &quot;ylucasg.github.io&quot;;"><head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Atirador de Respostas</title>
@@ -120,7 +118,7 @@
     }
     #bow-container {
       position: absolute;
-      bottom: 20px; /* Movido 10px para cima */
+      bottom: 0;
       left: 50%;
       transform: translateX(-50%);
       width: 100px;
@@ -138,7 +136,7 @@
     }
     .projectile {
       position: absolute;
-      bottom: 70px; /* Movido para acompanhar o arco */
+      bottom: 60px;
       width: 10px;
       height: 10px;
       background-color: #e67e22;
@@ -157,49 +155,31 @@
       width: 45%;
       padding: 15px;
     }
-
-    /* Estilos para mobile */
-    @media (max-width: 600px) {
-        #question-box {
-            font-size: 0.7rem;
-            padding: 5px 10px;
-        }
-        #score-box, #timer-box {
-            font-size: 0.7rem; /* Reduzido o tamanho do texto */
-            padding: 3px 8px;
-        }
-        .balloon {
-            width: 100px; /* Balões menores */
-            height: 40px; /* Balões menores */
-            font-size: 0.6rem; /* Texto do balão menor */
-            padding: 5px;
-        }
-    }
   </style>
 </head>
-<body>
-  <div id="start-screen">
+<body data-new-gr-c-s-check-loaded="14.1252.0" data-gr-ext-installed="">
+  <div id="start-screen" style="display: none;">
     <h1>Atirador de Respostas</h1>
     <p>Atire nos balões para responder as perguntas!</p>
     <button id="start-button">Iniciar Jogo</button>
   </div>
 
-  <div id="game-container">
-    <div id="question-box"></div>
-    <div id="score-box"></div>
-    <div id="timer-box"></div>
-    <div id="bow-container">
+  <div id="game-container" style="display: none;">
+    <div id="question-box">O que o `letramento em saúde mental` pode ajudar a fazer?</div>
+    <div id="score-box">Pontuação: 0</div>
+    <div id="timer-box">Tempo: 53s</div>
+    <div id="bow-container" style="left: 330px;">
       <div class="bow"></div>
     </div>
-  </div>
+  <div class="balloon" data-answer="Aumentar a competitividade entre os policiais." style="left: 380px; bottom: 371px;">Aumentar a competitividade entre os policiais.</div></div>
 
-  <div id="end-screen" style="display: none;">
+  <div id="end-screen" style="display: block;">
     <h1>Fim de Jogo!</h1>
     <p class="score-display">Sua Pontuação Final: <span id="final-score">0</span></p>
     <button id="restart-button">Jogar Novamente</button>
   </div>
 
-  <div id="mobile-controls">
+  <div id="mobile-controls" style="display: none;">
     <button id="left-button">⬅️</button>
     <button id="shoot-button">Disparar</button>
     <button id="right-button">➡️</button>
@@ -648,10 +628,10 @@
       const containerRect = gameContainer.getBoundingClientRect();
     
       projectile.style.left = `${bowRect.left + bowRect.width / 2 - containerRect.left - 5}px`;
-      projectile.style.bottom = "70px"; /* Ajustado para a nova posição do arco */
+      projectile.style.bottom = "60px";
       gameContainer.appendChild(projectile);
     
-      let bottom = 70;
+      let bottom = 60;
       const interval = setInterval(() => {
         bottom += 5;
         projectile.style.bottom = `${bottom}px`;
@@ -752,5 +732,6 @@
       }
     });
   </script>
-</body>
-</html>
+
+
+</body><grammarly-desktop-integration data-grammarly-shadow-root="true"></grammarly-desktop-integration></html>
