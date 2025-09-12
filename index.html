@@ -591,7 +591,7 @@
         balloon.classList.add('balloon');
         balloon.textContent = ans;
         balloon.dataset.answer = ans;
-        balloon.style.left = `${60 + i * 160}px`;
+        balloon.style.left = `${60 + i * 170}px`;
         balloon.style.bottom = "10px";
         gameContainer.appendChild(balloon);
     
@@ -606,7 +606,7 @@
           clearInterval(interval);
           return;
         }
-        bottom += 1;
+        bottom += 0.5;
         balloon.style.bottom = `${bottom}px`;
         if (bottom > gameContainer.clientHeight) {
           balloon.remove();
@@ -615,7 +615,7 @@
               endGame();
           }
         }
-      }, 20);
+      }, 30);
     }
     
     function shootProjectile() {
@@ -735,3 +735,4 @@
 
 
 </body><grammarly-desktop-integration data-grammarly-shadow-root="true"></grammarly-desktop-integration></html>
+
