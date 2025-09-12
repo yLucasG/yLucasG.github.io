@@ -639,6 +639,20 @@
                 answers.forEach(ans => {
                     criarBalao(ans);
                 });
+                                // Posiciona os balões em locais fixos e espaçados
+                const answers = [currentQuestion.correctAnswer, ...currentQuestion.wrongAnswers];
+                answers.sort(() => Math.random() - 0.5); // Mistura as respostas
+                
+                const numBaloes = answers.length;
+                const espacamento = gameContainer.clientWidth / (numBaloes + 1);
+                
+                answers.forEach((ans, i) => {
+                    const balao = criarBalao(ans);
+                    // Define a posição inicial com base no espaçamento
+                    const xPos = espacamento * (i + 1) - (balao.clientWidth / 2);
+                    balao.style.left = `${xPos}px`;
+                    moverBalao(balao);
+                });
             }
 
             function criarBalao(texto) {
@@ -662,7 +676,7 @@
 
             function moverBalao(balao) {
                 let bottom = -50;
-                const speed = 0.5 + Math.random() * 0.7; // Velocidade aleatória
+                const speed = 0.2 + Math.random() * 0.4; // Velocidade aleatória
                 
                 balao.animationInterval = setInterval(() => {
                     if (!gameActive) {
@@ -824,3 +838,4 @@
     </script>
 </body>
 </html>
+
