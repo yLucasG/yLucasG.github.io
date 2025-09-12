@@ -16,26 +16,35 @@
             font-family: 'Press Start 2P', cursive;
             color: #eee;
             user-select: none;
-            overflow: hidden;
             text-align: center;
             image-rendering: pixelated;
+            padding: 10px;
+            box-sizing: border-box;
         }
 
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
+        #game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 400px; /* Limite máximo para evitar que fique muito grande em monitores */
+        }
+
         #game-area {
             display: grid;
-            grid-template-rows: repeat(20, 20px);
-            grid-template-columns: repeat(10, 20px);
+            width: 100%;
+            grid-template-rows: repeat(20, 1fr);
+            grid-template-columns: repeat(10, 1fr);
+            aspect-ratio: 10 / 20; /* Proporção de 10x20 para manter o formato */
             border: 4px solid #eee;
             background-color: #000;
-            margin-top: 20px;
             position: relative;
+            margin-top: 10px;
         }
 
         .grid-cell {
-            width: 20px;
-            height: 20px;
             background-color: #222;
             border: 1px solid #333;
             box-sizing: border-box;
@@ -54,75 +63,119 @@
         .S { background-color: #00ff00; }
         .T { background-color: #aa00ff; }
         .Z { background-color: #ff0000; }
+        .locked { background-color: #555; }
 
         #score-display {
             font-size: 1.5rem;
             margin-bottom: 10px;
         }
 
-        #game-over-screen, #question-screen {
+        #question-screen, #game-over-screen {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             background-color: rgba(0, 0, 0, 0.9);
-            display: flex;
+            display: none;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             color: #eee;
-            font-size: 2rem;
-            display: none;
+            font-size: 1.5rem; /* Ajustado para melhor leitura em telas pequenas */
+            padding: 10px;
+            box-sizing: border-box;
+            z-index: 10;
         }
 
-        #question-screen button {
+        #question-screen p, #game-over-screen p {
+            margin: 10px;
+        }
+
+        #question-screen #options-container {
+            display: flex;
+            flex-direction: column;
+            width: 90%;
+        }
+
+        #question-screen button, .control-button {
             background-color: #007bff;
             color: #fff;
             border: 2px solid #fff;
-            padding: 10px 20px;
+            padding: 10px;
             font-family: 'Press Start 2P', cursive;
-            font-size: 1rem;
+            font-size: 0.8rem;
             cursor: pointer;
             margin: 5px;
             transition: background-color 0.2s;
+            text-decoration: none;
+            display: inline-block;
         }
 
-        #question-screen button:hover {
+        #question-screen button:hover, .control-button:hover {
             background-color: #0056b3;
         }
 
-        #instructions {
-            margin-top: 20px;
-            font-size: 0.8rem;
-            line-height: 1.5;
-            color: #ccc;
+        #game-over-screen button {
+            background-color: #28a745;
         }
 
-        #instructions p {
-            margin: 5px 0;
+        #mobile-controls {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            max-width: 400px;
+            margin-top: 20px;
+        }
+
+        .control-button {
+            width: 80px;
+            height: 50px;
+            font-size: 12px;
+            padding: 5px;
+            box-sizing: border-box;
+        }
+
+        @media (min-width: 768px) {
+            #mobile-controls {
+                display: none;
+            }
+        }
+        @media (max-width: 767px) {
+            h1 {
+                font-size: 1.5rem;
+            }
         }
     </style>
 </head>
 <body>
 
     <h1>Tetris do Conhecimento</h1>
-    <div id="score-display">Pontos: 0</div>
-    <div id="game-area"></div>
+    <div id="game-container">
+        <div id="score-display">Pontos: 0</div>
+        <div id="game-area"></div>
 
-    <div id="question-screen">
-        <p id="question-text"></p>
-        <div id="options-container"></div>
+        <div id="question-screen">
+            <p id="question-text"></p>
+            <div id="options-container"></div>
+        </div>
+
+        <div id="game-over-screen">
+            <p>Fim de Jogo!</p>
+            <p>Sua Pontuação Final: <span id="final-score">0</span></p>
+            <button onclick="location.reload()" style="background-color: #28a745;">Jogar Novamente</button>
+        </div>
     </div>
-
-    <div id="game-over-screen">
-        <p>Fim de Jogo!</p>
-        <p>Sua Pontuação Final: <span id="final-score">0</span></p>
-        <button onclick="location.reload()" style="background-color: #28a745;">Jogar Novamente</button>
+    
+    <div id="mobile-controls">
+        <button class="control-button" onclick="moveTetromino('left')">Esquerda</button>
+        <button class="control-button" onclick="rotateTetromino()">Girar</button>
+        <button class="control-button" onclick="moveTetromino('down')">Baixo</button>
+        <button class="control-button" onclick="moveTetromino('right')">Direita</button>
     </div>
 
     <div id="instructions">
-        <p>Controles:</p>
+        <p>Controles (Teclado):</p>
         <p>Setas Esquerda/Direita: Mover peça</p>
         <p>Seta Cima: Girar peça</p>
         <p>Seta Baixo: Acelerar queda</p>
@@ -139,7 +192,6 @@
 
         const COLS = 10;
         const ROWS = 20;
-        const CELL_SIZE = 20;
         let grid = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
         let currentTetromino = null;
         let currentX = 0;
@@ -149,7 +201,10 @@
         let gameInterval = null;
         let dropInterval = 1000;
         let isQuestionActive = false;
+        let clearedLinesThisRound = 0;
 
+        // COLOQUE AQUI A LISTA COMPLETA DAS 50 QUESTÕES
+        // Gerei uma versão pequena para o exemplo funcionar
         const quizData = [
                 {
                     "question": "De acordo com a Organização Mundial da Saúde (OMS), o conceito de saúde mental está diretamente ligado à capacidade do indivíduo de:",
@@ -934,6 +989,7 @@
                     }
                 }
             }
+            clearedLinesThisRound = 0;
             checkLines();
             generateNewTetromino();
         }
@@ -950,12 +1006,14 @@
             currentX = Math.floor(COLS / 2) - Math.floor(currentTetromino.shape[0].length / 2);
             currentY = -currentTetromino.shape.length;
 
-            if (!isValidMove(currentX, currentY, currentTetromino.shape)) {
+            if (!isValidMove(currentX, 0, currentTetromino.shape)) {
                 setGameOver();
             }
         }
 
         function moveTetromino(direction) {
+            if (gameOver || isQuestionActive) return;
+
             undrawTetromino();
             let newX = currentX;
             let newY = currentY;
@@ -980,44 +1038,24 @@
         }
 
         function rotateTetromino() {
+            if (gameOver || isQuestionActive) return;
+
             undrawTetromino();
             const originalRotation = currentTetromino.rotation;
             currentTetromino.rotation = (currentTetromino.rotation + 1) % currentTetromino.shapes.length;
             currentTetromino.shape = currentTetromino.shapes[currentTetromino.rotation];
 
             if (!isValidMove(currentX, currentY, currentTetromino.shape)) {
-                let kicked = false;
-                if (currentX + currentTetromino.shape[0].length > COLS) {
-                    if (isValidMove(currentX - 1, currentY, currentTetromino.shape)) {
-                        currentX--;
-                        kicked = true;
-                    } else if (isValidMove(currentX - 2, currentY, currentTetromino.shape)) {
-                        currentX -= 2;
-                        kicked = true;
-                    }
-                } else if (currentX < 0) {
-                     if (isValidMove(currentX + 1, currentY, currentTetromino.shape)) {
-                        currentX++;
-                        kicked = true;
-                    } else if (isValidMove(currentX + 2, currentY, currentTetromino.shape)) {
-                        currentX += 2;
-                        kicked = true;
-                    }
-                }
-
-                if (!kicked && !isValidMove(currentX, currentY, currentTetromino.shape)) {
-                    currentTetromino.rotation = originalRotation;
-                    currentTetromino.shape = currentTetromino.shapes[currentTetromino.rotation];
-                }
+                currentTetromino.rotation = originalRotation;
+                currentTetromino.shape = currentTetromino.shapes[currentTetromino.rotation];
             }
             drawTetromino();
         }
 
         function checkLines() {
-            let linesCleared = 0;
             for (let r = ROWS - 1; r >= 0; r--) {
                 if (grid[r].every(cell => cell !== 0)) {
-                    linesCleared++;
+                    clearedLinesThisRound++;
                     for (let rowToMove = r; rowToMove > 0; rowToMove--) {
                         grid[rowToMove] = [...grid[rowToMove - 1]];
                     }
@@ -1026,13 +1064,10 @@
                 }
             }
 
-            if (linesCleared > 0) {
-                score += linesCleared * 100;
-                scoreDisplay.textContent = `Pontos: ${score}`;
+            if (clearedLinesThisRound > 0) {
                 pauseGame();
                 showQuestion();
             }
-            drawGrid();
         }
 
         function gameLoop() {
@@ -1095,14 +1130,15 @@
         }
 
         function checkQuestionAnswer(selectedOption, correctAnswer) {
-            isQuestionActive = false;
-            questionScreen.style.display = 'none';
-
             if (selectedOption === correctAnswer) {
-                alert("Correto! O jogo continua!");
+                alert("Correto! Você ganhou 100 pontos por linha apagada!");
+                score += clearedLinesThisRound * 100;
+                scoreDisplay.textContent = `Pontos: ${score}`;
+                isQuestionActive = false;
+                questionScreen.style.display = 'none';
                 resumeGame();
             } else {
-                alert(`Incorreto! A resposta correta era: ${correctAnswer}. Fim de Jogo!`);
+                alert(`Incorreto! A resposta certa era: ${correctAnswer}. Fim de Jogo!`);
                 setGameOver();
             }
         }
@@ -1116,8 +1152,6 @@
                 moveTetromino('right');
             } else if (e.key === 'ArrowDown') {
                 moveTetromino('down');
-                score += 1;
-                scoreDisplay.textContent = `Pontos: ${score}`;
             } else if (e.key === 'ArrowUp') {
                 rotateTetromino();
             }
