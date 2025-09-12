@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tetris do Conhecimento: Bloco a Bloco do Saber</title>
+    <style>
+        body {
+            background-color: #1a1a1a;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Press Start 2P', cursive;
+            color: #eee;
+            user-select: none;
+            overflow: hidden;
+            text-align: center;
+            image-rendering: pixelated;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+        #game-area {
+            display: grid;
+            grid-template-rows: repeat(20, 20px);
+            grid-template-columns: repeat(10, 20px);
+            border: 4px solid #eee;
+            background-color: #000;
+            margin-top: 20px;
+            position: relative;
+        }
+
+        .grid-cell {
+            width: 20px;
+            height: 20px;
+            background-color: #222;
+            border: 1px solid #333;
+            box-sizing: border-box;
+        }
+
+        .tetromino {
+            border: 1px solid #555;
+            box-sizing: border-box;
+        }
+
+        /* Cores dos Tetrominos */
+        .I { background-color: #00ffff; }
+        .J { background-color: #0000ff; }
+        .L { background-color: #ffaa00; }
+        .O { background-color: #ffff00; }
+        .S { background-color: #00ff00; }
+        .T { background-color: #aa00ff; }
+        .Z { background-color: #ff0000; }
+
+        #score-display {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        #game-over-screen, #question-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #eee;
+            font-size: 2rem;
+            display: none;
+        }
+
+        #question-screen button {
+            background-color: #007bff;
+            color: #fff;
+            border: 2px solid #fff;
+            padding: 10px 20px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1rem;
+            cursor: pointer;
+            margin: 5px;
+            transition: background-color 0.2s;
+        }
+
+        #question-screen button:hover {
+            background-color: #0056b3;
+        }
+
+        #instructions {
+            margin-top: 20px;
+            font-size: 0.8rem;
+            line-height: 1.5;
+            color: #ccc;
+        }
+
+        #instructions p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Tetris do Conhecimento</h1>
+    <div id="score-display">Pontos: 0</div>
+    <div id="game-area"></div>
+
+    <div id="question-screen">
+        <p id="question-text"></p>
+        <div id="options-container"></div>
+    </div>
+
+    <div id="game-over-screen">
+        <p>Fim de Jogo!</p>
+        <p>Sua Pontuação Final: <span id="final-score">0</span></p>
+        <button onclick="location.reload()" style="background-color: #28a745;">Jogar Novamente</button>
+    </div>
+
+    <div id="instructions">
+        <p>Controles:</p>
+        <p>Setas Esquerda/Direita: Mover peça</p>
+        <p>Seta Cima: Girar peça</p>
+        <p>Seta Baixo: Acelerar queda</p>
+    </div>
+
+    <script>
+        const gameArea = document.getElementById('game-area');
+        const scoreDisplay = document.getElementById('score-display');
+        const questionScreen = document.getElementById('question-screen');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const gameOverScreen = document.getElementById('game-over-screen');
+        const finalScoreDisplay = document.getElementById('final-score');
+
+        const COLS = 10;
+        const ROWS = 20;
+        const CELL_SIZE = 20;
+        let grid = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
+        let currentTetromino = null;
+        let currentX = 0;
+        let currentY = 0;
+        let score = 0;
+        let gameOver = false;
+        let gameInterval = null;
+        let dropInterval = 1000;
+        let isQuestionActive = false;
+
+        const quizData = [
+                {
+                    "question": "De acordo com a Organização Mundial da Saúde (OMS), o conceito de saúde mental está diretamente ligado à capacidade do indivíduo de:",
+                    "options": [
+                    "Ser totalmente livre de qualquer forma de estresse ou preocupação em sua vida.",
+                    "Lidar com os estresses normais da vida, ser produtivo no trabalho e contribuir para a sua comunidade.",
+                    "Manter-se emocionalmente neutro e sem grandes oscilações de humor em qualquer situação.",
+                    "Garantir a ausência completa de qualquer sintoma de transtorno psicológico ou psiquiátrico."
+                    ],
+                    "answer": "Lidar com os estresses normais da vida, ser produtivo no trabalho e contribuir para a sua comunidade."
+                },
+                {
+                    "question": "Conforme o material, a qualidade de vida é um conceito amplo que, de acordo com a OMS, se refere à percepção do indivíduo sobre:",
+                    "options": [
+                    "O nível de riqueza material e de bens que ele conseguiu acumular ao longo da vida.",
+                    "O seu nível de satisfação profissional e de reconhecimento no ambiente de trabalho.",
+                    "O seu estado de completo bem-estar físico, mental e social, sem qualquer enfermidade.",
+                    "Sua posição na vida, no contexto da cultura e do sistema de valores em que vive, em relação aos seus objetivos."
+                    ],
+                    "answer": "Sua posição na vida, no contexto da cultura e do sistema de valores em que vive, em relação aos seus objetivos."
+                },
+                {
+                    "question": "A Qualidade de Vida no Trabalho (QVT) foi cunhada por Louis Davis na década de 1970. Qual das alternativas a seguir expressa a ideia central desse conceito?",
+                    "options": [
+                    "Focar apenas na otimização da produtividade para aumentar os lucros da empresa.",
+                    "Garantir o bem-estar geral e a saúde dos colaboradores no desempenho de suas atividades.",
+                    "Estabelecer uma hierarquia rígida para assegurar que as ordens sejam cumpridas sem questionamentos.",
+                    "Reduzir o quadro de funcionários para evitar sobrecarga e riscos físicos no ambiente de trabalho."
+                    ],
+                    "answer": "Garantir o bem-estar geral e a saúde dos colaboradores no desempenho de suas atividades."
+                },
+                {
+                    "question": "A promoção de programas de saúde mental e o estabelecimento de um ambiente de trabalho positivo são aplicações práticas mencionadas no texto. Qual das ações abaixo NÃO é um exemplo de aplicação prática para um ambiente de trabalho positivo?",
+                    "options": [
+                    "Adoção de horários flexíveis para um melhor equilíbrio entre vida pessoal e profissional.",
+                    "Aumento da pressão por resultados e desempenho para motivar os colaboradores.",
+                    "Disponibilização de serviços de psicologia e psiquiatria para a equipe.",
+                    "Fomentar relações de apoio entre colegas de trabalho, promovendo o senso de equipe."
+                    ],
+                    "answer": "Aumento da pressão por resultados e desempenho para motivar os colaboradores."
+                },
+                {
+                    "question": "Segundo o material didático, a Qualidade de Vida no Trabalho (QVT) é um conceito que envolve tanto a reivindicação dos colaboradores quanto o interesse das organizações. O principal benefício para a organização que investe na QVT é a obtenção de:",
+                    "options": [
+                    "Maior controle sobre os funcionários, evitando o absenteísmo e afastamentos de serviço.",
+                    "Aumento dos índices de produtividade e melhoria na qualidade do trabalho.",
+                    "Redução dos custos operacionais ao minimizar os benefícios e salários.",
+                    "Garantia de que os funcionários não terão problemas de saúde física ou psíquica."
+                    ],
+                    "answer": "Aumento dos índices de produtividade e melhoria na qualidade do trabalho."
+                },
+                {
+                    "question": "O texto extraído de Chiavenato sobre QVT menciona que a competitividade organizacional passa obrigatoriamente pela QVT. Por que, segundo o autor, as organizações precisam satisfazer seus colaboradores antes de satisfazer os clientes externos?",
+                    "options": [
+                    "Porque os colaboradores são o principal custo operacional da empresa.",
+                    "Porque o cliente interno é mais importante para a imagem da marca do que o cliente externo.",
+                    "Porque os colaboradores motivados são responsáveis pela otimização do potencial humano e pela qualidade e produtividade.",
+                    "Porque a legislação trabalhista exige que os funcionários sejam tratados como prioridade absoluta."
+                    ],
+                    "answer": "Porque os colaboradores motivados são responsáveis pela otimização do potencial humano e pela qualidade e produtividade."
+                },
+                {
+                    "question": "No modelo da 'Árvore do Problema' aplicado à saúde mental da PMPE, o que representa a 'copa (folhas e frutos)'?",
+                    "options": [
+                    "As causas profundas do problema, como o estresse ocupacional e o estigma.",
+                    "O problema central em si, que é a vitimização policial por problemas de saúde mental.",
+                    "As consequências e os efeitos visíveis do problema, como o alto número de suicídios e afastamentos.",
+                    "As estratégias de solução para os problemas de saúde mental na Corporação."
+                    ],
+                    "answer": "As consequências e os efeitos visíveis do problema, como o alto número de suicídios e afastamentos."
+                },
+                {
+                    "question": "Ainda no modelo da 'Árvore do Problema', a 'vitimização policial por problemas de saúde mental' é o problema principal. Onde essa definição é posicionada na árvore?",
+                    "options": [
+                    "Nas 'raízes'.",
+                    "No 'tronco'.",
+                    "Na 'copa'.",
+                    "Nas 'folhas e frutos'."
+                    ],
+                    "answer": "No 'tronco'."
+                },
+                {
+                    "question": "As 'raízes' da 'Árvore do Problema' representam as causas que alimentam a vitimização policial. Qual dos seguintes fatores NÃO é citado como uma das causas (raízes) na figura 3 do material didático?",
+                    "options": [
+                    "Estigmas sobre a saúde mental.",
+                    "Acesso à arma de fogo.",
+                    "Falta de armamento e equipamento moderno.",
+                    "Cultura de invulnerabilidade."
+                    ],
+                    "answer": "Falta de armamento e equipamento moderno."
+                },
+                {
+                    "question": "O material didático aponta que o 'déficit de efetivo' nas corporações é uma variável importante para a sobrecarga de trabalho. Isso contribui para o aumento de qual dos seguintes índices?",
+                    "options": [
+                    "Diminuição dos índices de suicídio e homicídios.",
+                    "Aumento dos afastamentos de serviço e absenteísmo.",
+                    "Melhora na qualidade de vida e satisfação dos profissionais.",
+                    "Aumento da quantidade de promoções e oportunidades de crescimento."
+                    ],
+                    "answer": "Aumento dos afastamentos de serviço e absenteísmo."
+                },
+                {
+                    "question": "O estresse é um processo pelo qual alguém percebe e responde a eventos desafiadores. Segundo a definição de Marilda Lipp, o estresse é uma reação complexa que surge da necessidade do organismo de:",
+                    "options": [
+                    "Alcançar o bem-estar psicológico através do autocuidado.",
+                    "Lidar com algo que ameace sua homeostase ou equilíbrio interno.",
+                    "Manter-se em um estado de alerta constante e sem descanso.",
+                    "Aumentar a pressão sanguínea para preparar o corpo para o trabalho."
+                    ],
+                    "answer": "Lidar com algo que ameace sua homeostase ou equilíbrio interno."
+                },
+                {
+                    "question": "Na primeira fase da 'Curva do Estresse', a fase de Alerta, o que ocorre com o indivíduo diante de um desafio ou ameaça percebida?",
+                    "options": [
+                    "Esgotamento completo dos recursos de enfrentamento e queda da produtividade.",
+                    "Aumento da motivação e da energia, com mobilização de recursos para enfrentar a situação.",
+                    "Oscilações constantes entre bem-estar e desconforto, com o aparecimento de doenças.",
+                    "Aumento da ansiedade e pânico, levando a um colapso total da resistência."
+                    ],
+                    "answer": "Aumento da motivação e da energia, com mobilização de recursos para enfrentar a situação."
+                },
+                {
+                    "question": "Em qual fase do estresse o material descreve que a situação estressante persiste, havendo um grande uso de energia na busca pelo reequilíbrio, causando desgaste generalizado e dificuldades de memória?",
+                    "options": [
+                    "Fase de Alerta.",
+                    "Fase de Resistência.",
+                    "Fase de Quase Exaustão.",
+                    "Fase de Exaustão."
+                    ],
+                    "answer": "Fase de Resistência."
+                },
+                {
+                    "question": "A terceira fase da 'Curva do Estresse' é a de 'Quase Exaustão'. O que é comum o indivíduo sentir nesta fase?",
+                    "options": [
+                    "Um estado de euforia e aumento da energia.",
+                    "Uma quebra total da resistência e exaustão psicológica.",
+                    "Oscilação entre momentos de bem-estar e desconforto, com o surgimento de algumas doenças.",
+                    "Apenas um aumento da motivação, sem qualquer sintoma físico negativo."
+                    ],
+                    "answer": "Oscilação entre momentos de bem-estar e desconforto, com o surgimento de algumas doenças."
+                },
+                {
+                    "question": "O estresse crônico pode afetar diretamente o sistema imunológico, tornando o indivíduo vulnerável a doenças. Em qual das fases do estresse ocorre a 'quebra total da resistência'?",
+                    "options": [
+                    "Fase de Alerta.",
+                    "Fase de Resistência.",
+                    "Fase de Quase Exaustão.",
+                    "Fase de Exaustão."
+                    ],
+                    "answer": "Fase de Exaustão."
+                },
+                {
+                    "question": "A Síndrome de Burnout é um distúrbio emocional com sintomas de exaustão extrema e estresse. Qual é a principal causa da doença mencionada no material didático?",
+                    "options": [
+                    "A falta de relações sociais e o isolamento do profissional.",
+                    "A cobrança de perfeição por parte dos superiores hierárquicos.",
+                    "O contato constante e direto com a violência e a criminalidade.",
+                    "O excesso de trabalho e as responsabilidades constantes."
+                    ],
+                    "answer": "O excesso de trabalho e as responsabilidades constantes."
+                },
+                {
+                    "question": "Os sintomas da Síndrome de Burnout são físicos e psicológicos. Qual das alternativas abaixo apresenta um sintoma que pode indicar a Síndrome de Burnout?",
+                    "options": [
+                    "Sentimentos de fracasso e insegurança.",
+                    "Aumento repentino de energia e motivação.",
+                    "Melhora do sono e do apetite.",
+                    "Diminuição dos batimentos cardíacos."
+                    ],
+                    "answer": "Sentimentos de fracasso e insegurança."
+                },
+                {
+                    "question": "Uma das distinções importantes no material didático é a diferença entre o estresse e a Síndrome de Burnout. Qual é a principal característica que diferencia o Burnout do estresse comum?",
+                    "options": [
+                    "O estresse é um processo de quatro fases, enquanto o burnout é um evento único.",
+                    "O estresse é causado por problemas pessoais, enquanto o burnout é exclusivamente ocupacional.",
+                    "O burnout é um distúrbio emocional resultante do esgotamento físico e estresse extremos de situações de trabalho.",
+                    "O estresse é uma reação psicofisiológica, enquanto o burnout é apenas um estado de cansaço mental."
+                    ],
+                    "answer": "O burnout é um distúrbio emocional resultante do esgotamento físico e estresse extremos de situações de trabalho."
+                },
+                {
+                    "question": "O material define a depressão como uma doença psiquiátrica crônica e recorrente. Qual dos seguintes sintomas é considerado um sintoma clássico da depressão?",
+                    "options": [
+                    "Humor eufórico, irritabilidade e falta de necessidade de sono.",
+                    "Tristeza constante e prolongada, autodesvalorização e sentimentos de culpa.",
+                    "Sentimento de corpo pesado e sensibilidade exagerada à rejeição.",
+                    "Aumento da atividade física e interesse por novas experiências."
+                    ],
+                    "answer": "Tristeza constante e prolongada, autodesvalorização e sentimentos de culpa."
+                },
+                {
+                    "question": "Qual dos seguintes quadros depressivos, que se caracteriza por um estado mais leve e crônico, com queixas de cansaço e desânimo persistentes, é o único subtipo mencionado no material que deve ser estudado?",
+                    "options": [
+                    "Depressão endógena.",
+                    "Depressão sazonal.",
+                    "Distimia.",
+                    "Depressão psicótica."
+                    ],
+                    "answer": "Distimia."
+                },
+                {
+                    "question": "O Transtorno Bipolar é uma doença caracterizada por alterações de humor que levam o indivíduo a oscilar entre euforia e depressão. A principal característica que define a fase de 'mania' é:",
+                    "options": [
+                    "O humor deprimido, a falta de energia e de iniciativa.",
+                    "Um estado de mania leve que pode ser produtivo para o paciente.",
+                    "Um estado de exaltação do humor, com aumento de energia, sem relação com o momento vivido.",
+                    "O ganho de peso e o aumento do apetite por carboidratos."
+                    ],
+                    "answer": "Um estado de exaltação do humor, com aumento de energia, sem relação com o momento vivido."
+                },
+                {
+                    "question": "De acordo com o material, a fase de 'Hipomania' do transtorno bipolar é descrita como:",
+                    "options": [
+                    "A quebra total da resistência e o surgimento de exaustão psicológica.",
+                    "Um estado de euforia mais leve que, geralmente, acarreta um funcionamento produtivo para o paciente.",
+                    "O estado em que os sintomas de tristeza profunda e desesperança são mais acentuados.",
+                    "A total ausência de emoções e de sentimentos, levando a um estado de apatia."
+                    ],
+                    "answer": "Um estado de euforia mais leve que, geralmente, acarreta um funcionamento produtivo para o paciente."
+                },
+                {
+                    "question": "Qual é a principal diferença entre o transtorno de estresse agudo e o transtorno de estresse pós-traumático (TEPT) apresentada no texto?",
+                    "options": [
+                    "A gravidade dos sintomas, sendo o estresse agudo muito mais grave que o TEPT.",
+                    "A natureza do evento, já que o estresse agudo é causado apenas por estresse e o TEPT, por traumas.",
+                    "A duração dos sintomas, já que o estresse agudo dura menos de um mês e o TEPT dura mais de um mês.",
+                    "A forma de tratamento, pois o estresse agudo não requer tratamento profissional, ao contrário do TEPT."
+                    ],
+                    "answer": "A duração dos sintomas, já que o estresse agudo dura menos de um mês e o TEPT dura mais de um mês."
+                },
+                {
+                    "question": "O Transtorno de Ansiedade é considerado um problema quando a ansiedade se torna intensa e frequente, interferindo nas atividades normais do indivíduo. A ansiedade não patológica, no entanto, desempenha um papel importante na sobrevivência porque:",
+                    "options": [
+                    "Desencadeia uma resposta de luta ou fuga diante de uma ameaça ou estresse.",
+                    "Garante que o indivíduo não sinta medo ou desconforto em situações de risco.",
+                    "Ajuda o indivíduo a se manter inativo e relaxado em momentos de perigo.",
+                    "Causa uma desconexão de alguns aspectos do funcionamento mental, protegendo o indivíduo."
+                    ],
+                    "answer": "Desencadeia uma resposta de luta ou fuga diante de uma ameaça ou estresse."
+                },
+                {
+                    "question": "A partir do material didático, um 'estigma' sobre a saúde mental pode ser definido como:",
+                    "options": [
+                    "Um conjunto de percepções e atitudes negativas, crenças e preconceitos sobre uma condição ou grupo.",
+                    "A ausência completa de tratamento para transtornos mentais em uma determinada sociedade.",
+                    "Um sintoma visível de um transtorno mental que pode ser facilmente identificado pela família.",
+                    "O conjunto de políticas públicas que visam a inclusão social de pessoas com transtornos mentais."
+                    ],
+                    "answer": "Um conjunto de percepções e atitudes negativas, crenças e preconceitos sobre uma condição ou grupo."
+                },
+                {
+                    "question": "O gráfico 'Relação Estigma Versus Busca de Ajuda em Saúde Mental' ilustra que a relação entre estigma e a busca por ajuda é:",
+                    "options": [
+                    "Diretamente proporcional: quanto maior o estigma, maior a busca por ajuda.",
+                    "Inversamente proporcional: quanto maior o estigma, menor a busca por ajuda.",
+                    "Complexa, mas sem uma correlação estatística significativa.",
+                    "Irrelevante, já que a busca por ajuda depende apenas da gravidade do problema."
+                    ],
+                    "answer": "Inversamente proporcional: quanto maior o estigma, menor a busca por ajuda."
+                },
+                {
+                    "question": "De acordo com o texto sobre suicidologia, o que a 'ambivalência' representa na crise suicida?",
+                    "options": [
+                    "A ausência completa de emoções e sentimentos, levando a uma apatia total.",
+                    "A decisão firme e inabalável de uma pessoa de tirar a própria vida.",
+                    "A coexistência de dois valores opostos, como o desejo de viver e o de morrer.",
+                    "Um plano detalhado de suicídio que a pessoa não consegue colocar em prática."
+                    ],
+                    "answer": "A coexistência de dois valores opostos, como o desejo de viver e o de morrer."
+                },
+                {
+                    "question": "Segundo a Associação Brasileira de Psiquiatria (ABP) citada no texto, o suicídio pode ser definido como um ato deliberado, executado pelo próprio indivíduo, cuja intenção é a morte de forma:",
+                    "options": [
+                    "Inconsciente e impulsiva, sem qualquer planejamento.",
+                    "Apenas por omissão, como deixar de tomar medicamentos ou se alimentar.",
+                    "Consciente e intencional, mesmo que haja ambivalência, usando um meio que ele acredita ser letal.",
+                    "Com a única finalidade de chamar a atenção para um problema pessoal."
+                    ],
+                    "answer": "Consciente e intencional, mesmo que haja ambivalência, usando um meio que ele acredita ser letal."
+                },
+                {
+                    "question": "De acordo com o autor Rory O'Connor, citado no material, qual das seguintes afirmativas expressa um conceito sobre o que o suicídio NÃO É?",
+                    "options": [
+                    "É um ato de covardia, uma forma de fugir dos problemas da vida.",
+                    "É o resultado de um único fator ou causa precipitante.",
+                    "É um fenômeno complexo e multideterminado.",
+                    "É um tipo de violência contra a própria vida, que pode ser evitado."
+                    ],
+                    "answer": "É o resultado de um único fator ou causa precipitante."
+                },
+                {
+                    "question": "O texto sobre suicidologia diferencia 'fatores de proteção' e 'fatores de risco'. Um fator de risco é aquele que:",
+                    "options": [
+                    "Diminui a probabilidade de morte por suicídio.",
+                    "Aumenta a probabilidade de morte por suicídio.",
+                    "É sinônimo de 'âncora', por ajudar a pessoa a superar a crise.",
+                    "É uma característica permanente e imutável na vida de uma pessoa."
+                    ],
+                    "answer": "Aumenta a probabilidade de morte por suicídio."
+                },
+                {
+                    "question": "Ainda no contexto da suicidologia, a apostila diferencia 'gatilhos' e 'âncoras'. Um 'gatilho' é um fator que:",
+                    "options": [
+                    "Víncula a pessoa a um forte sentido de vida e valor.",
+                    "Diminui a probabilidade de um suicídio consumado.",
+                    "Dispara uma crise suicida, sendo um fator de risco precipitante.",
+                    "Permite a um interventor em crise suicida criar esperança."
+                    ],
+                    "answer": "Dispara uma crise suicida, sendo um fator de risco precipitante."
+                },
+                {
+                    "question": "A partir da visão de Chiavenato, a Qualidade de Vida no Trabalho (QVT) envolve uma constelação de fatores. Qual dos itens abaixo é um dos componentes da QVT?",
+                    "options": [
+                    "Apenas a remuneração justa e os benefícios financeiros.",
+                    "A segurança no emprego e as condições de trabalho seguras.",
+                    "A ausência total de qualquer conflito social ou interpessoal.",
+                    "O total controle e obediência à supervisão competente."
+                    ],
+                    "answer": "A segurança no emprego e as condições de trabalho seguras."
+                },
+                {
+                    "question": "A QVT é definida como um conceito amplo e multidisciplinar, pois abrange todas as esferas da vida humana e é de interesse de diversas ciências. Isso a torna, por conseguinte, um conceito:",
+                    "options": [
+                    "Limitado ao bem-estar psicológico e à saúde mental.",
+                    "Restrito ao ambiente profissional e aos fatores ambientais.",
+                    "Estático, pois não se modifica com as circunstâncias da sociedade.",
+                    "Dinâmico e contingencial, pois se modifica conforme as circunstâncias externas."
+                    ],
+                    "answer": "Dinâmico e contingencial, pois se modifica conforme as circunstâncias externas."
+                },
+                {
+                    "question": "A Organização Mundial da Saúde (OMS) redefiniu o conceito de saúde em 1948. Como a OMS passou a conceituar a saúde a partir desta redefinição?",
+                    "options": [
+                    "Como a ausência de doenças físicas, mentais e sociais.",
+                    "Como um estado de completo bem-estar físico, mental e social, e não somente como ausência de enfermidades.",
+                    "Como a capacidade do indivíduo de lidar com qualquer desafio.",
+                    "Como a garantia de que a pessoa tenha sucesso financeiro e profissional."
+                    ],
+                    "answer": "Como um estado de completo bem-estar físico, mental e social, e não somente como ausência de enfermidades."
+                },
+                {
+                    "question": "Qual é a variável, segundo uma pesquisa nacional do Ministério da Justiça e Segurança Pública, que constitui um fator de risco importante para a sobrecarga de trabalho e o adoecimento físico e psíquico dos profissionais de segurança pública?",
+                    "options": [
+                    "O alto número de cursos e treinamentos na área.",
+                    "O déficit de efetivo nas corporações.",
+                    "A falta de reconhecimento profissional por parte da população.",
+                    "O risco de ser vítima de crimes letais."
+                    ],
+                    "answer": "O déficit de efetivo nas corporações."
+                },
+                {
+                    "question": "A Teoria Psicodinâmica do Trabalho, citada no texto, permite entender a atividade policial militar de uma forma diferente. Essa teoria foca em:",
+                    "options": [
+                    "A atividade policial como um conhecimento ou desconhecimento técnico.",
+                    "A padronização das condutas, comportamentos e atos dos policiais.",
+                    "O policial militar como um trabalhador, um sujeito que sente, se afeta e é afetado.",
+                    "O policial militar como um 'braço armado do estado', focado apenas em repressão."
+                    ],
+                    "answer": "O policial militar como um trabalhador, um sujeito que sente, se afeta e é afetado."
+                },
+                {
+                    "question": "Qual é um dos fatores que, segundo o material, dificulta a expressão do que é subjetivo e singular na formação do policial militar?",
+                    "options": [
+                    "O ideal de um homem que se estrutura em princípios rígidos e a padronização das condutas.",
+                    "A falta de contato regular e constante com a violência e a criminalidade.",
+                    "O reconhecimento social da profissão e a valorização da individualidade.",
+                    "A ausência de códigos e legislações rígidos para a regulamentação da conduta."
+                    ],
+                    "answer": "O ideal de um homem que se estrutura em princípios rígidos e a padronização das condutas."
+                },
+                {
+                    "question": "Um policial militar está em uma fase em que sente um grande desgaste, com dificuldades de memória e cansaço sem causa aparente. Isso indica que a demanda da situação ultrapassou sua capacidade de lidar com ela. Em qual fase do estresse ele se encontra?",
+                    "options": [
+                    "Fase de Alerta.",
+                    "Fase de Resistência.",
+                    "Fase de Quase Exaustão.",
+                    "Fase de Exaustão."
+                    ],
+                    "answer": "Fase de Resistência."
+                },
+                {
+                    "question": "Qual dos seguintes sintomas é característico da Síndrome de Burnout?",
+                    "options": [
+                    "Humor elevado e comportamento impulsivo.",
+                    "Perda de interesse sexual e aumento da libido.",
+                    "Cansaço excessivo, físico e mental.",
+                    "Ocorrência de alucinações auditivas ou visuais."
+                    ],
+                    "answer": "Cansaço excessivo, físico e mental."
+                },
+                {
+                    "question": "A Depressão é um problema médico sério e altamente prevalente. Qual dos sintomas abaixo não é diretamente associado à depressão, segundo o material didático?",
+                    "options": [
+                    "Sensação de tristeza e autodesvalorização.",
+                    "Lentificação do pensamento e falta de concentração.",
+                    "Aumento da libido e interesse por novas atividades.",
+                    "Pensamentos suicidas e desesperança."
+                    ],
+                    "answer": "Aumento da libido e interesse por novas atividades."
+                },
+                {
+                    "question": "Qual dos seguintes sintomas pertence ao quadro de Distimia, um tipo de depressão?",
+                    "options": [
+                    "Presença de delírios e alucinações.",
+                    "Perda de peso importante e falta de reatividade do humor.",
+                    "Cansaço e desânimo constantes durante a maior parte do tempo, por no mínimo dois anos.",
+                    "Inversão dos sintomas, com aumento de apetite e ganho de peso."
+                    ],
+                    "answer": "Cansaço e desânimo constantes durante a maior parte do tempo, por no mínimo dois anos."
+                },
+                {
+                    "question": "A Bipolaridade é caracterizada por oscilações de humor. A fase de 'Mania' é descrita como um estado de exaltação. Qual dos seguintes sintomas é característico desta fase?",
+                    "options": [
+                    "Falta de energia e ausência de prazer nas atividades diárias.",
+                    "Aumento de energia, humor eufórico ou irritável e mania de grandeza.",
+                    "Sentimentos de derrota e desesperança.",
+                    "Apatia, diminuição da atividade e isolamento social."
+                    ],
+                    "answer": "Aumento de energia, humor eufórico ou irritável e mania de grandeza."
+                },
+                {
+                    "question": "Conforme o texto, a ansiedade é uma experiência humana normal. No entanto, ela se torna um transtorno quando:",
+                    "options": [
+                    "Ocorre em momentos indevidos, com intensidade e duração que interferem nas atividades normais da pessoa.",
+                    "Causa uma reação de luta ou fuga, independentemente da situação.",
+                    "Está ligada a um evento estressante e passa rapidamente.",
+                    "É sentida apenas em situações de perigo e risco de vida."
+                    ],
+                    "answer": "Ocorre em momentos indevidos, com intensidade e duração que interferem nas atividades normais da pessoa."
+                },
+                {
+                    "question": "Qual dos seguintes transtornos é descrito no material como uma reação disfuncional intensa e desagradável que tem início logo após um evento extremamente traumático e dura menos de um mês?",
+                    "options": [
+                    "Transtorno Bipolar.",
+                    "Transtorno de Pânico.",
+                    "Transtorno de Estresse Pós-Traumático (TEPT).",
+                    "Transtorno de Estresse Agudo."
+                    ],
+                    "answer": "Transtorno de Estresse Agudo."
+                },
+                {
+                    "question": "O Transtorno de Estresse Pós-Traumático (TEPT) é uma reação intensa a um evento traumático. Qual dos seguintes é um sintoma comum de TEPT, segundo o material?",
+                    "options": [
+                    "Aumento do apetite por doces e carboidratos.",
+                    "Sentimento de que a vida está cheia de propósito e alegria.",
+                    "Reviver mentalmente o evento traumático e ter pesadelos frequentes.",
+                    "Redução da atividade e isolamento social, sem outros sintomas."
+                    ],
+                    "answer": "Reviver mentalmente o evento traumático e ter pesadelos frequentes."
+                },
+                {
+                    "question": "O texto descreve que o estigma da saúde mental tem raízes em medos, estereótipos e mal-entendidos. Qual das seguintes é uma consequência danosa do estigma, conforme o material?",
+                    "options": [
+                    "O aumento da procura por tratamento profissional.",
+                    "A diminuição do número de afastamentos médicos.",
+                    "A marginalização de pessoas com problemas mentais e o desencorajamento da busca por ajuda.",
+                    "A implementação de novas políticas de saúde no ambiente de trabalho."
+                    ],
+                    "answer": "A marginalização de pessoas com problemas mentais e o desencorajamento da busca por ajuda."
+                },
+                {
+                    "question": "O texto sobre suicidologia destaca a importância da ambivalência no estudo do suicídio. Por que a ambivalência é considerada um aspecto comum da crise suicida?",
+                    "options": [
+                    "Porque a pessoa em crise suicida está em constante estado de euforia e mania.",
+                    "Porque a mente da pessoa em crise oscila entre o querer viver e o querer morrer.",
+                    "Porque a pessoa em crise não consegue se decidir por um plano de suicídio.",
+                    "Porque a ambivalência impede o profissional de emergência de chegar a tempo."
+                    ],
+                    "answer": "Porque a mente da pessoa em crise oscila entre o querer viver e o querer morrer."
+                },
+                {
+                    "question": "Segundo a apostila, qual é o conceito de suicídio na visão de Émile Durkheim, pai da Sociologia?",
+                    "options": [
+                    "Um ato que resulta direta ou indiretamente de uma ação praticada pela própria vítima, com conhecimento do resultado mortal.",
+                    "Um ato que somente é praticado por indivíduos com doenças mentais graves e incuráveis.",
+                    "Um ato de covardia, uma vez que a pessoa se rende aos desafios da vida.",
+                    "Um ato de desespero que não pode ser evitado e é uma escolha estritamente individual."
+                    ],
+                    "answer": "Um ato que resulta direta ou indiretamente de uma ação praticada pela própria vítima, com conhecimento do resultado mortal."
+                },
+                {
+                    "question": "O'Connor, em 'O que o suicídio não é', refuta algumas crenças populares. Qual das opções abaixo ele aponta como uma crença equivocada sobre o suicídio?",
+                    "options": [
+                    "O suicídio não pode ser evitado e é um destino inescapável.",
+                    "O suicídio é um problema de saúde pública que atinge todas as camadas sociais.",
+                    "O suicídio é um ato de egoísmo, praticado para causar dor nos familiares.",
+                    "O suicídio é um desfecho multideterminado e complexo."
+                    ],
+                    "answer": "O suicídio é um ato de egoísmo, praticado para causar dor nos familiares."
+                },
+                {
+                    "question": "O texto diferencia 'fatores de proteção' de 'fatores de risco'. Qual dos seguintes é um exemplo de Fator de Proteção, segundo a ABP?",
+                    "options": [
+                    "Desespero e desesperança.",
+                    "Histórico familiar de suicídio.",
+                    "Dependência química.",
+                    "Bons laços sociais estabelecidos com a família."
+                    ],
+                    "answer": "Bons laços sociais estabelecidos com a família."
+                },
+                {
+                    "question": "No contexto da suicidologia, um 'gatilho' é um fator que dispara uma crise suicida. O que é uma 'âncora'?",
+                    "options": [
+                    "Um fator de risco inevitável que leva ao suicídio.",
+                    "Um fator especial que se vincula a um forte sentido de vida e valor, ajudando a mitigar a crise.",
+                    "Um estado de apatia total, que impede a pessoa de agir.",
+                    "A consequência da falta de apoio profissional para a pessoa em crise."
+                    ],
+                    "answer": "Um fator especial que se vincula a um forte sentido de vida e valor, ajudando a mitigar a crise."
+                },
+                {
+                    "question": "O conceito de Qualidade de Vida no Trabalho (QVT) de Chiavenato inclui quais dos seguintes componentes?",
+                    "options": [
+                    "Satisfação com o trabalho, possibilidades de futuro na organização e remuneração.",
+                    "Apenas o ambiente físico de trabalho e a ergonomia do posto de trabalho.",
+                    "Unicamente a supervisão competente e as retroações de desempenho.",
+                    "Foco total na segurança, sem considerar o crescimento profissional."
+                    ],
+                    "answer": "Satisfação com o trabalho, possibilidades de futuro na organização e remuneração."
+                },
+                {
+                    "question": "O texto menciona que a saúde mental e a qualidade de vida estão intrinsecamente ligadas. Um dos impactos da saúde mental no ambiente de trabalho é que problemas de saúde mental podem levar a:",
+                    "options": [
+                    "Aumento da produtividade e eficiência da organização.",
+                    "Diminuição na qualidade de vida, afetando o desempenho e as relações interpessoais.",
+                    "Melhora do equilíbrio entre vida pessoal e profissional.",
+                    "Redução da pressão e do estresse por resultados."
+                    ],
+                    "answer": "Diminuição na qualidade de vida, afetando o desempenho e as relações interpessoais."
+                },
+                {
+                    "question": "De acordo com a 'Árvore do Problema', a cultura de invulnerabilidade e o estresse ocupacional são exemplos de:",
+                    "options": [
+                    "Efeitos do problema.",
+                    "O problema central.",
+                    "Causas do problema (raízes).",
+                    "Soluções para o problema."
+                    ],
+                    "answer": "Causas do problema (raízes)."
+                },
+                {
+                    "question": "A definição de estresse de Marilda Lipp o caracteriza como uma reação psicofisiológica que busca reequilibrar o organismo. No entanto, o estresse persistente pode causar:",
+                    "options": [
+                    "Um aumento da motivação e da produtividade, sem efeitos negativos.",
+                    "A diminuição da vulnerabilidade a doenças físicas, como doenças cardíacas e hipertensão.",
+                    "A exaustão completa dos recursos de enfrentamento, levando a doenças e queda do sistema imunológico.",
+                    "Um estado de tranquilidade e bem-estar contínuo."
+                    ],
+                    "answer": "A exaustão completa dos recursos de enfrentamento, levando a doenças e queda do sistema imunológico."
+                },
+                {
+                    "question": "Qual é a principal diferença entre o Transtorno de Ansiedade Generalizada (TAG) e o Transtorno de Estresse Agudo?",
+                    "options": [
+                    "O TAG ocorre após um evento traumático, enquanto o Transtorno de Estresse Agudo não tem um gatilho específico.",
+                    "O TAG se manifesta com sintomas de exaustão e burnout, enquanto o Transtorno de Estresse Agudo causa apenas nervosismo.",
+                    "O TAG se manifesta com preocupação excessiva sem um foco específico, enquanto o Transtorno de Estresse Agudo é uma reação intensa a um trauma.",
+                    "O TAG tem sintomas que duram menos de um mês, e o Transtorno de Estresse Agudo se prolonga por anos."
+                    ],
+                    "answer": "O TAG se manifesta com preocupação excessiva sem um foco específico, enquanto o Transtorno de Estresse Agudo é uma reação intensa a um trauma."
+                },
+                {
+                    "question": "O material didático descreve que a Síndrome de Burnout é comum em profissionais que atuam sob pressão. Qual das seguintes profissões é citada como exemplo de alta vulnerabilidade à síndrome?",
+                    "options": [
+                    "Contadores.",
+                    "Profissionais de segurança pública.",
+                    "Bibliotecários.",
+                    "Professores universitários."
+                    ],
+                    "answer": "Profissionais de segurança pública."
+                },
+                {
+                    "question": "Um dos subtipos de depressão, a distimia, é um quadro mais leve e crônico. Como se manifestam os sintomas na maioria dos casos?",
+                    "options": [
+                    "Apatia e sensação de corpo pesado, com letargia e falta de prazer nas atividades.",
+                    "Mania de grandeza e impulsividade.",
+                    "Sentimentos de culpa, tristeza profunda e lentidão psicomotora.",
+                    "Aumento da libido e do apetite, com ansiedade social."
+                    ],
+                    "answer": "Apatia e sensação de corpo pesado, com letargia e falta de prazer nas atividades."
+                },
+                {
+                    "question": "No Transtorno Bipolar, as fases se manifestam de forma diferente. Qual fase se caracteriza por um estado de euforia leve, que pode até ser produtivo para o paciente?",
+                    "options": [
+                    "Depressão.",
+                    "Mania.",
+                    "Hipomania.",
+                    "Ciclotimia."
+                    ],
+                    "answer": "Hipomania."
+                },
+                {
+                    "question": "A Organização Mundial da Saúde (OMS) afirma que os suicídios são evitáveis. O que a apostila ressalta que deve ser feito com o conhecimento sobre suicidologia ao se falar com pessoas enlutadas?",
+                    "options": [
+                    "Enfatizar que os suicídios poderiam ter sido evitados, para conscientizá-las.",
+                    "Trazer à tona o sentimento de culpa para que busquem ajuda profissional.",
+                    "Ajudar a pessoa a entender que o suicídio é um problema de saúde pública.",
+                    "Priorizar o bem-estar e não reforçar ideias de que a pessoa enlutada poderia ter salvo seu ente querido."
+                    ],
+                    "answer": "Priorizar o bem-estar e não reforçar ideias de que a pessoa enlutada poderia ter salvo seu ente querido."
+                },
+                {
+                    "question": "De acordo com o material, um dos 'focos' da Política Pública de Saúde Mental da Polícia Militar de Pernambuco (PMPE) é a:",
+                    "options": [
+                    "Assistência e gestão do policial militar em seu aspecto profissional.",
+                    "Promoção da saúde, prevenção do adoecimento e assistência em saúde mental.",
+                    "Repressão do uso de álcool e drogas pelos policiais militares.",
+                    "Priorização apenas dos veteranos e dos policiais militares da reserva."
+                    ],
+                    "answer": "Promoção da saúde, prevenção do adoecimento e assistência em saúde mental."
+                },
+                {
+                    "question": "O texto afirma que, para Rory O'Connor, uma das coisas que o suicídio não é, é um 'pecado'. Por que essa crença causa prejuízo à prevenção, de acordo com a apostila?",
+                    "options": [
+                    "Porque a maioria das pessoas que se suicidam não são religiosas.",
+                    "Porque muitas religiões punem a tentativa de suicídio, quando a pessoa precisa de ajuda.",
+                    "Porque a religião é um fator de proteção importante contra o suicídio.",
+                    "Porque o suicídio é um crime em todos os países do mundo."
+                    ],
+                    "answer": "Porque muitas religiões punem a tentativa de suicídio, quando a pessoa precisa de ajuda."
+                },
+                {
+                    "question": "Um policial militar que foi exposto a um desastre com risco à vida, e agora tem dificuldades com o funcionamento cotidiano, mas os sintomas persistem por menos de seis meses, pode ser diagnosticado com:",
+                    "options": [
+                    "Transtorno de Adaptação.",
+                    "Transtorno de Pânico.",
+                    "Transtorno Bipolar.",
+                    "Síndrome de Burnout."
+                    ],
+                    "answer": "Transtorno de Adaptação."
+                },
+                {
+                    "question": "Qual dos seguintes fatores NÃO é considerado uma das 'raízes' do problema de vitimização policial, conforme a 'Árvore do Problema' da PMPE?",
+                    "options": [
+                    "Rejeição social do trabalho.",
+                    "Demandas da vida privada.",
+                    "Elevados números de suicídios.",
+                    "Uso de álcool e substâncias."
+                    ],
+                    "answer": "Elevados números de suicídios."
+                },
+                {
+                    "question": "A partir do que o material didático apresenta, a relação entre o estigma de saúde mental e a busca de ajuda é inversamente proporcional. Isso significa que, para aumentar a busca por ajuda, é necessário:",
+                    "options": [
+                    "Aumentar o estigma e a marginalização.",
+                    "Aumentar a vigilância e o controle sobre os profissionais.",
+                    "Diminuir o estigma, a falta de compreensão e os preconceitos.",
+                    "Diminuir a quantidade de profissionais de saúde mental nas corporações."
+                    ],
+                    "answer": "Diminuir o estigma, a falta de compreensão e os preconceitos."
+                }
+                ];
+        
+        const TETROMINOS = {
+            'I': [
+                [[0,0,0,0], [1,1,1,1], [0,0,0,0], [0,0,0,0]],
+                [[0,1,0,0], [0,1,0,0], [0,1,0,0], [0,1,0,0]]
+            ],
+            'J': [
+                [[1,0,0], [1,1,1], [0,0,0]],
+                [[0,1,1], [0,1,0], [0,1,0]],
+                [[0,0,0], [1,1,1], [0,0,1]],
+                [[0,1,0], [0,1,0], [1,1,0]]
+            ],
+            'L': [
+                [[0,0,1], [1,1,1], [0,0,0]],
+                [[0,1,0], [0,1,0], [0,1,1]],
+                [[0,0,0], [1,1,1], [1,0,0]],
+                [[1,1,0], [0,1,0], [0,1,0]]
+            ],
+            'O': [
+                [[1,1], [1,1]]
+            ],
+            'S': [
+                [[0,1,1], [1,1,0], [0,0,0]],
+                [[0,1,0], [0,1,1], [0,0,1]]
+            ],
+            'T': [
+                [[0,1,0], [1,1,1], [0,0,0]],
+                [[0,1,0], [0,1,1], [0,1,0]],
+                [[0,0,0], [1,1,1], [0,1,0]],
+                [[0,1,0], [1,1,0], [0,1,0]]
+            ],
+            'Z': [
+                [[1,1,0], [0,1,1], [0,0,0]],
+                [[0,0,1], [0,1,1], [0,1,0]]
+            ]
+        };
+        const TETROMINO_KEYS = Object.keys(TETROMINOS);
+
+        function drawGrid() {
+            gameArea.innerHTML = '';
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('grid-cell');
+                    if (grid[r][c] !== 0) {
+                        cell.classList.add('tetromino', grid[r][c]);
+                    }
+                    gameArea.appendChild(cell);
+                }
+            }
+        }
+
+        function drawTetromino() {
+            if (!currentTetromino) return;
+            const shape = currentTetromino.shape;
+            const type = currentTetromino.type;
+            for (let r = 0; r < shape.length; r++) {
+                for (let c = 0; c < shape[r].length; c++) {
+                    if (shape[r][c] === 1) {
+                        const gridX = currentX + c;
+                        const gridY = currentY + r;
+                        if (gridX >= 0 && gridX < COLS && gridY >= 0 && gridY < ROWS) {
+                            const cellIndex = gridY * COLS + gridX;
+                            const cell = gameArea.children[cellIndex];
+                            if (cell) {
+                                cell.classList.add('tetromino', type);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        function undrawTetromino() {
+            if (!currentTetromino) return;
+            const shape = currentTetromino.shape;
+            const type = currentTetromino.type;
+            for (let r = 0; r < shape.length; r++) {
+                for (let c = 0; c < shape[r].length; c++) {
+                    if (shape[r][c] === 1) {
+                        const gridX = currentX + c;
+                        const gridY = currentY + r;
+                        if (gridX >= 0 && gridX < COLS && gridY >= 0 && gridY < ROWS) {
+                            const cellIndex = gridY * COLS + gridX;
+                            const cell = gameArea.children[cellIndex];
+                            if (cell) {
+                                cell.classList.remove('tetromino', type);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        function isValidMove(newX, newY, newShape) {
+            if (!newShape) newShape = currentTetromino.shape;
+            for (let r = 0; r < newShape.length; r++) {
+                for (let c = 0; c < newShape[r].length; c++) {
+                    if (newShape[r][c] === 1) {
+                        const gridX = newX + c;
+                        const gridY = newY + r;
+                        if (gridX < 0 || gridX >= COLS || gridY >= ROWS) {
+                            return false;
+                        }
+                        if (gridY < 0) {
+                            continue;
+                        }
+                        if (grid[gridY][gridX] !== 0) {
+                            return false;
+                        }
+                    }
+                }
+            }
+            return true;
+        }
+
+        function lockTetromino() {
+            const shape = currentTetromino.shape;
+            const type = currentTetromino.type;
+            for (let r = 0; r < shape.length; r++) {
+                for (let c = 0; c < shape[r].length; c++) {
+                    if (shape[r][c] === 1) {
+                        const gridX = currentX + c;
+                        const gridY = currentY + r;
+                        if (gridY < 0) {
+                            setGameOver();
+                            return;
+                        }
+                        grid[gridY][gridX] = type;
+                    }
+                }
+            }
+            checkLines();
+            generateNewTetromino();
+        }
+
+        function generateNewTetromino() {
+            const type = TETROMINO_KEYS[Math.floor(Math.random() * TETROMINO_KEYS.length)];
+            const shapes = TETROMINOS[type];
+            currentTetromino = {
+                type: type,
+                shapes: shapes,
+                rotation: 0,
+                shape: shapes[0]
+            };
+            currentX = Math.floor(COLS / 2) - Math.floor(currentTetromino.shape[0].length / 2);
+            currentY = -currentTetromino.shape.length;
+
+            if (!isValidMove(currentX, currentY, currentTetromino.shape)) {
+                setGameOver();
+            }
+        }
+
+        function moveTetromino(direction) {
+            undrawTetromino();
+            let newX = currentX;
+            let newY = currentY;
+
+            if (direction === 'left') {
+                newX--;
+            } else if (direction === 'right') {
+                newX++;
+            } else if (direction === 'down') {
+                newY++;
+            }
+
+            if (isValidMove(newX, newY)) {
+                currentX = newX;
+                currentY = newY;
+            } else if (direction === 'down') {
+                lockTetromino();
+                return false;
+            }
+            drawTetromino();
+            return true;
+        }
+
+        function rotateTetromino() {
+            undrawTetromino();
+            const originalRotation = currentTetromino.rotation;
+            currentTetromino.rotation = (currentTetromino.rotation + 1) % currentTetromino.shapes.length;
+            currentTetromino.shape = currentTetromino.shapes[currentTetromino.rotation];
+
+            if (!isValidMove(currentX, currentY, currentTetromino.shape)) {
+                let kicked = false;
+                if (currentX + currentTetromino.shape[0].length > COLS) {
+                    if (isValidMove(currentX - 1, currentY, currentTetromino.shape)) {
+                        currentX--;
+                        kicked = true;
+                    } else if (isValidMove(currentX - 2, currentY, currentTetromino.shape)) {
+                        currentX -= 2;
+                        kicked = true;
+                    }
+                } else if (currentX < 0) {
+                     if (isValidMove(currentX + 1, currentY, currentTetromino.shape)) {
+                        currentX++;
+                        kicked = true;
+                    } else if (isValidMove(currentX + 2, currentY, currentTetromino.shape)) {
+                        currentX += 2;
+                        kicked = true;
+                    }
+                }
+
+                if (!kicked && !isValidMove(currentX, currentY, currentTetromino.shape)) {
+                    currentTetromino.rotation = originalRotation;
+                    currentTetromino.shape = currentTetromino.shapes[currentTetromino.rotation];
+                }
+            }
+            drawTetromino();
+        }
+
+        function checkLines() {
+            let linesCleared = 0;
+            for (let r = ROWS - 1; r >= 0; r--) {
+                if (grid[r].every(cell => cell !== 0)) {
+                    linesCleared++;
+                    for (let rowToMove = r; rowToMove > 0; rowToMove--) {
+                        grid[rowToMove] = [...grid[rowToMove - 1]];
+                    }
+                    grid[0] = Array(COLS).fill(0);
+                    r++;
+                }
+            }
+
+            if (linesCleared > 0) {
+                score += linesCleared * 100;
+                scoreDisplay.textContent = `Pontos: ${score}`;
+                pauseGame();
+                showQuestion();
+            }
+            drawGrid();
+        }
+
+        function gameLoop() {
+            if (gameOver || isQuestionActive) return;
+
+            undrawTetromino();
+            currentY++;
+            if (!isValidMove(currentX, currentY)) {
+                currentY--;
+                lockTetromino();
+            }
+            drawGrid();
+            drawTetromino();
+        }
+
+        function startGame() {
+            gameOver = false;
+            score = 0;
+            scoreDisplay.textContent = `Pontos: ${score}`;
+            grid = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
+            generateNewTetromino();
+            drawGrid();
+            drawTetromino();
+            gameInterval = setInterval(gameLoop, dropInterval);
+        }
+
+        function pauseGame() {
+            clearInterval(gameInterval);
+        }
+
+        function resumeGame() {
+            if (!gameOver && !isQuestionActive) {
+                gameInterval = setInterval(gameLoop, dropInterval);
+            }
+        }
+
+        function setGameOver() {
+            gameOver = true;
+            pauseGame();
+            finalScoreDisplay.textContent = score;
+            gameOverScreen.style.display = 'flex';
+        }
+
+        function showQuestion() {
+            isQuestionActive = true;
+            questionScreen.style.display = 'flex';
+            
+            const randomQuestion = quizData[Math.floor(Math.random() * quizData.length)];
+            questionText.textContent = randomQuestion.question;
+            optionsContainer.innerHTML = '';
+
+            const shuffledOptions = [...randomQuestion.options].sort(() => Math.random() - 0.5);
+
+            shuffledOptions.forEach(option => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.addEventListener('click', () => checkQuestionAnswer(option, randomQuestion.answer));
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function checkQuestionAnswer(selectedOption, correctAnswer) {
+            isQuestionActive = false;
+            questionScreen.style.display = 'none';
+
+            if (selectedOption === correctAnswer) {
+                alert("Correto! O jogo continua!");
+                resumeGame();
+            } else {
+                alert(`Incorreto! A resposta correta era: ${correctAnswer}. Fim de Jogo!`);
+                setGameOver();
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (gameOver || isQuestionActive) return;
+
+            if (e.key === 'ArrowLeft') {
+                moveTetromino('left');
+            } else if (e.key === 'ArrowRight') {
+                moveTetromino('right');
+            } else if (e.key === 'ArrowDown') {
+                moveTetromino('down');
+                score += 1;
+                scoreDisplay.textContent = `Pontos: ${score}`;
+            } else if (e.key === 'ArrowUp') {
+                rotateTetromino();
+            }
+        });
+
+        startGame();
+    </script>
+
+</body>
+</html>
