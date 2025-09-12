@@ -606,7 +606,11 @@
                 startScreen.style.display = 'none';
                 endScreen.style.display = 'none';
                 gameContainer.style.display = 'block';
-                mobileControls.style.display = 'flex';
+                
+                // Mostra os controles mobile apenas em telas pequenas
+                if (window.innerWidth <= 600) {
+                    mobileControls.style.display = 'flex';
+                }
                 
                 // Reseta a interface
                 scoreBox.textContent = `Pontuação: ${score}`;
@@ -636,19 +640,11 @@
 
                 const answers = [currentQuestion.correctAnswer, ...currentQuestion.wrongAnswers].sort(() => Math.random() - 0.5);
 
-                answers.forEach(ans => {
-                    criarBalao(ans);
-                });
-                                // Posiciona os balões em locais fixos e espaçados
-                const answers = [currentQuestion.correctAnswer, ...currentQuestion.wrongAnswers];
-                answers.sort(() => Math.random() - 0.5); // Mistura as respostas
-                
                 const numBaloes = answers.length;
                 const espacamento = gameContainer.clientWidth / (numBaloes + 1);
-                
+
                 answers.forEach((ans, i) => {
                     const balao = criarBalao(ans);
-                    // Define a posição inicial com base no espaçamento
                     const xPos = espacamento * (i + 1) - (balao.clientWidth / 2);
                     balao.style.left = `${xPos}px`;
                     moverBalao(balao);
@@ -660,23 +656,16 @@
                 balao.classList.add('balloon');
                 balao.textContent = texto;
                 balao.dataset.answer = texto;
-
-                const containerWidth = gameContainer.clientWidth;
-                const balaoWidth = 150; // Largura aproximada
-                const randomLeft = Math.random() * (containerWidth - balaoWidth);
-
-                balao.style.left = `${randomLeft}px`;
                 balao.style.bottom = `-50px`;
 
                 gameContainer.appendChild(balao);
                 activeBalloons.push(balao);
-
-                moverBalao(balao);
+                return balao;
             }
 
             function moverBalao(balao) {
                 let bottom = -50;
-                const speed = 0.2 + Math.random() * 0.4; // Velocidade aleatória
+                const speed = 0.2 + Math.random() * 0.4; // Velocidade mais lenta e menos variada
                 
                 balao.animationInterval = setInterval(() => {
                     if (!gameActive) {
@@ -832,10 +821,9 @@
                 }
             });
             
-            // Inicia o jogo na primeira carga
+            // Posição inicial do atirador na carga da página
             bow.style.left = `calc(50% - 50px)`;
         });
     </script>
 </body>
 </html>
-
