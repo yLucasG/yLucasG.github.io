@@ -614,7 +614,7 @@
         balloon.dataset.answer = ans;
         
         // Aplica o espaçamento dinâmico
-        balloon.style.left = `${60 + i * spacing}px`;
+        balloon.style.left = `${(gameContainer.clientWidth / answers.length) * i + ((gameContainer.clientWidth / answers.length - 150) / 2) + 50}px`;
         
         balloon.style.bottom = "10px";
         gameContainer.appendChild(balloon);
@@ -750,3 +750,4 @@
   </script>
 </body>
 </html>
+
