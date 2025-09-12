@@ -102,8 +102,17 @@
       font-size: 1rem;
       z-index: 10;
     }
+    /* Novo container para os balões para usar Flexbox */
+    #balloon-container {
+      position: absolute;
+      bottom: 10px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+    }
     .balloon {
-      position: absolute;
       background-color: #9b59b6;
       border: 2px solid #8e44ad;
       color: #fff;
@@ -115,6 +124,9 @@
       word-wrap: break-word;
       overflow-wrap: break-word;
       height: auto;
+      width: 150px;
+      /* Transição de subida do balão */
+      transition: bottom 2s linear;
     }
     #bow-container {
       position: absolute;
@@ -155,6 +167,7 @@
       width: 45%;
       padding: 15px;
     }
+    /* Media query para telas grandes (desktop) */
     @media (min-width: 601px) {
       #bow-container {
         bottom: 25px;
@@ -162,7 +175,11 @@
       .balloon {
         width: 250px;
       }
+      #balloon-container {
+        align-items: flex-start;
+      }
     }
+    /* Media query para telas pequenas (mobile) */
     @media (max-width: 600px) {
         #question-box {
             font-size: 0.7rem;
@@ -188,10 +205,11 @@
     <button id="start-button">Iniciar Jogo</button>
   </div>
 
-  <div id="game-container" style="display: none;">
+  <div id="game-container">
     <div id="question-box"></div>
     <div id="score-box"></div>
     <div id="timer-box"></div>
+    <div id="balloon-container"></div>
     <div id="bow-container">
       <div class="bow"></div>
     </div>
@@ -220,6 +238,7 @@
     const timerBox = document.getElementById('timer-box');
     const finalScoreDisplay = document.getElementById('final-score');
     const bow = document.getElementById('bow-container');
+    const balloonContainer = document.getElementById('balloon-container');
     
     const mobileControls = document.getElementById('mobile-controls');
     const leftButton = document.getElementById('left-button');
@@ -232,7 +251,9 @@
     let currentQuestion;
     let gameActive = false;
     let shooting = false;
-    
+    let balloonIntervals = []; // Para armazenar os intervalos dos balões
+
+    // Seu array de perguntas e respostas...
     const questionsAndAnswers = [
       {
         question: "Como a Organização Mundial da Saúde (OMS) define saúde mental?",
@@ -615,15 +636,11 @@
         balloon.textContent = ans;
         balloon.dataset.answer = ans;
         
-        const containerWidth = gameContainer.clientWidth;
-        const balloonWidth = (window.innerWidth <= 600) ? 100 : 250;
-        const numBalloons = answers.length;
-        const totalBalloonWidth = balloonWidth * numBalloons;
-        const totalSpacing = containerWidth - totalBalloonWidth;
-        const spacingUnit = totalSpacing / (numBalloons + 1);
-        balloon.style.left = `${spacingUnit + i * (balloonWidth + spacingUnit)}px`;
-        
-        balloon.style.bottom = "10px";
+        let balloonWidth = (window.innerWidth <= 600) ? 100 : 250;
+        let spacing = (gameContainer.clientWidth - (balloonWidth * answers.length)) / (answers.length + 1);
+        balloon.style.left = `${spacing + i * (balloonWidth + spacing)}px`;
+        
+        balloon.style.bottom = "10px";
         gameContainer.appendChild(balloon);
         moveBalloon(balloon);
       });
