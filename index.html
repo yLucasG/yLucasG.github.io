@@ -4,7 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tetris do Conhecimento: Bloco a Bloco do Saber</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --cell-size: 20px;
+            --game-width: calc(var(--cell-size) * 10);
+            --game-height: calc(var(--cell-size) * 20);
+        }
+
         body {
             background-color: #1a1a1a;
             display: flex;
@@ -20,16 +29,15 @@
             image-rendering: pixelated;
             padding: 10px;
             box-sizing: border-box;
+            overflow: auto; /* Permite a rolagem para evitar o estouro em telas pequenas */
         }
-
-        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
         #game-container {
             display: flex;
             flex-direction: column;
             align-items: center;
             width: 100%;
-            max-width: 400px; /* Limite máximo para evitar que fique muito grande em monitores */
+            max-width: 400px; /* Limite máximo para evitar que a área do jogo fique enorme */
         }
 
         #game-area {
@@ -37,7 +45,7 @@
             width: 100%;
             grid-template-rows: repeat(20, 1fr);
             grid-template-columns: repeat(10, 1fr);
-            aspect-ratio: 10 / 20; /* Proporção de 10x20 para manter o formato */
+            aspect-ratio: 10 / 20; /* Mantém a proporção de 10x20 */
             border: 4px solid #eee;
             background-color: #000;
             position: relative;
@@ -82,7 +90,7 @@
             justify-content: center;
             align-items: center;
             color: #eee;
-            font-size: 1.5rem; /* Ajustado para melhor leitura em telas pequenas */
+            font-size: 1.5rem;
             padding: 10px;
             box-sizing: border-box;
             z-index: 10;
@@ -96,8 +104,11 @@
             display: flex;
             flex-direction: column;
             width: 90%;
+            /* AQUI: Fonte para melhor leitura */
+            font-family: Arial, sans-serif;
+            font-size: 1rem;
         }
-
+        
         #question-screen button, .control-button {
             background-color: #007bff;
             color: #fff;
@@ -110,6 +121,12 @@
             transition: background-color 0.2s;
             text-decoration: none;
             display: inline-block;
+        }
+        
+        #question-screen button {
+            /* AQUI: Botões de opções com fonte mais fácil de ler */
+            font-family: Arial, sans-serif;
+            font-size: 1rem;
         }
 
         #question-screen button:hover, .control-button:hover {
@@ -144,6 +161,9 @@
         @media (max-width: 767px) {
             h1 {
                 font-size: 1.5rem;
+            }
+            #game-container {
+                padding-bottom: 80px; /* Garante que os controles não cubram a área de jogo */
             }
         }
     </style>
@@ -205,7 +225,7 @@
 
         // COLOQUE AQUI A LISTA COMPLETA DAS 50 QUESTÕES
         // Gerei uma versão pequena para o exemplo funcionar
-        const quizData = [
+       const quizData = [
                 {
                     "question": "De acordo com a Organização Mundial da Saúde (OMS), o conceito de saúde mental está diretamente ligado à capacidade do indivíduo de:",
                     "options": [
@@ -857,7 +877,6 @@
                     "answer": "Diminuir o estigma, a falta de compreensão e os preconceitos."
                 }
                 ];
-        
         const TETROMINOS = {
             'I': [
                 [[0,0,0,0], [1,1,1,1], [0,0,0,0], [0,0,0,0]],
