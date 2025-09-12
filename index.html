@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
@@ -64,251 +64,8 @@
       background-color: #c0392b;
       padding: 5px 10px;
       border-radius: 5px;
-      font-size: 1.2rem;
-      z-index: 10;
-    }
-    .balloon {
-      position: absolute;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      width: 18vw;   /* proporcional à largura da tela */
-      height: 18vw;
-      max-width: 100px;  /* limite para não ficar gigante em telas grandes */
-      max-height: 100px;
-      font-size: clamp(0.6rem, 2.5vw, 0.8rem); /* mínimo, ideal, máximo */
-      right: 10px; /* fixa à direita */
-      text-align: center;
-      padding: 10px;
-      border-radius: 50%;
-      color: #ecf0f1;
-      box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
-      cursor: pointer;
-      transition: transform 0.1s ease-out;
-    }
-    #mobile-controls button {
-      margin: 6px;
-      box-sizing: border-box;
-    }
-    @media (max-height: 500px) and (orientation: landscape) {
-      .balloon {
-        width: clamp(48px, 12vw, 80px);
-        height: clamp(48px, 12vw, 80px);
-        font-size: clamp(0.9rem, 1.5vw, 0.9rem);
-        padding: 5px;
-        position: absolute;
-        top: 2px;
-      }
-      #score {
-        font-size: 0.4rem; /* menor texto */
-      }
-      #mobile-controls.visible button {
-        width: 44px;
-        height: 44px;
-        font-size: 0.95rem;
-        margin: 2px;
-        bottom: 25px;
-      }
-      #question-box {
-        font-size: 0.2rem !important;
-        padding: 4px 6px;
-      }
-      #bow-container {
-        transform-origin: 50% 50%;
-        transform: scale(0.85);
-      }
-    }
-    @media (max-width: 600px) {
-      .balloon {
-        width: 17vw;
-        height: 17vw;
-        font-size: 2.7vw;
-      }
-      #score {
-        font-size: 0.1rem; /* menor texto */
-      }
-      #timer-box {
-      font-size: 0.2rem !important;
-      padding: 4px 6px;
-    }
-      #question-box {
-        font-size: 0.2rem !important;
-        padding: 2px 4px;
-        top: 1px;
-      }
-      #game-container {
-        height: 70vh;
-        }
-    }
-    .hit-effect {
-      animation: burst 0.5s ease-out forwards;
-    }
-    @keyframes burst {
-      0% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.5); opacity: 0.5; }
-      100% { transform: scale(2); opacity: 0; }
-    }
-    #start-screen, #end-screen {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(44, 62, 80, 0.9);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      z-index: 20;
-    }
-    #start-button, #restart-button {
-      padding: 15px 30px;
-      font-size: 1.5rem;
-      font-family: 'Bangers', sans-serif;
-      color: #ecf0f1;
-      background-color: #3498db;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-    #start-button:hover, #restart-button:hover {
-      background-color: #2980b9;
-    }
-    #final-score {
-      font-size: 3rem;
-      color: #2ecc71;
-    }
-    #bow-container {
-        position: absolute;
-        top: 50%;
-        left: 20px;
-        width: 60px;
-        height: 60px;
-        background-color: #e67e22;
-        transform: translateY(-50%) rotate(100deg);
-        transform-origin: 50% 50%;
-        z-index: 15;
-        pointer-events: none;
-    }
-    .arrow {
-        position: absolute;
-        width: 15px;
-        height: 15px;
-        background-color: #ecf0f1;
-        border-radius: 50%;
-        pointer-events: none;
-    }
-    #power-bar-container {
-      position: absolute;
-      bottom: 20px;
-      left: 20px;
-      width: 200px;
-      height: 10px;
-      background-color: #555;
-      border-radius: 50px;
-      overflow: hidden;
-      z-index: 15;
-    }
-    #power-bar {
-      width: 0;
-      height: 100%;
-      background-color: #f39c12;
-      transition: width 0.1s linear;
-    }
-    #mobile-controls {
-      display: none;
-      position: absolute;
-      bottom: 20px;
-      right: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      z-index: 20;
-    }
-    #mobile-controls.visible {
-      display: flex;
-    }
-    #mobile-controls button {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      font-size: 1.2rem;
-      margin: 5px;
-      font-family: 'Bangers', sans-serif;
-      color: #ecf0f1;
-      background-color: #3498db;
-      border: none;
-      border-radius: 50%;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-    #mobile-controls button:active {
-      background-color: #2980b9;
-    }
-    #shoot-btn {
-      height: 120px;
-      font-size: 1.5rem;
-      border-radius: 10px;
-    }
-    .popup {
-      position: absolute;
-      top: 40%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 2rem;
-      padding: 20px 40px;
-      border-radius: 15px;
-      z-index: 30;
-      animation: popupAnim 1s ease forwards;
-    }
-    .popup.success {
-      background-color: #2ecc71;
-      color: white;
-    }
-    .popup.error {
-      background-color: #e74c3c;
-      color: white;
-      border: 3px dashed yellow;
-    }
-    @keyframes popupAnim {
-      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
-      30% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
-      100% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
-    }
-  </style>
-</head>
-<body>
-  <h1>Atirador de Respostas: SQMV</h1>
-  <div id="game-container">
-    <div id="mobile-controls">
-    <button id="aim-up-btn">▲</button>
-    <button id="aim-down-btn">▼</button>
-    <button id="shoot-btn">ATIRAR</button>
-    </div>
-    <div id="start-screen">
-      <h2>Pronto para aprender?</h2>
-      <p>Segure a barra de espaço para carregar a flecha e solte para atirar!</p>
-      <p>Use as setas do teclado (↑ ↓) para mirar.</p>
-      <p>Acerte o balão com a resposta correta para ganhar pontos.</p>
-      <button id="start-button">Começar</button>
-    </div>
-    <div id="end-screen" style="display:none;">
-      <h2>Tempo Esgotado!</h2>
-      <p>Sua pontuação final:</p>
-      <div id="final-score">0</div>
-      <button id="restart-button">Jogar Novamente</button>
-    </div>
-    <div id="question-box"></div>
-    <div id="score-box">Pontuação: 0</div>
-    <div id="timer-box">Tempo: 60</div>
-    <div id="power-bar-container">
-      <div id="power-bar"></div>
-    </div>
-    <div id="bow-container"></div>
-  </div>
-
-  <script>
+      font-size: 1.2re
+<script>
     const gameContainer = document.getElementById('game-container');
 const startScreen = document.getElementById('start-screen');
 const endScreen = document.getElementById('end-screen');
@@ -682,446 +439,178 @@ const questionsAndAnswers = [
     question: "O que o conceito de QVT (Qualidade de Vida no Trabalho) envolve, segundo a apostila?",
     correctAnswer: "A busca por uma visão integral e ética do ser humano em seu relacionamento com as organizações.",
     wrongAnswers: [
-      "Apenas a satisfação individual com o trabalho executado.",
-      "A produtividade e a qualidade do trabalho em detrimento do bem-estar."
-    ],
-  },
-  {
-    question: "Como o Anuário Brasileiro de Segurança Pública 2024 descreve a taxa de suicídios de policiais em 2023?",
-    correctAnswer: "Cresceu 26,2% no mesmo período, superando a soma de mortes em confronto em serviço e fora de serviço.",
-    wrongAnswers: [
-      "Apresentou uma queda de 18,1% em relação ao ano anterior.",
-      "Foi menor que as mortes em confronto em serviço e fora de serviço."
-    ],
-  },
-  {
-    question: "O que a 'ambivalência' no estudo do suicídio ajuda os profissionais de segurança a entender?",
-    correctAnswer: "A oscilação e a indecisão de uma pessoa em crise suicida, que hesita entre viver e morrer.",
-    wrongAnswers: [
-      "A certeza absoluta de que uma pessoa quer morrer.",
-      "A ausência total de vontade de viver ou morrer."
-    ],
-  },
-  {
-    question: "A cultura de 'naturalização de situações estressantes' e a ideia de 'policial herói' podem levar a qual consequência?",
-    correctAnswer: "Ao silêncio sobre o sofrimento, ao tabu sobre a saúde mental e à invisibilidade do trauma.",
-    wrongAnswers: [
-      "Ao fortalecimento dos vínculos sociais entre os policiais.",
-      "À maior busca por ajuda profissional e ao acolhimento."
-    ],
-  },
-  {
-    question: "O que os 'Focais' do Programa Tamojunto devem fazer para garantir a eficácia do programa?",
-    correctAnswer: "Zelar pelo tratamento humanizado, discrição, respeito, dignidade e sigilo das informações.",
-    wrongAnswers: [
-      "Compartilhar as informações pessoais dos colegas com a chefia.",
-      "Fornecer diagnóstico e tratamento psicológico para os colegas."
-    ],
-  },
-  {
-    question: "O que a OMS aponta sobre o tratamento de casos severos de saúde mental no mundo?",
-    correctAnswer: "80% das pessoas com casos severos de saúde mental estão sem tratamento.",
-    wrongAnswers: [
-      "A maioria dos casos severos de saúde mental recebe tratamento adequado.",
-      "O Brasil está no topo do ranking mundial de tratamento de saúde mental."
-    ],
-  },
-  {
-    question: "Segundo o Anuário Brasileiro de Segurança Pública 2024, quais são as características do perfil de policiais que mais foram vítimas de CVLI em 2023?",
-    correctAnswer: "Homens (96%), negros (69,7%) com faixa etária entre 35 e 54 anos (71,6%).",
-    wrongAnswers: [
-      "Mulheres (4%), brancas (29,4%) com idade entre 18 e 24 anos (0,7%).",
-      "Homens (96%), brancos (29,4%) com idade acima de 60 anos (6%)."
-    ],
-  },
-  {
-    question: "O que a Teoria Psicodinâmica do Trabalho, citada na apostila, nos ajuda a entender?",
-    correctAnswer: "O trabalho policial como uma atividade que mobiliza o corpo, a inteligência e a própria pessoa, ou seja, um trabalhador que sente e se afeta.",
-    wrongAnswers: [
-      "A polícia como um 'braço armado do estado', que não sente emoções.",
-      "Que o trabalho policial é a única causa do adoecimento mental."
-    ],
-  },
-  {
-    question: "De acordo com a apostila, o que é um dos principais fatores de sofrimento no trabalho do policial?",
-    correctAnswer: "A falta de reconhecimento social e o preconceito da população sobre a profissão.",
-    wrongAnswers: [
-      "O uso de equipamentos e armamentos modernos.",
-      "A autonomia no atendimento a ocorrências."
-    ],
-  },
-  {
-    question: "O que o losango no jogo representa agora? ",
-    correctAnswer: "A arma de tiro, que, com as pontas nas duas extremidades, representa os dois triângulos com as bases unidas.",
-    wrongAnswers: [
-      "O projétil de disparo que se move na direção oposta ao ângulo do triângulo.",
-      "Um obstáculo no jogo que o jogador deve evitar."
-    ],
-  },
-  {
-    question: "Na 'Árvore do Problema', o `tronco` representa...",
-    correctAnswer: "O problema principal.",
-    wrongAnswers: [
-      "As causas do problema.",
-      "Os efeitos visíveis do problema."
-    ],
-  },
-  {
-    question: "Segundo a apostila, o que o `silêncio` como estratégia de defesa coletiva na Brigada Militar significa?",
-    correctAnswer: "Um acordo para não expressar medos e desconfortos, violando a estratégia e não sendo bem visto pelo grupo.",
-    wrongAnswers: [
-      "Uma forma de manter a hierarquia e o respeito entre os colegas.",
-      "Uma maneira de fortalecer os laços de amizade e camaradagem."
-    ],
-  },
-  {
-    question: "Qual é a principal função do Programa `Tamojunto`?",
-    correctAnswer: "Capacitar policiais para atuarem na política de suporte entre pares.",
-    wrongAnswers: [
-      "Realizar a gestão da saúde física dos policiais.",
-      "Oferecer atendimento psicológico online gratuito para o efetivo."
-    ],
-  },
-  {
-    question: "Qual a definição de `Saúde` segundo a OMS em 1948?",
-    correctAnswer: "Um estado de completo bem-estar físico, mental e social, e não somente a ausência de enfermidades.",
-    wrongAnswers: [
-      "A ausência total de doenças físicas e mentais.",
-      "O estado de bem-estar apenas físico e social."
-    ],
-  },
-  {
-    question: "O que o `Gabinete de Psicologia`, administrado pela FCAS, oferece?",
-    correctAnswer: "Atendimento de psicoterapia presencial, com apoio de médico psiquiatra, e atendimentos pós-trauma.",
-    wrongAnswers: [
-      "Apenas o serviço de plantões psicológicos para casos de emergência.",
-      "Apenas o atendimento online gratuito para todo o efetivo."
-    ],
-  },
-  {
-    question: "A `qualidade de vida no trabalho (QVT)` representa o quê?",
-    correctAnswer: "O grau em que os membros da organização são capazes de satisfazer suas necessidades pessoais pelo trabalho e se sentirem satisfeitos e felizes.",
-    wrongAnswers: [
       "Apenas a produtividade e a qualidade no trabalho.",
       "O respeito pelos bem-estar das pessoas do ponto de vista biológico."
     ],
   }
 ];
+function startGame() {
+  startScreen.style.display = 'none';
+  gameContainer.style.display = 'block';
+  mobileControls.style.display = 'flex';
+  score = 0;
+  time = 60;
+  scoreBox.textContent = `Pontuação: ${score}`;
+  timerBox.textContent = `Tempo: ${time}s`;
+  gameActive = true;
+  loadQuestion();
+  startTimer();
+}
 
-// ----------- ALTERAÇÃO PARA 3 BALÕES -----------
-function createBalloonsForQuestion() {
-  // remove existentes
+function loadQuestion() {
   gameContainer.querySelectorAll('.balloon').forEach(b => b.remove());
+  if (questionsAndAnswers.length === 0) {
+    endGame();
+    return;
+  }
+  currentQuestion = questionsAndAnswers[Math.floor(Math.random() * questionsAndAnswers.length)];
+  questionBox.textContent = currentQuestion.question;
 
-  // sempre só 2 erradas
-  const wrongs = currentQuestion.wrongAnswers.slice(0, 2);
-  const allAnswers = [
-    { text: currentQuestion.correctAnswer, correct: true },
-    ...wrongs.map(ans => ({ text: ans, correct: false }))
-  ].sort(() => Math.random() - 0.5);
+  const answers = [currentQuestion.correctAnswer, ...currentQuestion.wrongAnswers];
+  answers.sort(() => Math.random() - 0.5);
 
-  allAnswers.forEach((answer) => {
+  answers.forEach((ans, i) => {
     const balloon = document.createElement('div');
-    balloon.className = 'balloon';
-    balloon.textContent = answer.text;
-    balloon.style.backgroundColor = "#2ecc71";
-    balloon.setAttribute('data-correct', answer.correct);
-    balloon.style.opacity = '0';
+    balloon.classList.add('balloon');
+    balloon.textContent = ans;
+    balloon.dataset.answer = ans;
+    balloon.style.left = `${60 + i * 160}px`;
+    balloon.style.bottom = "10px";
     gameContainer.appendChild(balloon);
-  });
 
-  requestAnimationFrame(() => {
-    const balloons = Array.from(gameContainer.querySelectorAll('.balloon'));
-    const isLandscapeMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
-      && window.innerWidth > window.innerHeight
-      && window.innerHeight <= 500;
-
-    if (isLandscapeMobile) {
-      positionLandscapeBalloons(balloons);
-    } else {
-      positionDefaultBalloons(balloons);
-    }
+    moveBalloon(balloon);
   });
 }
-// -----------------------------------------------
 
-// ... todo o restante do código permanece igual!
-function startGame() {
-  score = 0;
-  time = 120;
-  scoreBox.textContent = `Pontuação: ${score}`;
-  timerBox.textContent = `Tempo: ${time}`;
-  startScreen.style.display = 'none';
-  endScreen.style.display = 'none';
-  gameActive = true;
-  aimAngle = 0;
-  bow.style.transform = `rotate(${aimAngle}deg)`;
+function moveBalloon(balloon) {
+  let bottom = 10;
+  const interval = setInterval(() => {
+    if (!gameActive) {
+      clearInterval(interval);
+      return;
+    }
+    bottom += 1;
+    balloon.style.bottom = `${bottom}px`;
+    if (bottom > 600) {
+      balloon.remove();
+      clearInterval(interval);
+    }
+  }, 20);
+}
 
-  currentQuestion = getRandomQuestion();
-  displayQuestion(currentQuestion);
-  createBalloonsForQuestion();
+function shootProjectile() {
+  if (!gameActive || shooting) return;
+  shooting = true;
 
+  const projectile = document.createElement('div');
+  projectile.classList.add('projectile');
+  const bowRect = bow.getBoundingClientRect();
+  const containerRect = gameContainer.getBoundingClientRect();
+
+  projectile.style.left = `${bowRect.left + bowRect.width / 2 - containerRect.left - 5}px`;
+  projectile.style.bottom = "60px";
+  gameContainer.appendChild(projectile);
+
+  let bottom = 60;
+  const interval = setInterval(() => {
+    bottom += 5;
+    projectile.style.bottom = `${bottom}px`;
+
+    // colisão
+    document.querySelectorAll('.balloon').forEach(balloon => {
+      const projRect = projectile.getBoundingClientRect();
+      const balloonRect = balloon.getBoundingClientRect();
+      if (
+        projRect.left < balloonRect.right &&
+        projRect.right > balloonRect.left &&
+        projRect.top < balloonRect.bottom &&
+        projRect.bottom > balloonRect.top
+      ) {
+        if (balloon.dataset.answer === currentQuestion.correctAnswer) {
+          score += 10;
+          scoreBox.textContent = `Pontuação: ${score}`;
+          loadQuestion();
+        } else {
+          score -= 5;
+          scoreBox.textContent = `Pontuação: ${score}`;
+        }
+        balloon.remove();
+        projectile.remove();
+        clearInterval(interval);
+        shooting = false;
+      }
+    });
+
+    if (bottom > 600) {
+      projectile.remove();
+      clearInterval(interval);
+      shooting = false;
+    }
+  }, 20);
+}
+
+function startTimer() {
   timerInterval = setInterval(() => {
+    if (!gameActive) {
+      clearInterval(timerInterval);
+      return;
+    }
     time--;
-    timerBox.textContent = `Tempo: ${time}`;
+    timerBox.textContent = `Tempo: ${time}s`;
     if (time <= 0) {
+      clearInterval(timerInterval);
       endGame();
     }
   }, 1000);
 }
+
 function endGame() {
   gameActive = false;
-  clearInterval(timerInterval);
+  gameContainer.style.display = 'none';
+  mobileControls.style.display = 'none';
+  endScreen.style.display = 'block';
   finalScoreDisplay.textContent = score;
-  endScreen.style.display = 'flex';
-  gameContainer.querySelectorAll('.balloon').forEach(balloon => balloon.remove());
 }
+// ===== CONTROLES =====
+
+// Botão iniciar
 startButton.addEventListener('click', startGame);
-restartButton.addEventListener('click', startGame);
-function getRandomQuestion() {
-  return questionsAndAnswers[Math.floor(Math.random() * questionsAndAnswers.length)];
-}
-function displayQuestion(question) {
-  questionBox.textContent = question.question;
-}
-function positionDefaultBalloons(balloons) {
-  const gapY = 120;
-  let topStart = 70;
-  let rightPos = 120;
-  balloons.forEach((balloon, i) => {
-    balloon.style.position = "absolute";
-    balloon.style.left = "auto";
-    balloon.style.right = `${rightPos}px`;
-    balloon.style.top = `${topStart + i * gapY}px`;
-    balloon.style.opacity = "1";
-  });
-}
-// posicionamento diagonal (desktop e celular)
-function positionLandscapeBalloons(balloons) {
-  if (!balloons.length) return;
-  const gameW = gameContainer.clientWidth;
-  const gameH = gameContainer.clientHeight;
 
-  const isMobile = window.innerWidth <= 768; // detecta celular
+// Botão reiniciar
+restartButton.addEventListener('click', () => {
+  endScreen.style.display = 'none';
+  startGame();
+});
 
-  // espaçamento vertical entre balões
-  const gapDiag = isMobile 
-    ? Math.floor(gameH * 0.8) // mais próximos no celular
-    : Math.floor(gameH * 0.22); // padrão no desktop
+// Mobile - mover esquerda/direita
+leftButton.addEventListener('click', () => {
+  let left = parseInt(bow.style.left || "370");
+  if (left > 20) bow.style.left = `${left - 20}px`;
+});
 
-  // distância do topo
-  const startTop = isMobile 
-    ? Math.floor(gameH * 0.55) // mais embaixo no celular
-    : Math.floor(gameH * 0.2); // padrão no desktop
+rightButton.addEventListener('click', () => {
+  let left = parseInt(bow.style.left || "370");
+  if (left < 740) bow.style.left = `${left + 20}px`;
+});
 
-  // distância da lateral direita
-  const startLeft = isMobile 
-    ? Math.floor(gameW * 0.6) // ajusta para caber bem no celular
-    : Math.floor(gameW * 0.7); // padrão no desktop
+// Mobile - atirar
+shootButton.addEventListener('click', shootProjectile);
 
-  balloons.forEach((balloon, i) => {
-    balloon.style.position = "absolute";
-    balloon.style.left = `${startLeft + i * 15}px`; // leve inclinação
-    balloon.style.top = `${startTop + i * gapDiag}px`; // diagonal descendo
-    balloon.style.right = "auto";
-    balloon.style.opacity = "1";
-  });
-}
+// Teclado - mover e atirar
+document.addEventListener('keydown', (e) => {
+  if (!gameActive) return;
+  let left = parseInt(bow.style.left || "370");
 
-window.addEventListener('resize', () => {
-  const balloons = Array.from(gameContainer.querySelectorAll('.balloon'));
-  if (!balloons.length) return;
-  const isLandscapeMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
-    && window.innerWidth > window.innerHeight
-    && window.innerHeight <= 500;
-  if (isLandscapeMobile) {
-    positionLandscapeBalloons(balloons);
-  } else {
-    positionDefaultBalloons(balloons);
+  if (e.key === "ArrowLeft" && left > 20) {
+    bow.style.left = `${left - 20}px`;
+  } else if (e.key === "ArrowRight" && left < 740) {
+    bow.style.left = `${left + 20}px`;
+  } else if (e.key === " " || e.key === "ArrowUp") {
+    shootProjectile();
   }
 });
-function shootArrow(power, angle) {
-  const arrowElement = document.createElement('div');
-  arrowElement.classList.add('arrow');
-  gameContainer.appendChild(arrowElement);
 
-  const bowRect = bow.getBoundingClientRect();
-  const gameRect = gameContainer.getBoundingClientRect();
-  const startX = bowRect.left - gameRect.left + bowRect.height / 2;
-  const startY = bowRect.top - gameRect.top + bowRect.width / 2;
-  const rad = angle * Math.PI / 180;
-  let currentX = startX;
-  let currentY = startY;
-  const speed = 5 + power * 0.3;
-  const dx = Math.cos(rad) * speed;
-  const dy = Math.sin(rad) * speed;
-
-  arrowElement.style.transform = `rotate(${angle - 90}deg)`;
-  arrowElement.style.left = `${currentX}px`;
-  arrowElement.style.top = `${currentY}px`;
-
-  const arrowAnimation = setInterval(() => {
-    currentX += dx;
-    currentY += dy;
-    arrowElement.style.left = `${currentX}px`;
-    arrowElement.style.top = `${currentY}px`;
-
-    const hitTarget = checkCollision(currentX + 25, currentY + 2.5);
-    if (hitTarget) {
-      clearInterval(arrowAnimation);
-      arrowElement.remove();
-      shooting = false;
-
-      if (hitTarget.getAttribute('data-correct') === 'true') {
-        score += 10;
-        time += 15;
-        scoreBox.textContent = `Pontuação: ${score}`;
-        timerBox.textContent = `Tempo: ${time}`;
-        hitTarget.classList.add('hit-effect');
-        showPopup("Acertou! +10", true);
-        setTimeout(() => {
-          hitTarget.remove();
-          currentQuestion = getRandomQuestion();
-          displayQuestion(currentQuestion);
-          createBalloonsForQuestion();
-        }, 500);
-      } else {
-        score -= 5;
-        scoreBox.textContent = `Pontuação: ${score}`;
-        hitTarget.classList.add('hit-effect');
-        showPopup("Errou! -5", false);
-        setTimeout(() => hitTarget.remove(), 500);
-      }
-    }
-
-    if (currentX > gameContainer.clientWidth || currentX < 0 || currentY > gameContainer.clientHeight || currentY < 0) {
-      clearInterval(arrowAnimation);
-      arrowElement.remove();
-      shooting = false;
-    }
-  }, 16);
-}
-function showPopup(text, success) {
-  const popup = document.createElement('div');
-  popup.className = `popup ${success ? 'success' : 'error'}`;
-  popup.textContent = text;
-  gameContainer.appendChild(popup);
-  setTimeout(() => popup.remove(), 1000);
-}
-function checkCollision(x, y) {
-  const targets = gameContainer.querySelectorAll('.balloon');
-  for (let i = 0; i < targets.length; i++) {
-    const rect = targets[i].getBoundingClientRect();
-    const gameRect = gameContainer.getBoundingClientRect();
-    const targetX = rect.left - gameRect.left + rect.width / 2;
-    const targetY = rect.top - gameRect.top + rect.height / 2;
-    const targetRadius = rect.width / 2;
-    const distance = Math.sqrt((targetX - x) ** 2 + (targetY - y) ** 2);
-    if (distance < targetRadius) return targets[i];
-  }
-  return null;
-}
-window.onload = function() {
-  const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-  if (isMobile) {
-    mobileControls.classList.add('visible');
-    aimUpBtn.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      if (!gameActive || shooting) return;
-      aimInterval = setInterval(() => {
-        aimAngle = Math.max(-90, aimAngle - 5);
-        bow.style.transform = `rotate(${aimAngle}deg)`;
-      }, 50);
-    });
-    aimUpBtn.addEventListener('touchend', () => {
-      clearInterval(aimInterval);
-    });
-    aimDownBtn.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      if (!gameActive || shooting) return;
-      aimInterval = setInterval(() => {
-        aimAngle = Math.min(90, aimAngle + 5);
-        bow.style.transform = `rotate(${aimAngle}deg)`;
-      }, 50);
-    });
-    aimDownBtn.addEventListener('touchend', () => {
-      clearInterval(aimInterval);
-    });
-    shootBtn.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      if (!gameActive || shooting || isCharging) return;
-      isCharging = true;
-      powerCharge = 0;
-      chargeInterval = setInterval(() => {
-        if (powerCharge < 100) {
-          powerCharge += 2;
-          powerBar.style.width = `${powerCharge}%`;
-        }
-      }, 20);
-    });
-    shootBtn.addEventListener('touchend', (e) => {
-      e.preventDefault();
-      if (!gameActive || shooting || !isCharging) return;
-      isCharging = false;
-      shooting = true;
-      clearInterval(chargeInterval);
-      shootArrow(powerCharge, aimAngle);
-      powerCharge = 0;
-      powerBar.style.width = '0%';
-    });
-  } else {
-    document.addEventListener('keydown', (e) => {
-      if (!gameActive || shooting) return;
-      if (e.code === 'Space' && !isCharging) {
-        isCharging = true;
-        powerCharge = 0;
-        chargeInterval = setInterval(() => {
-          if (powerCharge < 100) {
-            powerCharge += 2;
-            powerBar.style.width = `${powerCharge}%`;
-          }
-        }, 20);
-      } else if (e.code === 'ArrowUp') {
-        aimAngle = Math.max(-90, aimAngle - 5);
-        bow.style.transform = `rotate(${aimAngle}deg)`;
-      } else if (e.code === 'ArrowDown') {
-        aimAngle = Math.min(90, aimAngle + 5);
-        bow.style.transform = `rotate(${aimAngle}deg)`;
-      }
-    });
-    document.addEventListener('keyup', (e) => {
-      if (!gameActive || shooting) return;
-      if (e.code === 'Space' && isCharging) {
-        isCharging = false;
-        shooting = true;
-        clearInterval(chargeInterval);
-        shootArrow(powerCharge, aimAngle);
-        powerCharge = 0;
-        powerBar.style.width = '0%';
-      }
-    });
-  }
-};
-  </script>
+// ===== FIM =====
+</script>
 </body>
-
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
