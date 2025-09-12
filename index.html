@@ -115,7 +115,6 @@
       word-wrap: break-word;
       overflow-wrap: break-word;
       height: auto;
-      /* Largura padrão para desktop */
       width: 150px;
     }
     #bow-container {
@@ -608,18 +607,18 @@
       const answers = [currentQuestion.correctAnswer, ...currentQuestion.wrongAnswers];
       answers.sort(() => Math.random() - 0.5);
     
+      // Usa o novo cálculo de espaçamento aqui
       answers.forEach((ans, i) => {
         const balloon = document.createElement('div');
         balloon.classList.add('balloon');
         balloon.textContent = ans;
         balloon.dataset.answer = ans;
         
-        // Corrigido: Usa um valor fixo no desktop para o espaçamento
         let spacing;
         if (window.innerWidth <= 600) {
-            spacing = 100;
+            spacing = 100; // Espaçamento mobile
         } else {
-            spacing = 200; // Valor aumentado para maior espaçamento no desktop
+            spacing = 200; // Espaçamento desktop
         }
         balloon.style.left = `${50 + i * spacing}px`;
         
