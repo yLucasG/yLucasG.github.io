@@ -188,8 +188,7 @@
         width: 150px;
         height: 50px;
         font-size: 0.8rem;
-        padding: 5px;
-    }
+      }
 }
   </style>
 </head>
@@ -630,7 +629,27 @@
       // Ajuste a fórmula aqui para que caiba na tela.
       // Uma opção é usar porcentagens ou um valor menor para o i.
       const basePosition = (gameContainer.clientWidth / 4) - 75; // Centraliza e distribui
-      balloon.style.left = `${basePosition + i * 120}px`; // Ajuste o valor 120 para mais ou menos espaçamento
+      // Verifica se a tela é menor que 601px (mobile)
+let spacing;
+if (window.innerWidth <= 600) {
+    spacing = 100; // Espaçamento para o celular (pode ajustar esse valor)
+} else {
+    spacing = 170; // Espaçamento para o computador (pode ajustar esse valor)
+}
+
+answers.forEach((ans, i) => {
+    const balloon = document.createElement('div');
+    balloon.classList.add('balloon');
+    balloon.textContent = ans;
+    balloon.dataset.answer = ans;
+    
+    // Usa o espaçamento dinâmico aqui
+    balloon.style.left = `${60 + i * spacing}px`;
+    
+    balloon.style.bottom = "10px";
+    gameContainer.appendChild(balloon);
+    moveBalloon(balloon);
+});
       balloon.style.bottom = "10px";
       gameContainer.appendChild(balloon);
     
@@ -774,6 +793,7 @@
 
 
 </body><grammarly-desktop-integration data-grammarly-shadow-root="true"></grammarly-desktop-integration></html>
+
 
 
 
