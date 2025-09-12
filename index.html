@@ -118,7 +118,7 @@
     }
     #bow-container {
       position: absolute;
-      bottom: 0;
+      bottom: 5px;
       left: 50%;
       transform: translateX(-50%);
       width: 100px;
@@ -155,6 +155,32 @@
       width: 45%;
       padding: 15px;
     }
+    /* Estilos para mobile */
+@media (max-width: 600px) {
+    #question-box {
+        font-size: 0.7rem;
+        padding: 5px 10px;
+    }
+    #score-box, #timer-box {
+        font-size: 0.7rem;
+        padding: 3px 8px;
+    }
+    .balloon {
+        width: 100px;
+        height: 40px;
+        font-size: 0.6rem;
+        padding: 5px;
+    }
+}
+
+/* Adicionando uma nova media query para ajustar a posição dos balões */
+@media (max-width: 1000px) {
+    .balloon {
+        /* Ajusta o espaçamento entre os balões */
+        /* Isso vai garantir que eles não saiam da tela em dispositivos com largura menor que 1000px */
+        margin-left: -20px; /* Exemplo de ajuste, você pode precisar de mais ou menos */
+    }
+}
   </style>
 </head>
 <body data-new-gr-c-s-check-loaded="14.1252.0" data-gr-ext-installed="">
@@ -587,16 +613,19 @@
       answers.sort(() => Math.random() - 0.5);
     
       answers.forEach((ans, i) => {
-        const balloon = document.createElement('div');
-        balloon.classList.add('balloon');
-        balloon.textContent = ans;
-        balloon.dataset.answer = ans;
-        balloon.style.left = `${60 + i * 170}px`;
-        balloon.style.bottom = "10px";
-        gameContainer.appendChild(balloon);
+      const balloon = document.createElement('div');
+      balloon.classList.add('balloon');
+      balloon.textContent = ans;
+      balloon.dataset.answer = ans;
+      // Ajuste a fórmula aqui para que caiba na tela.
+      // Uma opção é usar porcentagens ou um valor menor para o i.
+      const basePosition = (gameContainer.clientWidth / 4) - 75; // Centraliza e distribui
+      balloon.style.left = `${basePosition + i * 120}px`; // Ajuste o valor 120 para mais ou menos espaçamento
+      balloon.style.bottom = "10px";
+      gameContainer.appendChild(balloon);
     
-        moveBalloon(balloon);
-      });
+      moveBalloon(balloon);
+    });
     }
 
     function moveBalloon(balloon) {
@@ -628,7 +657,7 @@
       const containerRect = gameContainer.getBoundingClientRect();
     
       projectile.style.left = `${bowRect.left + bowRect.width / 2 - containerRect.left - 5}px`;
-      projectile.style.bottom = "60px";
+      projectile.style.bottom = "65px";
       gameContainer.appendChild(projectile);
     
       let bottom = 60;
@@ -735,5 +764,6 @@
 
 
 </body><grammarly-desktop-integration data-grammarly-shadow-root="true"></grammarly-desktop-integration></html>
+
 
 
