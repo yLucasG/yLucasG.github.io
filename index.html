@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Atirador de Respostas</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bangers&display=swap');
+
+        :root {
+            --bg-color: #2c3e50;
+            --text-color: #ecf0f1;
+            --container-bg: #34495e;
+            --container-border: #bdc3c7;
+            --question-bg: #f39c12;
+            --score-bg: #27ae60;
+            --timer-bg: #c0392b;
+            --balloon-bg: #9b59b6;
+            --balloon-border: #8e44ad;
+            --bow-color: #d35400;
+            --projectile-color: #e67e22;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Bangers', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            text-align: center;
+            user-select: none;
+            cursor: none;
+        }
+
+        #game-container {
+            width: 95%;
+            max-width: 1000px;
+            height: 80vh;
+            background-color: var(--container-bg);
+            border: 5px solid var(--container-border);
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+            display: none;
+            cursor: crosshair;
+        }
+
+        #start-screen, #end-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background-color: var(--container-bg);
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            border: 2px solid var(--text-color);
+        }
+
+        h1 {
+            font-size: clamp(2rem, 5vw, 2.5rem);
+            color: var(--question-bg);
+            margin-bottom: 20px;
+        }
+
+        button {
+            font-family: 'Bangers', sans-serif;
+            font-size: clamp(1rem, 3vw, 1.5rem);
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: none;
+            background-color: var(--score-bg);
+            color: #fff;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #2ecc71;
+        }
+
+        .score-display {
+            font-size: clamp(1.2rem, 3vw, 1.5rem);
+            margin-top: 15px;
+        }
+
+        .info-box {
+            position: absolute;
+            top: 10px;
+            padding: 5px 15px;
+            border-radius: 10px;
+            font-size: clamp(0.7rem, 2vw, 1rem);
+            text-align: center;
+            color: var(--bg-color);
+            z-index: 10;
+        }
+
+        #question-box {
+            left: 50%;
+            transform: translateX(-50%);
+            width: clamp(70%, 80vw, 800px);
+            background-color: var(--question-bg);
+            border: 2px solid #e67e22;
+        }
+
+        #score-box {
+            left: 10px;
+            background-color: var(--score-bg);
+        }
+
+        #timer-box {
+            right: 10px;
+            background-color: var(--timer-bg);
+        }
+
+        .balloon {
+            position: absolute;
+            background-color: var(--balloon-bg);
+            border: 2px solid var(--balloon-border);
+            color: #fff;
+            padding: 10px;
+            border-radius: 50px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            white-space: normal;
+            word-wrap: break-word;
+            min-width: 120px;
+            font-size: clamp(0.6rem, 2vw, 0.8rem);
+        }
+
+        #bow {
+            position: absolute;
+            bottom: 25px;
+            width: 100px;
+            height: 100px;
+            background-color: transparent;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            z-index: 20;
+        }
+        
+        #bow-img {
+            width: 50px;
+            height: 50px;
+            background-color: var(--bow-color);
+            border-radius: 50%;
+        }
+
+        .projectile {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: var(--projectile-color);
+            border-radius: 50%;
+            z-index: 15;
+            transition: transform 0.2s ease-out;
+        }
+        
+        #mobile-controls {
+            display: none;
+            position: fixed;
+            bottom: 10px;
+            width: 90%;
+            justify-content: space-between;
+            z-index: 30;
+        }
+
+        #mobile-controls button {
+            width: 45%;
+            padding: 15px;
+        }
+
+        @media (max-width: 600px) {
+            #game-container {
+                cursor: default;
+            }
+
+            #mobile-controls {
+                display: flex;
+            }
+
+            body {
+                cursor: default;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="start-screen" role="main">
+        <h1>Atirador de Respostas</h1>
+        <p>Atire nos balões para responder as perguntas!</p>
+        <button id="start-button">Iniciar Jogo</button>
+    </div>
+
+    <div id="game-container">
+        <div id="question-box" class="info-box" aria-live="polite"></div>
+        <div id="score-box" class="info-box" aria-label="Pontuação do jogo">Pontuação: 0</div>
+        <div id="timer-box" class="info-box" aria-label="Tempo restante">Tempo: 60s</div>
+        <div id="bow">
+            <div id="bow-img"></div>
+        </div>
+    </div>
+
+    <div id="end-screen" style="display: none;" role="main">
+        <h1>Fim de Jogo!</h1>
+        <p class="score-display">Sua Pontuação Final: <span id="final-score">0</span></p>
+        <button id="restart-button">Jogar Novamente</button>
+    </div>
+
+    <div id="mobile-controls">
+        <button id="left-button" aria-label="Mover para a esquerda">⬅️</button>
+        <button id="shoot-button" aria-label="Disparar">Disparar</button>
+        <button id="right-button" aria-label="Mover para a direita">➡️</button>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const gameContainer = document.getElementById('game-container');
+            const startScreen = document.getElementById('start-screen');
+            const endScreen = document.getElementById('end-screen');
+            const startButton = document.getElementById('start-button');
+            const restartButton = document.getElementById('restart-button');
+            const questionBox = document.getElementById('question-box');
+            const scoreBox = document.getElementById('score-box');
+            const timerBox = document.getElementById('timer-box');
+            const finalScoreDisplay = document.getElementById('final-score');
+            const bow = document.getElementById('bow');
+            const mobileControls = document.getElementById('mobile-controls');
+            const leftButton = document.getElementById('left-button');
+            const rightButton = document.getElementById('right-button');
+            const shootButton = document.getElementById('shoot-button');
+
+            let score = 0;
+            let time = 60;
+            let timerInterval;
+            let currentQuestion;
+            let gameActive = false;
+            let activeBalloons = [];
+            let questionsPool = [];
+
+            const questionsAndAnswers = [
+        {
+            question: "Qual o principal objetivo da Gestão de Pessoas (GP)?",
+            correctAnswer: "Promover o alinhamento entre os objetivos individuais dos colaboradores e os objetivos organizacionais.",
+            wrongAnswers: [
+                "Focar exclusivamente na redução de custos com a folha de pagamento.",
+                "Fiscalizar o cumprimento de horários e a disciplina dos funcionários."
+            ],
+        },
+        {
+            question: "Na moderna Gestão de Pessoas, como são considerados os colaboradores?",
+            correctAnswer: "Como o principal ativo da organização, parceiros e capital humano.",
+            wrongAnswers: [
+                "Como meros recursos produtivos, facilmente substituíveis.",
+                "Como agentes passivos que apenas seguem ordens."
+            ],
+        },
+        {
+            question: "Qual foi o primeiro estágio da evolução da Gestão de Pessoas, caracterizado pelo foco em atividades burocráticas como folha de pagamento e controle de frequência?",
+            correctAnswer: "Administração de Pessoal.",
+            wrongAnswers: [
+                "Gestão Estratégica de Pessoas.",
+                "Gestão de Talentos."
+            ],
+        },
+        {
+            question: "Qual dos seis processos de Gestão de Pessoas é responsável por incluir novas pessoas na organização, abrangendo recrutamento e seleção?",
+            correctAnswer: "Processo de Agregar pessoas.",
+            wrongAnswers: [
+                "Processo de Desenvolver pessoas.",
+                "Processo de Manter pessoas."
+            ],
+        },
+        {
+            question: "O que caracteriza o processo de 'Recompensar pessoas' na Gestão de Pessoas?",
+            correctAnswer: "Incentivar as pessoas e satisfazer suas necessidades individuais mais elevadas, incluindo remuneração, benefícios e serviços sociais.",
+            wrongAnswers: [
+                "Apenas o pagamento do salário mensal.",
+                "Aplicar punições por baixo desempenho."
+            ],
+        },
+        {
+            question: "Qual a diferença fundamental entre recrutamento interno e externo?",
+            correctAnswer: "O recrutamento interno busca candidatos dentro da própria organização, enquanto o externo busca candidatos no mercado de trabalho.",
+            wrongAnswers: [
+                "O recrutamento interno é mais caro e demorado que o externo.",
+                "O recrutamento externo é utilizado apenas para cargos de alta gestão."
+            ],
+        },
+        {
+            question: "O que é a Avaliação 360 graus?",
+            correctAnswer: "Um método no qual o desempenho é avaliado por múltiplas fontes, como chefias, colegas, subordinados e clientes.",
+            wrongAnswers: [
+                "Uma autoavaliação feita pelo próprio colaborador.",
+                "Uma avaliação focada apenas nos resultados financeiros alcançados."
+            ],
+        },
+        {
+            question: "Segundo a Teoria dos Dois Fatores de Herzberg, o que são os 'Fatores de Higiene'?",
+            correctAnswer: "Fatores relacionados ao ambiente de trabalho (salário, condições de trabalho, relacionamentos) que, se ausentes, causam insatisfação, mas não necessariamente geram motivação.",
+            wrongAnswers: [
+                "Fatores relacionados ao conteúdo do trabalho que geram satisfação duradoura, como reconhecimento e crescimento.",
+                "As necessidades mais básicas da pirâmide de Maslow, como alimentação e segurança."
+            ],
+        },
+        {
+            question: "De acordo com a Teoria da Hierarquia das Necessidades de Maslow, qual é a necessidade no topo da pirâmide?",
+            correctAnswer: "Necessidade de Auto-Realização (moralidade, criatividade, solução de problemas).",
+            wrongAnswers: [
+                "Necessidades Fisiológicas (alimento, repouso, moradia).",
+                "Necessidade de Segurança (segurança do corpo, do emprego)."
+            ],
+        },
+        {
+            question: "Qual a principal diferença entre Treinamento e Desenvolvimento de Pessoas?",
+            correctAnswer: "O Treinamento foca no cargo atual e no desempenho a curto prazo, enquanto o Desenvolvimento foca na carreira e no crescimento a longo prazo.",
+            wrongAnswers: [
+                "Não há diferença, os termos são sinônimos.",
+                "Treinamento é para a equipe, enquanto Desenvolvimento é apenas para a liderança."
+            ],
+        },
+        {
+            question: "Quais são os três componentes da Competência na gestão de pessoas?",
+            correctAnswer: "Conhecimento (saber), Habilidade (saber fazer) e Atitude (fazer).",
+            wrongAnswers: [
+                "Inteligência, Carisma e Autoridade.",
+                "Formação, Experiência e Pontualidade."
+            ],
+        },
+        {
+            question: "Na Teoria Comportamental da Liderança, qual estilo de líder busca envolver ativamente os membros da equipe na tomada de decisões?",
+            correctAnswer: "Líder Democrático.",
+            wrongAnswers: [
+                "Líder Autoritário.",
+                "Líder Laissez-faire."
+            ],
+        },
+        {
+            question: "Qual a principal diferença entre um 'grupo' e uma 'equipe'?",
+            correctAnswer: "Numa equipe, os membros se unem por um esforço coletivo e compartilham a responsabilidade, enquanto num grupo as atividades podem ser individuais e até competitivas.",
+            wrongAnswers: [
+                "Grupo tem mais pessoas que uma equipe.",
+                "Equipe não tem um líder definido, enquanto um grupo sempre tem."
+            ],
+        },
+        {
+            question: "Segundo a doutrina do Exército Brasileiro, a chefia militar engloba três características. Quais são elas?",
+            correctAnswer: "Comando (autoridade legal), administração (gestão) e liderança (condução de pessoas).",
+            wrongAnswers: [
+                "Disciplina, hierarquia e ordem.",
+                "Estratégia, tática e logística."
+            ],
+        },
+        {
+            question: "Nos três níveis da cultura organizacional de Schein, qual é o nível mais profundo e inconsciente, representando crenças tidas como 'verdades' inquestionáveis?",
+            correctAnswer: "Pressupostos básicos.",
+            wrongAnswers: [
+                "Artefatos visíveis.",
+                "Valores compartilhados."
+            ],
+        },
+        {
+            question: "O que é Qualidade de Vida no Trabalho (QVT)?",
+            correctAnswer: "O bem-estar físico, mental e emocional dos funcionários no ambiente de trabalho.",
+            wrongAnswers: [
+                "A quantidade de benefícios financeiros oferecidos pela organização.",
+                "A ausência total de estresse e conflitos no trabalho."
+            ],
+        },
+        {
+            question: "Qual é a principal característica da liderança informal?",
+            correctAnswer: "Não está baseada em autoridade hierárquica, mas sim no respeito conquistado junto aos membros do grupo.",
+            wrongAnswers: [
+                "É exercida exclusivamente pelo chefe ou gerente do setor.",
+                "É uma liderança ineficaz e que gera desordem na organização."
+            ],
+        },
+        {
+            question: "Qual dos métodos de avaliação de desempenho envolve a comparação entre dois servidores ou entre um servidor e o grupo onde ele atua?",
+            correctAnswer: "Método Comparativo.",
+            wrongAnswers: [
+                "Avaliação por escalas gráficas.",
+                "Avaliação por incidentes críticos."
+            ],
+        },
+        {
+            question: "Na Teoria X de McGregor, qual é a premissa sobre os seres humanos em relação ao trabalho?",
+            correctAnswer: "Os seres humanos têm uma aversão natural ao trabalho e precisam ser controlados e pressionados.",
+            wrongAnswers: [
+                "O trabalho é uma atividade natural e gratificante para os seres humanos.",
+                "As pessoas são auto motivadas e buscam responsabilidades."
+            ],
+        },
+        {
+            question: "Qual dos cinco estilos de gestão de conflitos busca uma solução que atenda plenamente às necessidades de ambas as partes, através de um esforço conjunto?",
+            correctAnswer: "Colaboração.",
+            wrongAnswers: [
+                "Evitamento.",
+                "Competitividade."
+            ],
+        }, {
+            question: "Qual a principal diferença na Gestão de Pessoas entre o setor público e o setor privado?",
+            correctAnswer: "No setor público o interesse é atender os anseios da sociedade, enquanto no privado o interesse é o da organização.",
+            wrongAnswers: [
+                "O setor privado não se preocupa com o bem-estar dos colaboradores.",
+                "Não há diferença, as práticas de gestão são idênticas em ambos os setores."
+            ],
+        },
+        {
+            question: "Dentro dos processos de GP, qual deles é responsável por criar condições ambientais e psicológicas satisfatórias para as pessoas?",
+            correctAnswer: "Processo de Manter pessoas.",
+            wrongAnswers: [
+                "Processo de Agregar pessoas.",
+                "Processo de Monitorar pessoas."
+            ],
+        },
+        {
+            question: "Qual a principal vantagem do recrutamento INTERNO?",
+            correctAnswer: "Valoriza e retém os colaboradores, aproveitando o conhecimento que já possuem da organização.",
+            wrongAnswers: [
+                "Traz novas perspectivas e experiências de fora da organização.",
+                "É o único método permitido para preencher cargos de alta gestão."
+            ],
+        },
+        {
+            question: "No processo de admissão no setor público, qual etapa corresponde à aceitação formal do cargo pelo candidato nomeado?",
+            correctAnswer: "Posse.",
+            wrongAnswers: [
+                "Nomeação.",
+                "Exercício."
+            ],
+        },
+        {
+            question: "O que a Teoria Y de McGregor pressupõe sobre os colaboradores?",
+            correctAnswer: "Que o trabalho é uma atividade natural e que as pessoas são responsáveis, auto motivadas e capazes de autogerenciamento.",
+            wrongAnswers: [
+                "Que as pessoas são preguiçosas por natureza e precisam ser constantemente controladas.",
+                "Que a única motivação para o trabalho é a recompensa financeira."
+            ],
+        },
+        {
+            question: "Segundo Herzberg, qual dos seguintes é um 'Fator Motivacional' (intrínseco), que gera satisfação?",
+            correctAnswer: "Reconhecimento pelo desempenho e oportunidades de crescimento.",
+            wrongAnswers: [
+                "Salário e benefícios.",
+                "Boas condições de trabalho e segurança no emprego."
+            ],
+        },
+        {
+            question: "Qual é a primeira etapa do processo de treinamento?",
+            correctAnswer: "Diagnóstico (levantamento das necessidades de treinamento).",
+            wrongAnswers: [
+                "Execução (aplicação do curso).",
+                "Avaliação (verificação dos resultados)."
+            ],
+        },
+        {
+            question: "O que é 'Job Rotation' (rotação de cargos) como método de desenvolvimento?",
+            correctAnswer: "A movimentação de colaboradores entre diferentes cargos e áreas para ampliar sua experiência e visão da organização.",
+            wrongAnswers: [
+                "A promoção de um colaborador para um cargo superior.",
+                "A demissão de um colaborador para a contratação de outro."
+            ],
+        },
+        {
+            question: "Qual estilo de liderança se caracteriza por uma abordagem 'hands-off', fornecendo pouca orientação e delegando autoridade à equipe?",
+            correctAnswer: "Laissez-faire ou Liberal.",
+            wrongAnswers: [
+                "Democrático.",
+                "Autoritário."
+            ],
+        },
+        {
+            question: "O que são 'artefatos visíveis' no modelo de cultura organizacional de Schein?",
+            correctAnswer: "Aspectos superficiais e observáveis como símbolos, uniformes e layout do espaço físico.",
+            wrongAnswers: [
+                "As crenças e suposições fundamentais e inconscientes da organização.",
+                "Os valores e princípios amplamente aceitos pelos membros."
+            ],
+        },
+        {
+            question: "Qual é um dos efeitos POSITIVOS do conflito em uma organização?",
+            correctAnswer: "Pode despertar energia no grupo para buscar soluções criativas e inovadoras.",
+            wrongAnswers: [
+                "Sempre gera frustração, hostilidade e tensão entre as pessoas.",
+                "Aumenta a cooperação e melhora todos os relacionamentos."
+            ],
+        },
+        {
+            question: "No modelo de mudança de Kurt Lewin, o que significa a etapa de 'Descongelamento'?",
+            correctAnswer: "Tirar a organização da zona de conforto para superar a inércia e a resistência à mudança.",
+            wrongAnswers: [
+                "Implementar a mudança e mover a organização para uma nova posição.",
+                "Tornar a mudança permanente e estabilizar a nova situação."
+            ],
+        },
+        {
+            question: "Qual é um dos principais desafios da gestão multigeracional no serviço público?",
+            correctAnswer: "Compreender as diferentes perspectivas e estilos de trabalho de cada geração para criar um ambiente inclusivo.",
+            wrongAnswers: [
+                "Separar as gerações em setores diferentes para evitar conflitos.",
+                "Impor o mesmo estilo de trabalho para todas as gerações."
+            ],
+        },
+        {
+            question: "A capacidade de reconhecer e gerenciar as próprias emoções e as dos outros é uma habilidade de liderança chamada de:",
+            correctAnswer: "Inteligência Emocional.",
+            wrongAnswers: [
+                "Tomada de Decisão.",
+                "Gestão do Tempo."
+            ],
+        },
+        {
+            question: "Qual dos princípios da liderança militar enfatiza que o líder deve ter uma apresentação e conduta que despertem admiração e desejo de imitação?",
+            correctAnswer: "Servir de exemplo a seus homens.",
+            wrongAnswers: [
+                "Conhecer sua profissão.",
+                "Decidir com acerto e oportunidade."
+            ],
+        },
+        {
+            question: "O que é o processo de 'Aplicar pessoas' na GP?",
+            correctAnswer: "Desenhar as atividades que as pessoas realizarão, orientar e acompanhar seu desempenho.",
+            wrongAnswers: [
+                "Recrutar e selecionar novos talentos para a organização.",
+                "Capacitar e incrementar o desenvolvimento profissional das pessoas."
+            ],
+        },
+        {
+            question: "Qual a diferença entre motivação intrínseca e extrínseca?",
+            correctAnswer: "A intrínseca surge de fatores internos (prazer, desafio), enquanto a extrínseca vem de fatores externos (dinheiro, recompensas).",
+            wrongAnswers: [
+                "A intrínseca é mais fraca que a extrínseca.",
+                "A extrínseca só se aplica a cargos de liderança."
+            ],
+        },
+        {
+            question: "Qual ferramenta de gestão de conflitos envolve um terceiro imparcial para facilitar a comunicação entre as partes?",
+            correctAnswer: "Mediação.",
+            wrongAnswers: [
+                "Competição.",
+                "Negociação direta."
+            ],
+        },
+        {
+            question: "Um programa que oferece horários flexíveis e teletrabalho está focado em qual aspecto da GP?",
+            correctAnswer: "Qualidade de Vida no Trabalho (QVT).",
+            wrongAnswers: [
+                "Avaliação de Desempenho.",
+                "Recrutamento e Seleção."
+            ],
+        },
+        {
+            question: "O que é uma liderança 'ágil e adaptável', uma tendência no setor público?",
+            correctAnswer: "Um estilo de liderança que pode se adaptar rapidamente, responder às mudanças e impulsionar a inovação.",
+            wrongAnswers: [
+                "Uma liderança que segue rigidamente as regras, sem desvios.",
+                "Uma liderança que foca apenas em manter o status quo."
+            ],
+        }
+    ];
+
+            function iniciarJogo() {
+                gameActive = true;
+                score = 0;
+                time = 60;
+                questionsPool = [...questionsAndAnswers]; // Reinicia as perguntas
+                
+                // Exibe as telas e controles
+                startScreen.style.display = 'none';
+                endScreen.style.display = 'none';
+                gameContainer.style.display = 'block';
+                
+                // Mostra os controles mobile apenas em telas pequenas
+                if (window.innerWidth <= 600) {
+                    mobileControls.style.display = 'flex';
+                }
+                
+                // Reseta a interface
+                scoreBox.textContent = `Pontuação: ${score}`;
+                timerBox.textContent = `Tempo: ${time}s`;
+                bow.style.left = '50%';
+                
+                // Remove balões e projéteis antigos
+                document.querySelectorAll('.balloon').forEach(b => b.remove());
+                document.querySelectorAll('.projectile').forEach(p => p.remove());
+                activeBalloons = [];
+
+                carregarPergunta();
+                iniciarTimer();
+            }
+
+            function carregarPergunta() {
+                // Se o pool de perguntas acabar, o jogo termina
+                if (questionsPool.length === 0) {
+                    finalizarJogo();
+                    return;
+                }
+                
+                // Pega uma pergunta aleatória do pool
+                const randomIndex = Math.floor(Math.random() * questionsPool.length);
+                currentQuestion = questionsPool.splice(randomIndex, 1)[0];
+                questionBox.textContent = currentQuestion.question;
+
+                const answers = [currentQuestion.correctAnswer, ...currentQuestion.wrongAnswers].sort(() => Math.random() - 0.5);
+
+                const numBaloes = answers.length;
+                const espacamento = gameContainer.clientWidth / (numBaloes + 1);
+
+                answers.forEach((ans, i) => {
+                    const balao = criarBalao(ans);
+                    const xPos = espacamento * (i + 1) - (balao.clientWidth / 2);
+                    balao.style.left = `${xPos}px`;
+                    moverBalao(balao);
+                });
+            }
+
+            function criarBalao(texto) {
+                const balao = document.createElement('div');
+                balao.classList.add('balloon');
+                balao.textContent = texto;
+                balao.dataset.answer = texto;
+                balao.style.bottom = `-50px`;
+
+                gameContainer.appendChild(balao);
+                activeBalloons.push(balao);
+                return balao;
+            }
+
+            function moverBalao(balao) {
+                let bottom = -50;
+                const speed = 0.2 + Math.random() * 0.4; // Velocidade mais lenta e menos variada
+                
+                balao.animationInterval = setInterval(() => {
+                    if (!gameActive) {
+                        clearInterval(balao.animationInterval);
+                        return;
+                    }
+
+                    bottom += speed;
+                    balao.style.bottom = `${bottom}px`;
+
+                    if (bottom > gameContainer.clientHeight) {
+                        clearInterval(balao.animationInterval);
+                        balao.remove();
+                        // Se o balão correto sair da tela, o jogador perde
+                        if (balao.dataset.answer === currentQuestion.correctAnswer) {
+                            finalizarJogo();
+                        }
+                    }
+                }, 20);
+            }
+
+            function disparar() {
+                if (!gameActive) return;
+
+                const proj = document.createElement('div');
+                proj.classList.add('projectile');
+                const bowRect = bow.getBoundingClientRect();
+                const containerRect = gameContainer.getBoundingClientRect();
+                
+                proj.style.left = `${bowRect.left + bowRect.width / 2 - containerRect.left - 5}px`;
+                proj.style.bottom = `${bowRect.height}px`;
+
+                gameContainer.appendChild(proj);
+                
+                const projSpeed = 10;
+                let projInterval = setInterval(() => {
+                    let bottom = parseInt(proj.style.bottom) + projSpeed;
+                    proj.style.bottom = `${bottom}px`;
+                    
+                    if (bottom > gameContainer.clientHeight) {
+                        clearInterval(projInterval);
+                        proj.remove();
+                        return;
+                    }
+                    
+                    // Checa colisão com os balões
+                    activeBalloons.forEach(balao => {
+                        const projRect = proj.getBoundingClientRect();
+                        const balaoRect = balao.getBoundingClientRect();
+
+                        if (
+                            projRect.left < balaoRect.right &&
+                            projRect.right > balaoRect.left &&
+                            projRect.top < balaoRect.bottom &&
+                            projRect.bottom > balaoRect.top
+                        ) {
+                            clearInterval(projInterval);
+                            proj.remove();
+                            lidarComAcerto(balao);
+                        }
+                    });
+                }, 10);
+            }
+
+            function lidarComAcerto(balao) {
+                if (balao.dataset.answer === currentQuestion.correctAnswer) {
+                    score += 10;
+                    time += 10; // Adiciona 10 segundos ao tempo
+            
+                    scoreBox.textContent = `Pontuação: ${score}`;
+                    timerBox.textContent = `Tempo: ${time}s`;
+                    
+                    balao.remove();
+                    // Limpa todos os balões para carregar a próxima pergunta
+                    activeBalloons.forEach(b => clearInterval(b.animationInterval));
+                    activeBalloons.forEach(b => b.remove());
+                    activeBalloons = [];
+                    carregarPergunta();
+                } else {
+                    score = Math.max(0, score - 5);
+                    scoreBox.textContent = `Pontuação: ${score}`;
+                    balao.remove();
+                }
+            }
+            function iniciarTimer() {
+                if (timerInterval) clearInterval(timerInterval);
+                timerInterval = setInterval(() => {
+                    if (!gameActive) return;
+                    time--;
+                    timerBox.textContent = `Tempo: ${time}s`;
+                    if (time <= 0) {
+                        finalizarJogo();
+                    }
+                }, 1000);
+            }
+
+            function finalizarJogo() {
+                gameActive = false;
+                if (timerInterval) clearInterval(timerInterval);
+                activeBalloons.forEach(b => clearInterval(b.animationInterval));
+                
+                gameContainer.style.display = 'none';
+                mobileControls.style.display = 'none';
+                endScreen.style.display = 'block';
+                finalScoreDisplay.textContent = score;
+            }
+
+            // --- Controles de Eventos ---
+            startButton.addEventListener('click', iniciarJogo);
+            restartButton.addEventListener('click', iniciarJogo);
+
+            // Controle do atirador com mouse/touch e teclado
+            gameContainer.addEventListener('mousemove', (e) => {
+                if (!gameActive) return;
+                let mouseX = e.clientX - gameContainer.getBoundingClientRect().left;
+                let bowX = mouseX - bow.clientWidth / 2;
+                bow.style.left = `${Math.max(0, Math.min(bowX, gameContainer.clientWidth - bow.clientWidth))}px`;
+            });
+
+            gameContainer.addEventListener('click', () => {
+                disparar();
+            });
+            
+            // Controles mobile
+            leftButton.addEventListener('click', () => {
+                if (!gameActive) return;
+                let currentLeft = parseInt(bow.style.left || 0);
+                bow.style.left = `${Math.max(0, currentLeft - 20)}px`;
+            });
+
+            rightButton.addEventListener('click', () => {
+                if (!gameActive) return;
+                let currentLeft = parseInt(bow.style.left || 0);
+                bow.style.left = `${Math.min(gameContainer.clientWidth - bow.clientWidth, currentLeft + 20)}px`;
+            });
+
+            shootButton.addEventListener('click', () => {
+                disparar();
+            });
+
+            // Controles de teclado
+            document.addEventListener('keydown', (e) => {
+                if (!gameActive) return;
+                const bowPos = parseInt(bow.style.left || gameContainer.clientWidth / 2 - bow.clientWidth / 2);
+                const moveAmount = 20;
+
+                if (e.key === "ArrowLeft" || e.key.toLowerCase() === 'a') {
+                    e.preventDefault();
+                    bow.style.left = `${Math.max(0, bowPos - moveAmount)}px`;
+                } else if (e.key === "ArrowRight" || e.key.toLowerCase() === 'd') {
+                    e.preventDefault();
+                    bow.style.left = `${Math.min(gameContainer.clientWidth - bow.clientWidth, bowPos + moveAmount)}px`;
+                } else if (e.key === " " || e.key === "ArrowUp") {
+                    e.preventDefault();
+                    disparar();
+                }
+            });
+            
+            // Posição inicial do atirador na carga da página
+            bow.style.left = `calc(50% - 50px)`;
+        });
+    </script>
+</body>
+</html>
+
+
