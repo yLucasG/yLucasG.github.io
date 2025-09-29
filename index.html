@@ -72,14 +72,14 @@
         .touch-button:active { background-color: #2980b9; }
 
         #shop-screen h2 { margin-top: 0; }
-        .skin-power-desc { font-size: 0.8em; font-style: italic; color: #bdc3c7; }
+        .skin-power-desc { font-size: 0.8em; font-style: italic; color: #bdc3c7; min-height: 2.5em;}
         #shop-items {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
             gap: 20px; margin: 20px 0; max-height: 50vh; overflow-y: auto; padding: 5px;
         }
         .shop-item {
             background-color: var(--primary-bg); padding: 15px; border-radius: 10px;
-            border: 2px solid var(--accent-blue);
+            border: 2px solid var(--accent-blue); display: flex; flex-direction: column; justify-content: space-between;
         }
         .shop-item canvas { border-radius: 5px; background-color: var(--road-color); width: 100px; height: 100px; margin: auto; }
         .shop-button-equip { background-color: #9b59b6; }
@@ -155,7 +155,7 @@
         
         let player, portals, obstacles, powerUps, answerPopup;
         let score, lives, gameActive, gameLoopId, difficultyLevel;
-        let isFrozen, isSlowed, correctAnswersInARow, powerReady;
+        let isFrozen, isSlowed, correctAnswersInARow, powerReady, isNextGolden;
         let portalSpeed = 0.65;
         let playerData = {};
         const baseSpeed = 7;
@@ -172,76 +172,25 @@
                 [array[i], array[j]] = [array[j], array[i]];
             }
         }
-
+        
         // --- SKINS E PODERES ---
         const skins = [
             { id: 'default', name: 'Padrão', price: 0, draw: drawStickman, power: {name: 'Nenhum', desc: 'Sem poder especial.', execute: ()=>{} } },
-            { id: 'ninja', name: 'Ninja', price: 800, draw: drawNinja, power: {name: 'Lâmina Oculta', desc: 'Elimina todos os perigos da tela.', execute: ()=> { obstacles = []; } } },
-            { id: 'ghost', name: 'Fantasma', price: 700, draw: drawGhost, power: {name: 'Forma Etérea', desc: 'Atravesse perigos por 5s.', execute: ()=> { player.isPhasing = true; setTimeout(()=> player.isPhasing = false, 5000); } } },
-            { id: 'robot', name: 'Robô', price: 1000, draw: drawRobot, power: {name: 'Análise Tática', desc: 'Pausa o jogo e revela a resposta.', execute: ()=> { gameActive = false; portals.find(p=>p.isCorrect).isHint = true; setTimeout(()=> gameActive = true, 2000); } } },
-            { id: 'monkey', name: 'Macaco', price: 600, draw: drawMonkey, power: {name: 'Super Agilidade', desc: 'Fique invencível por 5s.', execute: ()=> { player.isInvincible = true; setTimeout(()=> player.isInvincible = false, 5000); } } },
-            { id: 'seagull', name: 'Gaivota', price: 600, draw: drawSeagull, power: {name: 'Voo Lento', desc: 'Deixa tudo em câmera lenta por 5s.', execute: ()=> { portalSpeed /= 2; setTimeout(()=> portalSpeed *= 2, 5000); } } },
-            { id: 'alligator', name: 'Jacaré', price: 750, draw: drawAlligator, power: {name: 'Escudo de Escamas', desc: 'Bloqueia o próximo dano.', execute: ()=> { player.isShielded = true; } } },
-            { id: 'goat', name: 'Bode', price: 500, draw: (p, ctxRef) => drawEmoji(p, ctxRef, '🐐'), power: {name: 'Teimosia', desc: 'Chance de ignorar um dano.', execute: ()=> { if(Math.random() < 0.5) player.isShielded = true; } } },
+            { id: 'frog', name: 'Sapo', price: 350, draw: (p, ctxRef) => drawEmoji(p, ctxRef, '🐸'), power: {name: 'Salto Rápido', desc: 'Salta uma distância para cima.', execute: ()=> { if(player.y > 150) player.y -= 150; } } },
+            { id: 'pig', name: 'Porco', price: 400, draw: (p, ctxRef) => drawEmoji(p, ctxRef, '🐷'), power: {name: 'Faro de Ouro', desc: 'Garante que a próxima questão seja dourada.', execute: ()=> { isNextGolden = true; } } },
+            { id: 'lion', name: 'Leão', price: 400, draw: (p, ctxRef) => drawEmoji(p, ctxRef, '🦁'), power: {name: 'Rugido Paralisante', desc: 'Congela todos os perigos por 3s.', execute: ()=> { obstacles.forEach(o => o.isStunned = true); setTimeout(()=> obstacles.forEach(o => o.isStunned = false), 3000); } } },
             { id: 'dog', name: 'Cachorro', price: 500, draw: drawDog, power: {name: 'Faro Fino', desc: 'Atrai o próximo power-up.', execute: ()=> { if (powerUps.length > 0) powerUps[0].isAttracted = true; } } },
+            { id: 'goat', name: 'Bode', price: 500, draw: (p, ctxRef) => drawEmoji(p, ctxRef, '🐐'), power: {name: 'Teimosia', desc: 'Chance de ignorar um dano.', execute: ()=> { if(Math.random() < 0.5) player.isShielded = true; } } },
+            { id: 'monkey', name: 'Macaco', price: 600, draw: (p, ctxRef) => drawEmoji(p, ctxRef, '🐒'), power: {name: 'Super Agilidade', desc: 'Fique invencível por 5s.', execute: ()=> { player.isInvincible = true; setTimeout(()=> player.isInvincible = false, 5000); } } },
+            { id: 'seagull', name: 'Gaivota', price: 600, draw: (p, ctxRef) => drawEmoji(p, ctxRef, '🕊️'), power: {name: 'Voo Lento', desc: 'Deixa tudo em câmera lenta por 5s.', execute: ()=> { isSlowed = true; setTimeout(()=> isSlowed = false, 5000); } } },
+            { id: 'ghost', name: 'Fantasma', price: 700, draw: (p, ctxRef) => drawEmoji(p, ctxRef, '👻'), power: {name: 'Forma Etérea', desc: 'Atravesse perigos por 5s.', execute: ()=> { player.isPhasing = true; setTimeout(()=> player.isPhasing = false, 5000); } } },
+            { id: 'alligator', name: 'Jacaré', price: 750, draw: (p, ctxRef) => drawEmoji(p, ctxRef, '🐊'), power: {name: 'Escudo de Escamas', desc: 'Bloqueia o próximo dano.', execute: ()=> { player.isShielded = true; } } },
+            { id: 'ninja', name: 'Ninja', price: 800, draw: (p, ctxRef) => drawEmoji(p, ctxRef, '🥷'), power: {name: 'Lâmina Oculta', desc: 'Elimina todos os perigos da tela.', execute: ()=> { obstacles = []; } } },
+            { id: 'robot', name: 'Robô', price: 1000, draw: (p, ctxRef) => drawEmoji(p, ctxRef, '🤖'), power: {name: 'Análise Tática', desc: 'Pausa o jogo e revela a resposta.', execute: ()=> { gameActive = false; portals.find(p=>p.isCorrect).isHint = true; setTimeout(()=> { gameActive = true; portals.forEach(p => p.isHint = false); }, 2000); } } },
         ];
 
         // --- FUNÇÕES DE DESENHO DE SKINS ---
-        function drawStickman(p, ctxRef, color = '#2c3e50') { /*...*/ }
-        function drawDog(p, ctxRef) { /*...*/ }
-        function drawEmoji(p, ctxRef, emoji = '🙂') { ctxRef.font = `${p.height}px Arial`; ctxRef.textAlign = 'center'; ctxRef.textBaseline = 'middle'; ctxRef.fillText(emoji, p.x + p.width/2, p.y + p.height/2); }
-        function drawNinja(p, ctxRef) { drawEmoji(p, ctxRef, '🥷'); }
-        function drawGhost(p, ctxRef) { drawEmoji(p, ctxRef, '👻'); }
-        function drawRobot(p, ctxRef) { drawEmoji(p, ctxRef, '🤖'); }
-        function drawMonkey(p, ctxRef) { drawEmoji(p, ctxRef, '🐒'); }
-        function drawSeagull(p, ctxRef) { drawEmoji(p, ctxRef, '🕊️'); }
-        function drawAlligator(p, ctxRef) { drawEmoji(p, ctxRef, '🐊'); }
-
-        // --- LÓGICA DE SALVAMENTO, NAVEGAÇÃO, E LOJA ---
-        function loadPlayerData() { /*...*/ }
-        function savePlayerData() { /*...*/ }
-        function updateCoinDisplays() { /*...*/ }
-        function showScreen(screenId) { /*...*/ }
-        function populateShop() { /*...*/ }
-        function buySkin(skinId, price) { /*...*/ }
-        function equipSkin(skinId) { /*...*/ }
-
-        // --- LÓGICA PRINCIPAL DO JOGO ---
-        function resetGame() { /*...*/ }
-        function startGame() { /*...*/ }
-        function endGame(collided = false) { /*...*/ }
-        function nextRound() { /*...*/ }
-        function createObjects() { /*...*/ }
-        function updateGameStatus() { /*...*/ }
-        function showDifficultyIndicator(text) { /*...*/ }
-        function checkCollision(a, b) { /*...*/ }
-        function drawAnswerPopup() { /*...*/ }
-        function usePower() {
-            if (!gameActive || !powerReady) return;
-            const equippedSkin = skins.find(s => s.id === playerData.equippedSkinId) || skins[0];
-            equippedSkin.power.execute();
-            powerReady = false;
-            updatePowerIndicator();
-        }
-        function updatePowerIndicator() {
-            powerIndicator.textContent = powerReady ? '⭐' : '';
-            powerBtn.classList.toggle('disabled', !powerReady);
-            powerBtn.disabled = !powerReady;
-        }
-
-        function gameLoop() {
-            if (!gameActive) {
-                if(gameLoopId) requestAnimationFrame(gameLoop); // Keep loop running for hint pause
-                return;
-            }
-            // ... (game logic)
-            if(gameActive) gameLoopId = requestAnimationFrame(gameLoop);
-        }
-        
-        // --- CÓDIGO COMPLETO (Funções abaixo) ---
-        
-        // FUNÇÕES DE DESENHO
-        drawStickman = (p, ctxRef, color = '#2c3e50') => {
+        function drawStickman(p, ctxRef, color = '#2c3e50') {
             const centerX = p.x + p.width / 2;
             const headRadius = p.width / 3;
             const bodyTop = p.y + headRadius * 2;
@@ -261,20 +210,31 @@
             ctxRef.moveTo(centerX, bodyBottom); ctxRef.lineTo(p.x, p.y + p.height);
             ctxRef.moveTo(centerX, bodyBottom); ctxRef.lineTo(p.x + p.width, p.y + p.height);
             ctxRef.stroke();
-        };
-        drawDog = (p, ctxRef) => {
-            ctxRef.fillStyle = '#8D6E63'; ctxRef.fillRect(p.x, p.y + p.height*0.2, p.width, p.height*0.8);
-            ctxRef.fillStyle = '#A1887F'; ctxRef.fillRect(p.x, p.y, p.width, p.height * 0.4);
-            ctxRef.fillStyle = '#5D4037'; ctxRef.fillRect(p.x - 5, p.y, 10, p.height * 0.3);
+        }
+        function drawDog(p, ctxRef) {
+            ctxRef.fillStyle = '#966F33'; // Corpo
+            ctxRef.fillRect(p.x, p.y + p.height*0.25, p.width, p.height*0.75);
+            ctxRef.fillStyle = '#AB927A'; // Cabeça
+            ctxRef.fillRect(p.x, p.y, p.width, p.height * 0.4);
+            ctxRef.fillStyle = '#6F4E37'; // Orelhas
+            ctxRef.fillRect(p.x - 5, p.y, 10, p.height * 0.3);
             ctxRef.fillRect(p.x + p.width - 5, p.y, 10, p.height * 0.3);
-            ctxRef.fillStyle = 'black'; ctxRef.beginPath();
+            ctxRef.fillStyle = 'black'; // Olhos e nariz
+            ctxRef.beginPath();
             ctxRef.arc(p.x + p.width*0.3, p.y + p.height*0.2, 3, 0, Math.PI * 2);
             ctxRef.arc(p.x + p.width*0.7, p.y + p.height*0.2, 3, 0, Math.PI * 2);
             ctxRef.fill();
-        };
+            ctxRef.fillRect(p.x + p.width/2 - 2, p.y + p.height * 0.3, 4, 4);
+        }
+        function drawEmoji(p, ctxRef, emoji = '🙂') {
+            ctxRef.font = `${p.height * 0.9}px Arial`;
+            ctxRef.textAlign = 'center';
+            ctxRef.textBaseline = 'middle';
+            ctxRef.fillText(emoji, p.x + p.width/2, p.y + p.height/2);
+        }
 
-        // UI E SALVAMENTO
-        loadPlayerData = () => {
+        // --- LÓGICA DE SALVAMENTO, NAVEGAÇÃO, E LOJA ---
+        function loadPlayerData() {
             const data = localStorage.getItem('cfoGameData');
             if (data) playerData = JSON.parse(data);
             else playerData = { name: "", coins: 0, ownedSkins: ['default'], equippedSkinId: 'default' };
@@ -282,22 +242,22 @@
                 document.getElementById('player-name-input').value = playerData.name;
                 document.getElementById('welcome-message').textContent = `Bem-vindo de volta, ${playerData.name}!`;
             }
-        };
-        savePlayerData = () => {
+        }
+        function savePlayerData() {
             playerData.name = document.getElementById('player-name-input').value.trim() || "Cadete";
             localStorage.setItem('cfoGameData', JSON.stringify(playerData));
-        };
-        updateCoinDisplays = () => {
+        }
+        function updateCoinDisplays() {
             document.getElementById('start-coins').textContent = playerData.coins;
             document.getElementById('shop-coins').textContent = playerData.coins;
-        };
-        showScreen = (screenId) => {
+        }
+        function showScreen(screenId) {
             ['start-screen', 'game-wrapper', 'game-over-screen', 'shop-screen'].forEach(id => {
                 document.getElementById(id).classList.add('hidden');
             });
             document.getElementById(screenId).classList.remove('hidden');
-        };
-        populateShop = () => {
+        }
+        function populateShop() {
             const container = document.getElementById('shop-items');
             container.innerHTML = '';
             skins.forEach(skin => {
@@ -335,67 +295,127 @@
                 itemDiv.appendChild(button);
                 container.appendChild(itemDiv);
             });
-        };
-        buySkin = (skinId, price) => {
+        }
+        function buySkin(skinId, price) {
             if (playerData.coins >= price) {
                 playerData.coins -= price; playerData.ownedSkins.push(skinId);
                 savePlayerData(); updateCoinDisplays(); populateShop();
             }
-        };
-        equipSkin = (skinId) => {
+        }
+        function equipSkin(skinId) {
             playerData.equippedSkinId = skinId;
             savePlayerData(); populateShop();
-        };
+        }
 
-        // LÓGICA DO JOGO
-        resetGame = () => {
+        // --- LÓGICA PRINCIPAL DO JOGO ---
+        function resetGame() {
             player = { x: canvas.width / 2 - playerWidth / 2, y: canvas.height - playerHeight - 20, width: playerWidth, height: playerHeight, speed: baseSpeed, isShielded: false, isInvincible: false, isPhasing: false, controlsSlippery: false };
             portals = []; obstacles = []; powerUps = []; answerPopup = null;
-            score = 0; lives = 3; difficultyLevel = 0; correctAnswersInARow = 0; powerReady = false;
+            score = 0; lives = 3; difficultyLevel = 0; correctAnswersInARow = 0; powerReady = false; isNextGolden = false;
             isFrozen = false; isSlowed = false;
             shuffle(questions); availableQuestions = [...questions];
             updateGameStatus(); updatePowerIndicator(); nextRound();
-        };
-        startGame = () => {
+        }
+        function startGame() {
             savePlayerData(); showScreen('game-wrapper'); gameActive = true;
             resetGame(); if(gameLoopId) cancelAnimationFrame(gameLoopId);
             gameLoop();
-        };
-        endGame = (collided = false) => {
+        }
+        function endGame(collided = false) {
             gameActive = false;
             const coinsEarned = score; playerData.coins += coinsEarned; savePlayerData();
             document.getElementById('final-score').textContent = score;
             document.getElementById('coins-earned').textContent = coinsEarned;
             document.getElementById('game-over-title').textContent = collided ? "Fim de Jogo: Colisão!" : "Fim de Jogo";
             showScreen('game-over-screen');
-        };
-        nextRound = () => {
+        }
+        function nextRound() {
             if (availableQuestions.length === 0) { shuffle(questions); availableQuestions = [...questions]; }
             currentQuestion = availableQuestions.pop();
             document.getElementById('question-area').textContent = currentQuestion.text;
             createObjects();
-        };
-        updateGameStatus = () => {
+        }
+        function createObjects() {
+            portals = []; 
+            const isGolden = Math.random() < 0.25 || isNextGolden;
+            if (isNextGolden) isNextGolden = false;
+            
+            const portalY = -portalHeight;
+            const leftPortalX = streetX + (streetWidth / 4) - (portalWidth / 2);
+            const rightPortalX = streetX + (streetWidth * 3 / 4) - (portalWidth / 2);
+            const positions = [leftPortalX, rightPortalX];
+            shuffle(positions);
+            portals.push({ x: positions[0], y: portalY, width: portalWidth, height: portalHeight, isCorrect: currentQuestion.answer === true, text: 'V', isGolden: isGolden });
+            portals.push({ x: positions[1], y: portalY, width: portalWidth, height: portalHeight, isCorrect: currentQuestion.answer === false, text: 'F', isGolden: isGolden });
+
+            const obstacleChance = 0.4 + (difficultyLevel * 0.1);
+            if (Math.random() < obstacleChance) {
+                let type = 'cone';
+                if (difficultyLevel >= 4 && Math.random() < 0.3) type = 'hole';
+                else if (difficultyLevel >= 3 && Math.random() < 0.35) type = 'monster';
+                else if (difficultyLevel >= 2 && Math.random() < 0.4) type = 'puddle';
+                if (difficultyLevel >= 1 && Math.random() < 0.4) type = 'tornado';
+                if (difficultyLevel >= 2 && Math.random() < 0.2) type = 'oil';
+                
+                obstacles.push({ type: type, x: streetX + Math.random() * (streetWidth - 30), y: -60 - Math.random() * 100, size: 30 });
+            }
+            if (Math.random() < 0.2) {
+                const type = Math.random() < 0.5 ? 'freeze' : 'life';
+                powerUps.push({ x: streetX + Math.random() * (streetWidth - 30), y: -100 - Math.random() * 150, size: 30, type: type });
+            }
+        }
+        function updateGameStatus() {
             document.getElementById('score').textContent = `Pontos: ${score}`;
             document.getElementById('lives').innerHTML = `Vidas: ${'❤️'.repeat(lives)}`;
             const newDifficultyLevel = Math.floor(score / 120);
             if (newDifficultyLevel > difficultyLevel) {
                 difficultyLevel = newDifficultyLevel;
-                showDifficultyIndicator(`Nível ${difficultyLevel + 1}!`);
+                const indicator = document.getElementById('difficulty-indicator');
+                indicator.textContent = `Nível ${difficultyLevel + 1}!`; indicator.style.opacity = 1;
+                setTimeout(() => { indicator.style.opacity = 0; }, 2000);
             }
             if (lives <= 0) endGame();
-        };
-        showDifficultyIndicator = (text) => {
-            const indicator = document.getElementById('difficulty-indicator');
-            indicator.textContent = text; indicator.style.opacity = 1;
-            setTimeout(() => { indicator.style.opacity = 0; }, 2000);
-        };
-        checkCollision = (a, b) => a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
-
+        }
+        function updatePowerIndicator() {
+            powerIndicator.textContent = powerReady ? '⭐' : '';
+            powerBtn.classList.toggle('disabled', !powerReady);
+            powerBtn.disabled = !powerReady;
+        }
+        function checkCollision(a, b) { return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y; }
+        function drawAnswerPopup() {
+            if (!answerPopup || answerPopup.alpha <= 0) return;
+            const x = canvas.width / 2; const y = canvas.height / 2;
+            const radius = 100; const points = 12; const inset = 0.5;
+            ctx.save();
+            ctx.globalAlpha = answerPopup.alpha; ctx.fillStyle = answerPopup.color; ctx.beginPath();
+            ctx.moveTo(x, y - radius);
+            for (let i = 0; i < points; i++) {
+                const outerAngle = (i / points) * 2 * Math.PI;
+                const innerAngle = outerAngle + (Math.PI / points);
+                ctx.lineTo(x + Math.cos(outerAngle) * radius, y + Math.sin(outerAngle) * radius);
+                ctx.lineTo(x + Math.cos(innerAngle) * radius * inset, y + Math.sin(innerAngle) * radius * inset);
+            }
+            ctx.closePath(); ctx.fill();
+            ctx.fillStyle = `rgba(255, 255, 255, ${answerPopup.alpha})`;
+            ctx.font = 'bold 36px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText(answerPopup.text, x, y);
+            ctx.restore();
+            answerPopup.alpha -= 0.015;
+        }
+        function usePower() {
+            if (!gameActive || !powerReady) return;
+            const equippedSkin = skins.find(s => s.id === playerData.equippedSkinId) || skins[0];
+            equippedSkin.power.execute();
+            powerReady = false; correctAnswersInARow = 0;
+            updatePowerIndicator();
+        }
+        
         // LOOP PRINCIPAL
-        gameLoop = () => {
-            if (!gameActive) return;
-
+        function gameLoop() {
+            if (!gameActive) {
+                if(gameLoopId) cancelAnimationFrame(gameLoopId);
+                return;
+            }
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = '#95a5a6'; ctx.fillRect(streetX, 0, streetWidth, canvas.height);
             
@@ -403,7 +423,6 @@
             ctx.globalAlpha = player.isPhasing ? 0.5 : 1.0;
             equippedSkin.draw(player, ctx);
             ctx.globalAlpha = 1.0;
-
             if (player.isShielded || player.isInvincible) {
                 ctx.strokeStyle = player.isInvincible ? 'gold' : 'cyan'; ctx.lineWidth = 4;
                 ctx.beginPath(); ctx.arc(player.x + player.width/2, player.y + player.height/2, player.height/2 + 5, 0, Math.PI * 2); ctx.stroke();
@@ -412,7 +431,6 @@
             player.speed = isSlowed ? baseSpeed / 2 : baseSpeed;
             const currentSpeed = isFrozen ? 0 : portalSpeed;
             
-            let hasCollidedWithPortal = false;
             portals.forEach(p => {
                 p.y += currentSpeed;
                 ctx.fillStyle = p.isGolden ? 'gold' : (p.text === 'V' ? '#2ecc71' : '#e74c3c');
@@ -420,47 +438,43 @@
                 ctx.fillRect(p.x, p.y, p.width, p.height);
                 ctx.fillStyle = 'black'; ctx.font = 'bold 30px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 ctx.fillText(p.text, p.x + p.width/2, p.y + p.height/2);
-                if (checkCollision(player, p)) {
-                    hasCollidedWithPortal = true;
-                    if(lives > 0) {
-                        const points = p.isGolden ? 30 : 10;
-                        if(p.isCorrect) {
-                            score += points; correctAnswersInARow++;
-                            answerPopup = { text: 'CERTO!', color: 'rgba(46, 204, 113, 0.9)', alpha: 1.0 };
-                            if (correctAnswersInARow >= 5 && !powerReady) { powerReady = true; updatePowerIndicator(); }
-                        } else {
-                            lives--; correctAnswersInARow = 0;
-                            answerPopup = { text: 'ERRADO!', color: 'rgba(231, 76, 60, 0.9)', alpha: 1.0 };
-                        }
-                        updateGameStatus(); if(lives > 0) nextRound();
+                if (checkCollision(player, p) && lives > 0) {
+                    const points = p.isGolden ? 30 : 10;
+                    if(p.isCorrect) {
+                        score += points; correctAnswersInARow++;
+                        answerPopup = { text: 'CERTO!', color: 'rgba(46, 204, 113, 0.9)', alpha: 1.0 };
+                        if (correctAnswersInARow >= 5 && !powerReady) { powerReady = true; updatePowerIndicator(); }
+                    } else {
+                        lives--; correctAnswersInARow = 0;
+                        answerPopup = { text: 'ERRADO!', color: 'rgba(231, 76, 60, 0.9)', alpha: 1.0 };
                     }
-                }
-            });
-            if (!hasCollidedWithPortal && portals.length > 0 && portals[0].y > canvas.height) {
-                if(lives > 0) {
-                    lives--; correctAnswersInARow = 0;
-                    answerPopup = { text: 'ERRADO!', color: 'rgba(231, 76, 60, 0.9)', alpha: 1.0 };
                     updateGameStatus(); if(lives > 0) nextRound();
                 }
+            });
+            if (portals.length > 0 && portals[0].y > canvas.height && lives > 0) {
+                lives--; correctAnswersInARow = 0;
+                answerPopup = { text: 'ERRADO!', color: 'rgba(231, 76, 60, 0.9)', alpha: 1.0 };
+                updateGameStatus(); if(lives > 0) nextRound();
             }
             
             for(let i = obstacles.length - 1; i >= 0; i--) {
                 let o = obstacles[i];
-                o.y += currentSpeed;
-                if (o.type === 'tornado') o.x += Math.sin(o.y * 0.05);
-                ctx.font = `${o.size}px Arial`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                if (!o.isStunned) o.y += currentSpeed;
+                if (o.type === 'tornado') o.x += Math.sin(o.y * 0.05) * 2;
+                
                 let emoji, collisionBox = { ...o, width: o.size, height: o.size };
                 switch(o.type) {
                     case 'cone': emoji = '🚧'; break;
                     case 'monster': emoji = '👾'; break;
                     case 'puddle': emoji = '💧'; break;
-                    case 'oil': emoji = '⚫'; break; // Representação do óleo
+                    case 'oil': emoji = '⚫'; break;
                     case 'tornado': emoji = '🌪️'; break;
                     case 'hole':
                         ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.beginPath();
                         ctx.arc(o.x + o.size/2, o.y + o.size/2, o.size/2, 0, Math.PI * 2);
                         ctx.fill(); emoji = null; break;
                 }
+                ctx.font = `${o.size}px Arial`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 if(emoji) ctx.fillText(emoji, o.x + o.size/2, o.y + o.size/2);
 
                 if (checkCollision(player, collisionBox)) {
@@ -498,7 +512,7 @@
             if(gameActive) gameLoopId = requestAnimationFrame(gameLoop);
         };
 
-        // CONTROLES E LISTENERS
+        // --- CONTROLES E LISTENERS ---
         let moveInterval = null;
         function startMoving(direction) {
             if (!gameActive) return;
@@ -512,16 +526,14 @@
             }, 16);
         }
         function stopMoving() { clearInterval(moveInterval); }
-
         document.addEventListener('keydown', e => {
-            if (gameActive && (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a')) startMoving('left');
-            if (gameActive && (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd')) startMoving('right');
-            if (gameActive && e.key === ' ') usePower();
+            if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') startMoving('left');
+            if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') startMoving('right');
+            if (e.key === ' ') usePower();
         });
         document.addEventListener('keyup', e => {
-            if (gameActive && (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a' || e.key === 'ArrowRight' || e.key.toLowerCase() === 'd')) stopMoving();
+            if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a' || e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') stopMoving();
         });
-
         document.getElementById('left-btn').addEventListener('touchstart', (e) => { e.preventDefault(); startMoving('left'); });
         document.getElementById('left-btn').addEventListener('touchend', stopMoving);
         document.getElementById('right-btn').addEventListener('touchstart', (e) => { e.preventDefault(); startMoving('right'); });
