@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Desafio CFO: A Conquista Horizontal</title>
+    <title>Desafio CFO: Missão Vertical</title>
     <style>
         :root {
             --primary-bg: #2c3e50;
@@ -23,11 +23,11 @@
             background-color: var(--primary-bg);
             font-family: Arial, sans-serif;
             color: var(--light-text);
-            overflow: hidden;
+            padding: 10px;
         }
         .screen {
-            width: 95%;
-            max-width: 900px;
+            width: 100%;
+            max-width: 500px;
             text-align: center;
             background-color: var(--secondary-bg);
             padding: 20px;
@@ -59,31 +59,69 @@
         .shop-button { background-color: var(--accent-blue); color: white; }
         .back-button { background-color: #f39c12; color: white; }
         .restart-button { background-color: var(--accent-red); color: white; }
-
-        #game-layout {
+        
+        #game-wrapper {
             display: flex;
+            flex-direction: column;
+            align-items: center;
             width: 100%;
-            max-width: 1100px;
-            height: 90vh;
-            max-height: 600px;
+            max-width: 500px;
+        }
+        #game-container {
             border: 3px solid var(--light-text);
             border-radius: 10px;
             overflow: hidden;
-        }
-        #left-panel {
-            flex-basis: 35%;
-            max-width: 350px;
             background-color: var(--secondary-bg);
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            width: 100%;
         }
-        #question-area { text-align: center; font-size: 1.1em; flex-grow: 1; display: flex; align-items: center; justify-content: center; }
-        #info-bar { font-size: 1.2em; }
-        #game-container { position: relative; flex-grow: 1; }
-        canvas { display: block; width: 100%; height: 100%; background-color: var(--road-color); }
-        
+        #info-bar {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 20px;
+            background-color: var(--primary-bg);
+            font-size: 18px;
+        }
+        #question-area {
+            width: 100%;
+            height: 90px;
+            padding: 10px;
+            background-color: var(--secondary-bg);
+            text-align: center;
+            font-size: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-bottom: 2px solid var(--primary-bg);
+        }
+        canvas {
+            background-color: var(--road-color);
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+        #touch-controls {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 15px;
+        }
+        .touch-button {
+            width: 48%;
+            padding: 20px 10px;
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            background-color: #3498db;
+            color: white;
+            border-radius: 10px;
+            border: 2px solid #2980b9;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .touch-button:active { background-color: #2980b9; }
+
         #shop-screen h2 { margin-top: 0; }
         #shop-items {
             display: grid;
@@ -121,16 +159,18 @@
         <p style="margin-top: 20px;"><strong>Moedas:</strong> <span id="start-coins">0</span></p>
     </div>
 
-    <div id="game-layout" class="hidden">
-        <div id="left-panel">
+    <div id="game-wrapper" class="hidden">
+        <div id="game-container">
             <div id="question-area">Carregando pergunta...</div>
             <div id="info-bar">
                 <div id="score">Pontos: 0</div>
                 <div id="lives">Vidas: ❤️❤️❤️</div>
             </div>
+            <canvas id="gameCanvas" width="500" height="600"></canvas>
         </div>
-        <div id="game-container">
-            <canvas id="gameCanvas" width="800" height="500"></canvas>
+        <div id="touch-controls">
+            <div id="left-btn" class="touch-button">Esquerda</div>
+            <div id="right-btn" class="touch-button">Direita</div>
         </div>
     </div>
 
@@ -154,23 +194,22 @@
     <script>
         // --- ELEMENTOS DO DOM ---
         const startScreen = document.getElementById('start-screen');
-        const gameLayout = document.getElementById('game-layout');
+        const gameWrapper = document.getElementById('game-wrapper');
         const gameOverScreen = document.getElementById('game-over-screen');
         const shopScreen = document.getElementById('shop-screen');
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        const questionArea = document.getElementById('question-area');
         
         // --- VARIÁVEIS DO JOGO ---
         const playerWidth = 30, playerHeight = 30;
-        const portalWidth = 60, portalHeight = 60;
-        const streetHeight = canvas.height * 0.8;
-        const streetY = (canvas.height - streetHeight) / 2;
+        const portalWidth = 80, portalHeight = 40;
+        const streetWidth = canvas.width * 0.7;
+        const streetX = (canvas.width - streetWidth) / 2;
         
-        let player = { x: 50, y: canvas.height / 2 - playerHeight / 2, width: playerWidth, height: playerHeight, speed: 6 };
+        let player = { x: canvas.width / 2 - playerWidth / 2, y: canvas.height - playerHeight - 20, width: playerWidth, height: playerHeight, speed: 7 };
         let portals = [], obstacles = [], powerUps = [];
         let score = 0, lives = 3, gameActive = false, gameLoopId;
-        let isFrozen = false, portalSpeed = 2.0;
+        let isFrozen = false, portalSpeed = 0.65;
         
         let playerData = {};
 
@@ -195,95 +234,11 @@
             ctx.arc(p.x + p.width / 2, p.y + p.height / 2, p.width / 2, 0, Math.PI * 2);
             ctx.fill();
         }
-        function drawDog(p) { /* ... código de desenho ... */ ctx.fillStyle = '#8D6E63'; ctx.fillRect(p.x, p.y, p.width, p.height); ctx.fillStyle = '#5D4037'; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + p.width*0.3, p.y); ctx.lineTo(p.x, p.y + p.height*0.3); ctx.fill(); ctx.beginPath(); ctx.moveTo(p.x + p.width, p.y); ctx.lineTo(p.x + p.width*0.7, p.y); ctx.lineTo(p.x + p.width, p.y + p.height*0.3); ctx.fill(); }
-        function drawGoat(p) { /* ... código de desenho ... */ ctx.fillStyle = '#E0E0E0'; ctx.fillRect(p.x, p.y, p.width, p.height); ctx.fillStyle = '#616161'; ctx.beginPath(); ctx.moveTo(p.x + p.width*0.2, p.y); ctx.lineTo(p.x + p.width*0.4, p.y); ctx.lineTo(p.x + p.width*0.2, p.y - p.height*0.3); ctx.fill(); ctx.beginPath(); ctx.moveTo(p.x + p.width*0.8, p.y); ctx.lineTo(p.x + p.width*0.6, p.y); ctx.lineTo(p.x + p.width*0.8, p.y - p.height*0.3); ctx.fill(); }
-        function drawEmoji(p) { /* ... código de desenho ... */ ctx.fillStyle = '#F1C40F'; ctx.beginPath(); ctx.arc(p.x + p.width/2, p.y + p.height/2, p.width/2, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = 'black'; ctx.beginPath(); ctx.arc(p.x + p.width*0.3, p.y + p.height*0.4, p.width*0.08, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(p.x + p.width*0.7, p.y + p.height*0.4, p.width*0.08, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(p.x + p.width/2, p.y + p.height*0.6, p.width*0.25, 0, Math.PI); ctx.stroke(); }
+        function drawDog(p) { ctx.fillStyle = '#8D6E63'; ctx.fillRect(p.x, p.y, p.width, p.height); ctx.fillStyle = '#5D4037'; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + p.width*0.3, p.y); ctx.lineTo(p.x, p.y + p.height*0.3); ctx.fill(); ctx.beginPath(); ctx.moveTo(p.x + p.width, p.y); ctx.lineTo(p.x + p.width*0.7, p.y); ctx.lineTo(p.x + p.width, p.y + p.height*0.3); ctx.fill(); }
+        function drawGoat(p) { ctx.fillStyle = '#E0E0E0'; ctx.fillRect(p.x, p.y, p.width, p.height); ctx.fillStyle = '#616161'; ctx.beginPath(); ctx.moveTo(p.x + p.width*0.2, p.y); ctx.lineTo(p.x + p.width*0.4, p.y); ctx.lineTo(p.x + p.width*0.2, p.y - p.height*0.3); ctx.fill(); ctx.beginPath(); ctx.moveTo(p.x + p.width*0.8, p.y); ctx.lineTo(p.x + p.width*0.6, p.y); ctx.lineTo(p.x + p.width*0.8, p.y - p.height*0.3); ctx.fill(); }
+        function drawEmoji(p) { ctx.fillStyle = '#F1C40F'; ctx.beginPath(); ctx.arc(p.x + p.width/2, p.y + p.height/2, p.width/2, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = 'black'; ctx.beginPath(); ctx.arc(p.x + p.width*0.3, p.y + p.height*0.4, p.width*0.08, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(p.x + p.width*0.7, p.y + p.height*0.4, p.width*0.08, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(p.x + p.width/2, p.y + p.height*0.6, p.width*0.25, 0, Math.PI); ctx.stroke(); }
 
         // --- LÓGICA DE SALVAMENTO ---
-        function loadPlayerData() { /* ... */ } // Funções omitidas para brevidade, mas estão no código
-        function savePlayerData() { /* ... */ }
-        function updateCoinDisplays() { /* ... */ }
-
-        // --- NAVEGAÇÃO ENTRE TELAS ---
-        function showScreen(screenId) { /* ... */ }
-
-        // --- LÓGICA DA LOJA ---
-        function populateShop() { /* ... */ }
-        function buySkin(skinId, price) { /* ... */ }
-        function equipSkin(skinId) { /* ... */ }
-
-        // --- LÓGICA PRINCIPAL DO JOGO ---
-        function resetGame() {
-            player = { x: 50, y: canvas.height / 2 - playerHeight / 2, width: playerWidth, height: playerHeight, speed: 6 };
-            portals = []; obstacles = []; powerUps = [];
-            score = 0; lives = 3; isFrozen = false; gameActive = true;
-            shuffle(questions);
-            availableQuestions = [...questions];
-            updateGameStatus();
-            nextRound();
-        }
-
-        function startGame() {
-            savePlayerData();
-            showScreen('game-layout');
-            resetGame();
-            if(gameLoopId) cancelAnimationFrame(gameLoopId);
-            gameLoopId = requestAnimationFrame(gameLoop);
-        }
-        
-        function endGame(collided = false) {
-            gameActive = false;
-            cancelAnimationFrame(gameLoopId);
-            const coinsEarned = score;
-            playerData.coins += coinsEarned;
-            savePlayerData();
-            document.getElementById('final-score').textContent = score;
-            document.getElementById('coins-earned').textContent = coinsEarned;
-            document.getElementById('game-over-title').textContent = collided ? "Fim de Jogo: Colisão!" : "Fim de Jogo";
-            showScreen('game-over-screen');
-        }
-        
-        function nextRound() {
-            if (availableQuestions.length === 0) availableQuestions = [...questions];
-            currentQuestion = availableQuestions.pop();
-            questionArea.textContent = currentQuestion.text;
-            createObjects();
-        }
-
-        function createObjects() { /* ... */ }
-        
-        function update() {
-            if (!gameActive) return;
-
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#95a5a6';
-            ctx.fillRect(0, streetY, canvas.width, streetHeight);
-
-            const equippedSkin = skins.find(s => s.id === playerData.equippedSkinId) || skins[0];
-            equippedSkin.draw(player);
-            
-            const currentSpeed = isFrozen ? 0 : portalSpeed;
-
-            portals.forEach(p => { /* ... */ });
-            obstacles.forEach((o, index) => { /* ... */ });
-            powerUps.forEach((p, index) => { /* ... */ });
-
-            gameLoopId = requestAnimationFrame(update);
-        }
-        
-        // --- EVENT LISTENERS E INICIALIZAÇÃO ---
-        window.onload = () => {
-            // As funções e listeners completos estão no código abaixo
-        };
-        
-// =================================================================================
-// O código acima foi resumido para visualização. O CÓDIGO COMPLETO E FUNCIONAL está abaixo.
-// =================================================================================
-
-
-        // --- LÓGICA COMPLETA ---
-
-        // LÓGICA DE SALVAMENTO
         function loadPlayerData() {
             const data = localStorage.getItem('cfoGameData');
             if (data) {
@@ -297,28 +252,26 @@
             }
             updateCoinDisplays();
         }
-
         function savePlayerData() {
             playerData.name = document.getElementById('player-name-input').value.trim();
             if (playerData.name === "") playerData.name = "Cadete";
             localStorage.setItem('cfoGameData', JSON.stringify(playerData));
             updateCoinDisplays();
         }
-        
         function updateCoinDisplays() {
             document.getElementById('start-coins').textContent = playerData.coins;
             document.getElementById('shop-coins').textContent = playerData.coins;
         }
 
-        // NAVEGAÇÃO
+        // --- NAVEGAÇÃO ENTRE TELAS ---
         function showScreen(screenId) {
-            ['start-screen', 'game-layout', 'game-over-screen', 'shop-screen'].forEach(id => {
+            ['start-screen', 'game-wrapper', 'game-over-screen', 'shop-screen'].forEach(id => {
                 document.getElementById(id).classList.add('hidden');
             });
             document.getElementById(screenId).classList.remove('hidden');
         }
 
-        // LÓGICA DA LOJA
+        // --- LÓGICA DA LOJA ---
         function populateShop() {
             const shopItemsContainer = document.getElementById('shop-items');
             shopItemsContainer.innerHTML = '';
@@ -374,23 +327,63 @@
             populateShop();
         }
         
-        // JOGO
+        // --- LÓGICA DO JOGO ---
+        function resetGame() {
+            player = { x: canvas.width / 2 - playerWidth / 2, y: canvas.height - playerHeight - 20, width: playerWidth, height: playerHeight, speed: 7 };
+            portals = []; obstacles = []; powerUps = [];
+            score = 0; lives = 3; isFrozen = false;
+            if(availableQuestions.length === 0 || questions.length - availableQuestions.length > 15) {
+                shuffle(questions);
+                availableQuestions = [...questions];
+            }
+            updateGameStatus();
+            nextRound();
+        }
+
+        function startGame() {
+            savePlayerData();
+            showScreen('game-wrapper');
+            gameActive = true;
+            resetGame();
+            if(gameLoopId) cancelAnimationFrame(gameLoopId);
+            gameLoop();
+        }
+        
+        function endGame(collided = false) {
+            gameActive = false;
+            cancelAnimationFrame(gameLoopId);
+            const coinsEarned = score;
+            playerData.coins += coinsEarned;
+            savePlayerData();
+            document.getElementById('final-score').textContent = score;
+            document.getElementById('coins-earned').textContent = coinsEarned;
+            document.getElementById('game-over-title').textContent = collided ? "Fim de Jogo: Colisão!" : "Fim de Jogo";
+            showScreen('game-over-screen');
+        }
+        
+        function nextRound() {
+            if (availableQuestions.length === 0) availableQuestions = [...questions];
+            currentQuestion = availableQuestions.pop();
+            document.getElementById('question-area').textContent = currentQuestion.text;
+            createObjects();
+        }
+
         function createObjects() {
             portals = []; obstacles = []; powerUps = [];
             const isGolden = Math.random() < 0.25;
-            const portalX = canvas.width + 50;
-            const upPortalY = streetY + (streetHeight / 4) - (portalHeight / 2);
-            const downPortalY = streetY + (streetHeight * 3 / 4) - (portalHeight / 2);
-            const positions = [upPortalY, downPortalY];
+            const portalY = -portalHeight;
+            const leftPortalX = streetX + (streetWidth / 4) - (portalWidth / 2);
+            const rightPortalX = streetX + (streetWidth * 3 / 4) - (portalWidth / 2);
+            const positions = [leftPortalX, rightPortalX];
             shuffle(positions);
 
-            portals.push({ x: portalX, y: positions[0], width: portalWidth, height: portalHeight, isCorrect: currentQuestion.answer === true, text: 'V', isGolden: isGolden });
-            portals.push({ x: portalX, y: positions[1], width: portalWidth, height: portalHeight, isCorrect: currentQuestion.answer === false, text: 'F', isGolden: isGolden });
+            portals.push({ x: positions[0], y: portalY, width: portalWidth, height: portalHeight, isCorrect: currentQuestion.answer === true, text: 'V', isGolden: isGolden });
+            portals.push({ x: positions[1], y: portalY, width: portalWidth, height: portalHeight, isCorrect: currentQuestion.answer === false, text: 'F', isGolden: isGolden });
 
-            if (Math.random() < 0.4) obstacles.push({ x: canvas.width + 150 + Math.random() * 100, y: streetY + Math.random() * (streetHeight - 30), size: 30 });
+            if (Math.random() < 0.4) obstacles.push({ x: streetX + Math.random() * (streetWidth - 30), y: -60, size: 30 });
             if (Math.random() < 0.2) {
                 const type = Math.random() < 0.5 ? 'freeze' : 'life';
-                powerUps.push({ x: canvas.width + 250 + Math.random() * 100, y: streetY + Math.random() * (streetHeight - 30), size: 30, type: type });
+                powerUps.push({ x: streetX + Math.random() * (streetWidth - 30), y: -100, size: 30, type: type });
             }
         }
         
@@ -399,22 +392,28 @@
             document.getElementById('lives').innerHTML = `Vidas: ${'❤️'.repeat(lives)}`;
             if (lives <= 0) endGame();
         }
+        
+        function checkCollision(a, b) {
+            return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
+        }
 
         function gameLoop() {
             if (!gameActive) return;
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#95a5a6';
-            ctx.fillRect(0, streetY, canvas.width, streetHeight);
+            ctx.fillStyle = '#95a5a6'; // Rua
+            ctx.fillRect(streetX, 0, streetWidth, canvas.height);
 
             const equippedSkin = skins.find(s => s.id === playerData.equippedSkinId) || skins[0];
             equippedSkin.draw(player);
             
             const currentSpeed = isFrozen ? 0 : portalSpeed;
-
+            
+            // Portals
+            let hasCollidedWithPortal = false;
             portals.forEach(p => {
-                p.x -= currentSpeed;
-                ctx.fillStyle = p.isGolden ? 'gold' : (p.isCorrect ? '#2ecc71' : '#e74c3c');
+                p.y += currentSpeed;
+                ctx.fillStyle = p.isGolden ? 'gold' : (p.text === 'V' ? '#2ecc71' : '#e74c3c');
                 ctx.fillRect(p.x, p.y, p.width, p.height);
                 ctx.fillStyle = 'black';
                 ctx.font = 'bold 30px Arial';
@@ -422,47 +421,74 @@
                 ctx.textBaseline = 'middle';
                 ctx.fillText(p.text, p.x + p.width/2, p.y + p.height/2);
 
-                if (player.x < p.x + p.width && player.x + player.width > p.x && player.y < p.y + p.height && player.y + player.height > p.y) {
+                if (checkCollision(player, p)) {
+                    hasCollidedWithPortal = true;
                     const points = p.isGolden ? 30 : 10;
                     if(p.isCorrect) { score += points; } else { lives--; }
                     updateGameStatus();
                     if(lives > 0) nextRound();
                 }
             });
-            if (portals.length > 0 && portals[0].x < -portalWidth) {
+            if (!hasCollidedWithPortal && portals.length > 0 && portals[0].y > canvas.height) {
                 lives--;
                 updateGameStatus();
                 if (lives > 0) nextRound();
             }
 
-            obstacles.forEach((o, index) => {
-                o.x -= currentSpeed;
-                ctx.font = `${o.size}px Arial`;
-                ctx.fillText('🚧', o.x + o.size/2, o.y + o.size/2);
-                if (player.x < o.x + o.size && player.x + player.width > o.x && player.y < o.y + o.size && player.y + player.height > o.y) {
-                    lives--;
-                    obstacles.splice(index, 1);
-                    updateGameStatus();
-                    if(lives <= 0) { endGame(true); return; }
-                }
-            });
+            // Obstacles and Powerups
+            [...obstacles, ...powerUps].forEach((item, index, arr) => {
+                item.y += currentSpeed;
+                ctx.font = `${item.size}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                const isObstacle = item.hasOwnProperty('size') && !item.hasOwnProperty('type');
+                const emoji = isObstacle ? '🚧' : (item.type === 'freeze' ? '❄️' : '❤️');
+                ctx.fillText(emoji, item.x + item.size/2, item.y + item.size/2);
 
-            powerUps.forEach((p, index) => {
-                 p.x -= currentSpeed;
-                 const emoji = p.type === 'freeze' ? '❄️' : '❤️';
-                 ctx.font = `${p.size}px Arial`;
-                 ctx.fillText(emoji, p.x + p.size/2, p.y + p.size/2);
-                 if (player.x < p.x + p.size && player.x + player.width > p.x && player.y < p.y + p.size && player.y + player.height > p.y) {
-                    if (p.type === 'freeze') { isFrozen = true; setTimeout(() => { isFrozen = false; }, 3000); }
-                    else if (p.type === 'life' && lives < 5) { lives++; updateGameStatus(); }
-                    powerUps.splice(index, 1);
-                 }
+                if (checkCollision(player, { ...item, width: item.size, height: item.size })) {
+                    if (isObstacle) {
+                        lives--;
+                        updateGameStatus();
+                        if (lives <= 0) { endGame(true); return; }
+                    } else { // Is power-up
+                        if (item.type === 'freeze') { isFrozen = true; setTimeout(() => { isFrozen = false; }, 3000); }
+                        else if (item.type === 'life' && lives < 5) { lives++; updateGameStatus(); }
+                    }
+                    arr.splice(index, 1); // Remove item after collision
+                }
             });
 
             if(gameActive) gameLoopId = requestAnimationFrame(gameLoop);
         }
 
-        // EVENT LISTENERS
+        // --- CONTROLES ---
+        let moveInterval = null;
+        function startMoving(direction) {
+            if (!gameActive) return;
+            clearInterval(moveInterval);
+            moveInterval = setInterval(() => {
+                if (direction === 'left' && player.x > streetX) { player.x -= player.speed; }
+                else if (direction === 'right' && player.x < streetX + streetWidth - player.width) { player.x += player.speed; }
+            }, 16);
+        }
+        function stopMoving() { clearInterval(moveInterval); }
+
+        document.addEventListener('keydown', e => {
+            if (!gameActive) return;
+            if (e.key === 'ArrowLeft') startMoving('left');
+            if (e.key === 'ArrowRight') startMoving('right');
+        });
+        document.addEventListener('keyup', e => {
+            if (!gameActive) return;
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') stopMoving();
+        });
+
+        document.getElementById('left-btn').addEventListener('touchstart', (e) => { e.preventDefault(); startMoving('left'); });
+        document.getElementById('left-btn').addEventListener('touchend', stopMoving);
+        document.getElementById('right-btn').addEventListener('touchstart', (e) => { e.preventDefault(); startMoving('right'); });
+        document.getElementById('right-btn').addEventListener('touchend', stopMoving);
+
+        // --- INICIALIZAÇÃO ---
         document.getElementById('start-game-button').onclick = startGame;
         document.getElementById('restart-button').onclick = startGame;
         document.getElementById('go-to-shop-button').onclick = () => { savePlayerData(); populateShop(); showScreen('shop-screen'); };
@@ -472,31 +498,10 @@
              showScreen('start-screen');
         };
 
-        let keys = {};
-        document.addEventListener('keydown', e => {
-            if (!gameActive) return;
-            keys[e.key] = true;
-        });
-        document.addEventListener('keyup', e => {
-            keys[e.key] = false;
-        });
-
-        function handleMovement() {
-            if (keys['ArrowUp'] || keys['w']) {
-                if(player.y > streetY) player.y -= player.speed;
-            }
-            if (keys['ArrowDown'] || keys['s']) {
-                if(player.y < streetY + streetHeight - player.height) player.y += player.speed;
-            }
-            requestAnimationFrame(handleMovement);
-        }
-        handleMovement();
-
         window.onload = () => {
             loadPlayerData();
             showScreen('start-screen');
         };
-
     </script>
 </body>
 </html>
