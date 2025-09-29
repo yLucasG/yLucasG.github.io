@@ -24,6 +24,7 @@
             font-family: Arial, sans-serif;
             color: var(--light-text);
             padding: 10px;
+            overflow: hidden;
         }
         .screen {
             width: 100%;
@@ -219,6 +220,14 @@
         let availableQuestions = [];
         let currentQuestion = {};
 
+        // --- FUNÇÃO SHUFFLE CORRIGIDA (ADICIONADA NOVAMENTE) ---
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
         // --- SKINS ---
         const skins = [
             { id: 'default', name: 'Padrão', price: 0, draw: drawStickman },
@@ -332,10 +341,10 @@
             player = { x: canvas.width / 2 - playerWidth / 2, y: canvas.height - playerHeight - 20, width: playerWidth, height: playerHeight, speed: 7 };
             portals = []; obstacles = []; powerUps = [];
             score = 0; lives = 3; isFrozen = false;
-            if(availableQuestions.length === 0 || questions.length - availableQuestions.length > 15) {
-                shuffle(questions);
-                availableQuestions = [...questions];
-            }
+            
+            shuffle(questions);
+            availableQuestions = [...questions];
+            
             updateGameStatus();
             nextRound();
         }
@@ -362,14 +371,17 @@
         }
         
         function nextRound() {
-            if (availableQuestions.length === 0) availableQuestions = [...questions];
+            if (availableQuestions.length === 0) {
+                shuffle(questions);
+                availableQuestions = [...questions];
+            }
             currentQuestion = availableQuestions.pop();
             document.getElementById('question-area').textContent = currentQuestion.text;
             createObjects();
         }
 
         function createObjects() {
-            portals = []; obstacles = []; powerUps = [];
+            portals = []; 
             const isGolden = Math.random() < 0.25;
             const portalY = -portalHeight;
             const leftPortalX = streetX + (streetWidth / 4) - (portalWidth / 2);
@@ -380,17 +392,19 @@
             portals.push({ x: positions[0], y: portalY, width: portalWidth, height: portalHeight, isCorrect: currentQuestion.answer === true, text: 'V', isGolden: isGolden });
             portals.push({ x: positions[1], y: portalY, width: portalWidth, height: portalHeight, isCorrect: currentQuestion.answer === false, text: 'F', isGolden: isGolden });
 
-            if (Math.random() < 0.4) obstacles.push({ x: streetX + Math.random() * (streetWidth - 30), y: -60, size: 30 });
+            if (Math.random() < 0.4) obstacles.push({ x: streetX + Math.random() * (streetWidth - 30), y: -60 - Math.random() * 100, size: 30 });
             if (Math.random() < 0.2) {
                 const type = Math.random() < 0.5 ? 'freeze' : 'life';
-                powerUps.push({ x: streetX + Math.random() * (streetWidth - 30), y: -100, size: 30, type: type });
+                powerUps.push({ x: streetX + Math.random() * (streetWidth - 30), y: -100 - Math.random() * 150, size: 30, type: type });
             }
         }
         
         function updateGameStatus() {
             document.getElementById('score').textContent = `Pontos: ${score}`;
             document.getElementById('lives').innerHTML = `Vidas: ${'❤️'.repeat(lives)}`;
-            if (lives <= 0) endGame();
+            if (lives <= 0) {
+                endGame();
+            }
         }
         
         function checkCollision(a, b) {
@@ -409,7 +423,6 @@
             
             const currentSpeed = isFrozen ? 0 : portalSpeed;
             
-            // Portals
             let hasCollidedWithPortal = false;
             portals.forEach(p => {
                 p.y += currentSpeed;
@@ -423,40 +436,55 @@
 
                 if (checkCollision(player, p)) {
                     hasCollidedWithPortal = true;
-                    const points = p.isGolden ? 30 : 10;
-                    if(p.isCorrect) { score += points; } else { lives--; }
-                    updateGameStatus();
-                    if(lives > 0) nextRound();
+                    if(lives > 0) {
+                        const points = p.isGolden ? 30 : 10;
+                        if(p.isCorrect) { score += points; } else { lives--; }
+                        updateGameStatus();
+                        if(lives > 0) nextRound();
+                    }
                 }
             });
             if (!hasCollidedWithPortal && portals.length > 0 && portals[0].y > canvas.height) {
-                lives--;
-                updateGameStatus();
-                if (lives > 0) nextRound();
+                if(lives > 0) {
+                    lives--;
+                    updateGameStatus();
+                    if(lives > 0) nextRound();
+                }
             }
 
-            // Obstacles and Powerups
-            [...obstacles, ...powerUps].forEach((item, index, arr) => {
-                item.y += currentSpeed;
-                ctx.font = `${item.size}px Arial`;
+            for(let i = obstacles.length - 1; i >= 0; i--) {
+                let o = obstacles[i];
+                o.y += currentSpeed;
+                ctx.font = `${o.size}px Arial`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                const isObstacle = item.hasOwnProperty('size') && !item.hasOwnProperty('type');
-                const emoji = isObstacle ? '🚧' : (item.type === 'freeze' ? '❄️' : '❤️');
-                ctx.fillText(emoji, item.x + item.size/2, item.y + item.size/2);
+                ctx.fillText('🚧', o.x + o.size/2, o.y + o.size/2);
 
-                if (checkCollision(player, { ...item, width: item.size, height: item.size })) {
-                    if (isObstacle) {
+                if (checkCollision(player, { ...o, width: o.size, height: o.size })) {
+                    obstacles.splice(i, 1);
+                    if(lives > 0) {
                         lives--;
                         updateGameStatus();
                         if (lives <= 0) { endGame(true); return; }
-                    } else { // Is power-up
-                        if (item.type === 'freeze') { isFrozen = true; setTimeout(() => { isFrozen = false; }, 3000); }
-                        else if (item.type === 'life' && lives < 5) { lives++; updateGameStatus(); }
                     }
-                    arr.splice(index, 1); // Remove item after collision
                 }
-            });
+            }
+            
+            for(let i = powerUps.length - 1; i >= 0; i--) {
+                let p = powerUps[i];
+                p.y += currentSpeed;
+                ctx.font = `${p.size}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                const emoji = p.type === 'freeze' ? '❄️' : '❤️';
+                ctx.fillText(emoji, p.x + p.size/2, p.y + p.size/2);
+
+                if (checkCollision(player, { ...p, width: p.size, height: p.size })) {
+                    powerUps.splice(i, 1);
+                    if (p.type === 'freeze') { isFrozen = true; setTimeout(() => { isFrozen = false; }, 3000); }
+                    else if (p.type === 'life' && lives < 5) { lives++; updateGameStatus(); }
+                }
+            }
 
             if(gameActive) gameLoopId = requestAnimationFrame(gameLoop);
         }
@@ -475,12 +503,12 @@
 
         document.addEventListener('keydown', e => {
             if (!gameActive) return;
-            if (e.key === 'ArrowLeft') startMoving('left');
-            if (e.key === 'ArrowRight') startMoving('right');
+            if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') startMoving('left');
+            if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') startMoving('right');
         });
         document.addEventListener('keyup', e => {
             if (!gameActive) return;
-            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') stopMoving();
+            if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a' || e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') stopMoving();
         });
 
         document.getElementById('left-btn').addEventListener('touchstart', (e) => { e.preventDefault(); startMoving('left'); });
