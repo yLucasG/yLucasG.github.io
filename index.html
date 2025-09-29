@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Desafio CFO: Missão Vertical</title>
+    <title>Desafio CFO: Versão Final</title>
     <style>
         :root {
             --primary-bg: #2c3e50;
@@ -75,6 +75,22 @@
             background-color: var(--secondary-bg);
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
             width: 100%;
+            position: relative;
+        }
+        #difficulty-indicator {
+            position: absolute;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0,0,0,0.5);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.5s;
         }
         #info-bar {
             display: flex;
@@ -162,6 +178,7 @@
 
     <div id="game-wrapper" class="hidden">
         <div id="game-container">
+            <div id="difficulty-indicator"></div>
             <div id="question-area">Carregando pergunta...</div>
             <div id="info-bar">
                 <div id="score">Pontos: 0</div>
@@ -200,19 +217,19 @@
         const shopScreen = document.getElementById('shop-screen');
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+        const difficultyIndicator = document.getElementById('difficulty-indicator');
         
         // --- VARIÁVEIS DO JOGO ---
-        const playerWidth = 30, playerHeight = 50; // Ajustado para stickman
+        const playerWidth = 30, playerHeight = 50;
         const portalWidth = 80, portalHeight = 40;
         const streetWidth = canvas.width * 0.7;
         const streetX = (canvas.width - streetWidth) / 2;
         
-        let player = { x: canvas.width / 2 - playerWidth / 2, y: canvas.height - playerHeight - 20, width: playerWidth, height: playerHeight, speed: 7 };
-        let portals = [], obstacles = [], powerUps = [];
-        let score = 0, lives = 3, gameActive = false, gameLoopId;
-        let isFrozen = false, portalSpeed = 0.65;
-        
+        let player, portals, obstacles, powerUps, answerPopup;
+        let score, lives, gameActive, gameLoopId, difficultyLevel;
+        let isFrozen, isSlowed, portalSpeed = 0.65;
         let playerData = {};
+        const baseSpeed = 7;
 
         const questions = [
             { text: "O Oficial é um líder apenas pelo cargo que exerce, não precisando ser inspirador ou motivador.", answer: false }, { text: "Gestão de Pessoas (GP) é o conjunto de práticas para administrar as pessoas, desconsiderando suas necessidades e motivações.", answer: false }, { text: "Na moderna Gestão de Pessoas, as pessoas constituem o principal ativo da organização.", answer: true }, { text: "Um dos objetivos da GP é proporcionar à organização pessoas bem treinadas e bem motivadas.", answer: true }, { text: "A evolução da Gestão de Pessoas passou de uma abordagem estratégica para uma puramente burocrática.", answer: false }, { text: "Agregar, aplicar, recompensar, desenvolver, manter e monitorar pessoas são os seis processos da GP.", answer: true }, { text: "O recrutamento interno atua sobre candidatos que estão no mercado, fora do serviço público.", answer: false }, { text: "A avaliação de desempenho serve para julgar o valor, a excelência e as competências de uma pessoa ou equipe.", answer: true }, { text: "A avaliação 360 graus é quando o desempenho é avaliado apenas pela chefia imediata.", answer: false }, { text: "O processo de recompensar pessoas é um elemento primordial para o incentivo e a motivação dos colaboradores.", answer: true }, { text: "A remuneração total inclui apenas o salário base, sem considerar benefícios ou incentivos.", answer: false }, { text: "Motivação extrínseca refere-se a fatores internos e pessoais que impulsionam um indivíduo a agir.", answer: false }, { text: "Na pirâmide de Maslow, as necessidades fisiológicas são a base e devem ser satisfeitas primeiro.", answer: true }, { text: "A Teoria X de McGregor pressupõe que o trabalho é uma atividade natural e gratificante para os seres humanos.", answer: false }, { text: "Fatores motivacionais, segundo Herzberg, estão relacionados ao conteúdo do trabalho em si, como reconhecimento e crescimento.", answer: true }, { text: "Treinamento e Desenvolvimento de pessoas têm o mesmo significado e foco.", answer: false }, { text: "O diagnóstico é a etapa inicial do processo de treinamento para identificar as necessidades da organização.", answer: true }, { text: "Liderança é a capacidade de guiar e influenciar um grupo para alcançar um objetivo comum.", answer: true }, { text: "A liderança informal origina-se da autoridade do cargo ocupado na estrutura da organização.", answer: false }, { text: "O estilo de liderança 'Laissez-faire' ou Liberal é caracterizado pelo controle centralizado e rígido do líder.", answer: false }, { text: "A escuta ativa é uma habilidade de comunicação crucial para líderes eficazes.", answer: true }, { text: "A gestão de conflitos busca sempre evitar o conflito, mesmo que isso signifique ignorar o problema.", answer: false }, { text: "O estilo de gestão de conflitos de 'Colaboração' busca uma solução que atenda às necessidades de ambas as partes.", answer: true }, { text: "Grupo e equipe de trabalho são termos com o mesmo significado, representando um conjunto de pessoas com um objetivo.", answer: false }, { text: "No Exército Brasileiro, a chefia militar engloba o comando, a administração e a liderança.", answer: true }, { text: "Um dos princípios da liderança militar é evitar assumir a responsabilidade pelos atos dos subordinados.", answer: false }, { text: "Cultura organizacional é definida como um conjunto de hábitos, crenças, valores e símbolos de uma organização.", answer: true }, { text: "Os artefatos visíveis, como uniformes e layout, são o nível mais profundo e inconsciente da cultura organizacional.", answer: false }, { text: "A resistência à mudança é sempre um fator negativo e deve ser suprimida imediatamente.", answer: false }, { text: "A Qualidade de Vida no Trabalho (QVT) refere-se apenas ao bem-estar físico dos funcionários, ignorando o mental e emocional.", answer: false }
@@ -236,33 +253,27 @@
             { id: 'dog', name: 'Cachorro', price: 500, draw: drawDog },
             { id: 'goat', name: 'Bode', price: 500, draw: drawGoat }
         ];
-
         function drawStickman(p, ctxRef, color = '#2c3e50') {
             const centerX = p.x + p.width / 2;
             const headRadius = p.width / 3;
             const bodyTop = p.y + headRadius * 2;
             const bodyBottom = p.y + p.height - (p.height / 4);
-
             ctxRef.strokeStyle = color;
             ctxRef.fillStyle = color;
             ctxRef.lineWidth = 4;
-
             ctxRef.beginPath();
             ctxRef.arc(centerX, p.y + headRadius, headRadius, 0, Math.PI * 2);
             ctxRef.fill();
-
             ctxRef.beginPath();
             ctxRef.moveTo(centerX, bodyTop);
             ctxRef.lineTo(centerX, bodyBottom);
             ctxRef.stroke();
-
             ctxRef.beginPath();
             ctxRef.moveTo(centerX, bodyTop + 5);
             ctxRef.lineTo(p.x, p.y + p.height / 2);
             ctxRef.moveTo(centerX, bodyTop + 5);
             ctxRef.lineTo(p.x + p.width, p.y + p.height / 2);
             ctxRef.stroke();
-
             ctxRef.beginPath();
             ctxRef.moveTo(centerX, bodyBottom);
             ctxRef.lineTo(p.x, p.y + p.height);
@@ -270,47 +281,24 @@
             ctxRef.lineTo(p.x + p.width, p.y + p.height);
             ctxRef.stroke();
         }
-
         function drawDog(p, ctxRef) {
-            ctxRef.fillStyle = '#8D6E63'; // Corpo marrom
-            ctxRef.fillRect(p.x, p.y + p.height*0.2, p.width, p.height*0.8);
-            ctxRef.fillStyle = '#A1887F'; // Cabeça
-            ctxRef.fillRect(p.x, p.y, p.width, p.height * 0.4);
-            ctxRef.fillStyle = '#5D4037'; // Orelhas
-            ctxRef.fillRect(p.x - 5, p.y, 10, p.height * 0.3);
+            ctxRef.fillStyle = '#8D6E63'; ctxRef.fillRect(p.x, p.y + p.height*0.2, p.width, p.height*0.8);
+            ctxRef.fillStyle = '#A1887F'; ctxRef.fillRect(p.x, p.y, p.width, p.height * 0.4);
+            ctxRef.fillStyle = '#5D4037'; ctxRef.fillRect(p.x - 5, p.y, 10, p.height * 0.3);
             ctxRef.fillRect(p.x + p.width - 5, p.y, 10, p.height * 0.3);
-            ctxRef.fillStyle = 'black'; // Olhos
-            ctxRef.beginPath();
+            ctxRef.fillStyle = 'black'; ctxRef.beginPath();
             ctxRef.arc(p.x + p.width*0.3, p.y + p.height*0.2, 3, 0, Math.PI * 2);
             ctxRef.arc(p.x + p.width*0.7, p.y + p.height*0.2, 3, 0, Math.PI * 2);
             ctxRef.fill();
         }
-
         function drawGoat(p, ctxRef) {
-            ctxRef.fillStyle = '#E0E0E0'; // Corpo
-            ctxRef.fillRect(p.x, p.y + p.height*0.2, p.width, p.height*0.8);
-            ctxRef.fillStyle = '#EEEEEE'; // Cabeça
-            ctxRef.fillRect(p.x, p.y, p.width, p.height * 0.4);
-            ctxRef.fillStyle = '#616161'; // Chifres
-            ctxRef.beginPath();
-            ctxRef.moveTo(p.x + p.width*0.3, p.y);
-            ctxRef.lineTo(p.x + p.width*0.2, p.y - 15);
-            ctxRef.lineTo(p.x + p.width*0.4, p.y);
-            ctxRef.fill();
-            ctxRef.beginPath();
-            ctxRef.moveTo(p.x + p.width*0.7, p.y);
-            ctxRef.lineTo(p.x + p.width*0.8, p.y - 15);
-            ctxRef.lineTo(p.x + p.width*0.6, p.y);
-            ctxRef.fill();
-            ctxRef.fillStyle = 'black'; // Olhos
-            ctxRef.fillRect(p.x + p.width*0.2, p.y + p.height*0.15, 5, 2);
-            ctxRef.fillRect(p.x + p.width*0.6, p.y + p.height*0.15, 5, 2);
+            ctxRef.font = `${p.height * 0.8}px Arial`; ctxRef.textAlign = 'center'; ctxRef.textBaseline = 'middle';
+            ctxRef.fillText('🐐', p.x + p.width/2, p.y + p.height/2);
         }
-
         function drawEmoji(p, ctxRef) { 
             const centerX = p.x + p.width/2;
             const centerY = p.y + p.height/2;
-            const radius = p.width/2;
+            const radius = Math.min(p.width, p.height) / 2;
             ctxRef.fillStyle = '#F1C40F';
             ctxRef.beginPath();
             ctxRef.arc(centerX, centerY, radius, 0, Math.PI * 2);
@@ -329,7 +317,75 @@
         }
 
         // --- LÓGICA DE SALVAMENTO, NAVEGAÇÃO, E LOJA ---
-        function loadPlayerData() {
+        function loadPlayerData() { /* ... */ }
+        function savePlayerData() { /* ... */ }
+        function updateCoinDisplays() { /* ... */ }
+        function showScreen(screenId) { /* ... */ }
+        function populateShop() { /* ... */ }
+        function buySkin(skinId, price) { /* ... */ }
+        function equipSkin(skinId) { /* ... */ }
+
+        // --- LÓGICA PRINCIPAL DO JOGO ---
+        function resetGame() {
+            player = { x: canvas.width / 2 - playerWidth / 2, y: canvas.height - playerHeight - 20, width: playerWidth, height: playerHeight, speed: baseSpeed };
+            portals = []; obstacles = []; powerUps = []; answerPopup = null;
+            score = 0; lives = 3; difficultyLevel = 0;
+            isFrozen = false; isSlowed = false;
+            shuffle(questions);
+            availableQuestions = [...questions];
+            updateGameStatus();
+            nextRound();
+        }
+        function startGame() { /* ... */ }
+        function endGame(collided = false) { /* ... */ }
+        function nextRound() { /* ... */ }
+        function createObjects() { /* ... */ }
+        function updateGameStatus() { /* ... */ }
+        function showDifficultyIndicator(text) { /* ... */ }
+        function checkCollision(a, b) { /* ... */ }
+
+        function drawAnswerPopup() {
+            if (!answerPopup || answerPopup.alpha <= 0) return;
+
+            const x = canvas.width / 2;
+            const y = canvas.height / 2;
+            const radius = 100;
+            const points = 12;
+            const inset = 0.5;
+
+            ctx.save();
+            ctx.globalAlpha = answerPopup.alpha;
+            ctx.fillStyle = answerPopup.color;
+            ctx.beginPath();
+            ctx.moveTo(x, y - radius);
+            for (let i = 0; i < points; i++) {
+                const outerAngle = (i / points) * 2 * Math.PI;
+                const innerAngle = outerAngle + (Math.PI / points);
+                ctx.lineTo(x + Math.cos(outerAngle) * radius, y + Math.sin(outerAngle) * radius);
+                ctx.lineTo(x + Math.cos(innerAngle) * radius * inset, y + Math.sin(innerAngle) * radius * inset);
+            }
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.fillStyle = `rgba(255, 255, 255, ${answerPopup.alpha})`;
+            ctx.font = 'bold 36px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(answerPopup.text, x, y);
+            
+            ctx.restore();
+            answerPopup.alpha -= 0.015;
+        }
+
+        function gameLoop() {
+            if (!gameActive) return;
+            // ... (game logic)
+            drawAnswerPopup();
+            if(gameActive) gameLoopId = requestAnimationFrame(gameLoop);
+        }
+
+        // --- CÓDIGO COMPLETO ---
+        loadPlayerData = () => {
             const data = localStorage.getItem('cfoGameData');
             if (data) {
                 playerData = JSON.parse(data);
@@ -341,41 +397,38 @@
                 playerData = { name: "", coins: 0, ownedSkins: ['default'], equippedSkinId: 'default' };
             }
             updateCoinDisplays();
-        }
-        function savePlayerData() {
+        };
+        savePlayerData = () => {
             playerData.name = document.getElementById('player-name-input').value.trim();
             if (playerData.name === "") playerData.name = "Cadete";
             localStorage.setItem('cfoGameData', JSON.stringify(playerData));
             updateCoinDisplays();
-        }
-        function updateCoinDisplays() {
+        };
+        updateCoinDisplays = () => {
             document.getElementById('start-coins').textContent = playerData.coins;
             document.getElementById('shop-coins').textContent = playerData.coins;
-        }
-        function showScreen(screenId) {
+        };
+        showScreen = (screenId) => {
             ['start-screen', 'game-wrapper', 'game-over-screen', 'shop-screen'].forEach(id => {
                 document.getElementById(id).classList.add('hidden');
             });
             document.getElementById(screenId).classList.remove('hidden');
-        }
-        function populateShop() {
+        };
+        populateShop = () => {
             const shopItemsContainer = document.getElementById('shop-items');
             shopItemsContainer.innerHTML = '';
             skins.forEach(skin => {
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'shop-item';
-                
                 const canvasPreview = document.createElement('canvas');
                 canvasPreview.width = 100; canvasPreview.height = 100;
                 const prevCtx = canvasPreview.getContext('2d');
                 const p = {x: (100-playerWidth)/2, y: (100-playerHeight)/2, width: playerWidth, height: playerHeight};
                 skin.draw(p, prevCtx);
-
                 const nameP = document.createElement('p');
                 nameP.textContent = `${skin.name}`;
                 const button = document.createElement('button');
                 button.className = 'button';
-
                 if (playerData.equippedSkinId === skin.id) {
                     button.textContent = 'Equipado';
                     button.classList.add('shop-button-equipped');
@@ -398,42 +451,29 @@
                 itemDiv.appendChild(button);
                 shopItemsContainer.appendChild(itemDiv);
             });
-        }
-        function buySkin(skinId, price) {
+        };
+        buySkin = (skinId, price) => {
             if (playerData.coins >= price) {
                 playerData.coins -= price;
                 playerData.ownedSkins.push(skinId);
                 savePlayerData();
                 populateShop();
             }
-        }
-        function equipSkin(skinId) {
+        };
+        equipSkin = (skinId) => {
             playerData.equippedSkinId = skinId;
             savePlayerData();
             populateShop();
-        }
-
-        // --- LÓGICA PRINCIPAL DO JOGO ---
-        function resetGame() {
-            player = { x: canvas.width / 2 - playerWidth / 2, y: canvas.height - playerHeight - 20, width: playerWidth, height: playerHeight, speed: 7 };
-            portals = []; obstacles = []; powerUps = [];
-            score = 0; lives = 3; isFrozen = false;
-            shuffle(questions);
-            availableQuestions = [...questions];
-            updateGameStatus();
-            nextRound();
-        }
-
-        function startGame() {
+        };
+        startGame = () => {
             savePlayerData();
             showScreen('game-wrapper');
             gameActive = true;
             resetGame();
             if(gameLoopId) cancelAnimationFrame(gameLoopId);
             gameLoop();
-        }
-        
-        function endGame(collided = false) {
+        };
+        endGame = (collided = false) => {
             gameActive = false;
             cancelAnimationFrame(gameLoopId);
             const coinsEarned = score;
@@ -443,9 +483,8 @@
             document.getElementById('coins-earned').textContent = coinsEarned;
             document.getElementById('game-over-title').textContent = collided ? "Fim de Jogo: Colisão!" : "Fim de Jogo";
             showScreen('game-over-screen');
-        }
-        
-        function nextRound() {
+        };
+        nextRound = () => {
             if (availableQuestions.length === 0) {
                 shuffle(questions);
                 availableQuestions = [...questions];
@@ -453,49 +492,35 @@
             currentQuestion = availableQuestions.pop();
             document.getElementById('question-area').textContent = currentQuestion.text;
             createObjects();
-        }
-
-        function createObjects() {
-            portals = []; 
-            const isGolden = Math.random() < 0.25;
-            const portalY = -portalHeight;
-            const leftPortalX = streetX + (streetWidth / 4) - (portalWidth / 2);
-            const rightPortalX = streetX + (streetWidth * 3 / 4) - (portalWidth / 2);
-            const positions = [leftPortalX, rightPortalX];
-            shuffle(positions);
-
-            portals.push({ x: positions[0], y: portalY, width: portalWidth, height: portalHeight, isCorrect: currentQuestion.answer === true, text: 'V', isGolden: isGolden });
-            portals.push({ x: positions[1], y: portalY, width: portalWidth, height: portalHeight, isCorrect: currentQuestion.answer === false, text: 'F', isGolden: isGolden });
-
-            if (Math.random() < 0.4) obstacles.push({ x: streetX + Math.random() * (streetWidth - 30), y: -60 - Math.random() * 100, size: 30 });
-            if (Math.random() < 0.2) {
-                const type = Math.random() < 0.5 ? 'freeze' : 'life';
-                powerUps.push({ x: streetX + Math.random() * (streetWidth - 30), y: -100 - Math.random() * 150, size: 30, type: type });
-            }
-        }
-        
-        function updateGameStatus() {
+        };
+        updateGameStatus = () => {
             document.getElementById('score').textContent = `Pontos: ${score}`;
             document.getElementById('lives').innerHTML = `Vidas: ${'❤️'.repeat(lives)}`;
-            if (lives <= 0) {
-                endGame();
+            const newDifficultyLevel = Math.floor(score / 120);
+            if (newDifficultyLevel > difficultyLevel) {
+                difficultyLevel = newDifficultyLevel;
+                showDifficultyIndicator(`Nível ${difficultyLevel + 1}!`);
             }
-        }
-        
-        function checkCollision(a, b) {
+            if (lives <= 0) endGame();
+        };
+        showDifficultyIndicator = (text) => {
+            difficultyIndicator.textContent = text;
+            difficultyIndicator.style.opacity = 1;
+            setTimeout(() => { difficultyIndicator.style.opacity = 0; }, 2000);
+        };
+        checkCollision = (a, b) => {
             return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
-        }
-
-        function gameLoop() {
+        };
+        gameLoop = () => {
             if (!gameActive) return;
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#95a5a6'; // Rua
+            ctx.fillStyle = '#95a5a6';
             ctx.fillRect(streetX, 0, streetWidth, canvas.height);
-
             const equippedSkin = skins.find(s => s.id === playerData.equippedSkinId) || skins[0];
             equippedSkin.draw(player, ctx);
             
+            player.speed = isSlowed ? baseSpeed / 2 : baseSpeed;
             const currentSpeed = isFrozen ? 0 : portalSpeed;
             
             let hasCollidedWithPortal = false;
@@ -503,17 +528,19 @@
                 p.y += currentSpeed;
                 ctx.fillStyle = p.isGolden ? 'gold' : (p.text === 'V' ? '#2ecc71' : '#e74c3c');
                 ctx.fillRect(p.x, p.y, p.width, p.height);
-                ctx.fillStyle = 'black';
-                ctx.font = 'bold 30px Arial';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
+                ctx.fillStyle = 'black'; ctx.font = 'bold 30px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 ctx.fillText(p.text, p.x + p.width/2, p.y + p.height/2);
-
                 if (checkCollision(player, p)) {
                     hasCollidedWithPortal = true;
                     if(lives > 0) {
                         const points = p.isGolden ? 30 : 10;
-                        if(p.isCorrect) { score += points; } else { lives--; }
+                        if(p.isCorrect) {
+                            score += points;
+                            answerPopup = { text: 'CERTO!', color: 'rgba(46, 204, 113, 0.9)', alpha: 1.0 };
+                        } else {
+                            lives--;
+                            answerPopup = { text: 'ERRADO!', color: 'rgba(231, 76, 60, 0.9)', alpha: 1.0 };
+                        }
                         updateGameStatus();
                         if(lives > 0) nextRound();
                     }
@@ -522,6 +549,7 @@
             if (!hasCollidedWithPortal && portals.length > 0 && portals[0].y > canvas.height) {
                 if(lives > 0) {
                     lives--;
+                    answerPopup = { text: 'ERRADO!', color: 'rgba(231, 76, 60, 0.9)', alpha: 1.0 };
                     updateGameStatus();
                     if(lives > 0) nextRound();
                 }
@@ -529,39 +557,43 @@
             for(let i = obstacles.length - 1; i >= 0; i--) {
                 let o = obstacles[i];
                 o.y += currentSpeed;
-                ctx.font = `${o.size}px Arial`;
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText('🚧', o.x + o.size/2, o.y + o.size/2);
-
-                if (checkCollision(player, { ...o, width: o.size, height: o.size })) {
-                    obstacles.splice(i, 1);
-                    if(lives > 0) {
-                        lives--;
-                        updateGameStatus();
+                ctx.font = `${o.size}px Arial`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                let emoji, collisionBox = { ...o, width: o.size, height: o.size };
+                switch(o.type) {
+                    case 'cone': emoji = '🚧'; break;
+                    case 'monster': emoji = '👾'; break;
+                    case 'puddle': emoji = '💧'; break;
+                    case 'hole':
+                        ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.beginPath();
+                        ctx.arc(o.x + o.size/2, o.y + o.size/2, o.size/2, 0, Math.PI * 2);
+                        ctx.fill(); emoji = null; break;
+                }
+                if(emoji) ctx.fillText(emoji, o.x + o.size/2, o.y + o.size/2);
+                if (checkCollision(player, collisionBox)) {
+                    if (o.type === 'puddle') {
+                        if (!isSlowed) { isSlowed = true; setTimeout(() => { isSlowed = false; }, 3000); }
+                    } else if (lives > 0) {
+                        lives--; updateGameStatus();
                         if (lives <= 0) { endGame(true); return; }
                     }
+                    obstacles.splice(i, 1);
                 }
             }
             for(let i = powerUps.length - 1; i >= 0; i--) {
                 let p = powerUps[i];
                 p.y += currentSpeed;
-                ctx.font = `${p.size}px Arial`;
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
+                ctx.font = `${p.size}px Arial`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 const emoji = p.type === 'freeze' ? '❄️' : '❤️';
                 ctx.fillText(emoji, p.x + p.size/2, p.y + p.size/2);
-
                 if (checkCollision(player, { ...p, width: p.size, height: p.size })) {
                     powerUps.splice(i, 1);
                     if (p.type === 'freeze') { isFrozen = true; setTimeout(() => { isFrozen = false; }, 3000); }
                     else if (p.type === 'life' && lives < 5) { lives++; updateGameStatus(); }
                 }
             }
+            drawAnswerPopup();
             if(gameActive) gameLoopId = requestAnimationFrame(gameLoop);
-        }
-
-        // --- CONTROLES E INICIALIZAÇÃO ---
+        };
         let moveInterval = null;
         function startMoving(direction) {
             if (!gameActive) return;
@@ -572,7 +604,6 @@
             }, 16);
         }
         function stopMoving() { clearInterval(moveInterval); }
-
         document.addEventListener('keydown', e => {
             if (!gameActive) return;
             if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') startMoving('left');
@@ -582,12 +613,10 @@
             if (!gameActive) return;
             if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a' || e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') stopMoving();
         });
-
         document.getElementById('left-btn').addEventListener('touchstart', (e) => { e.preventDefault(); startMoving('left'); });
         document.getElementById('left-btn').addEventListener('touchend', stopMoving);
         document.getElementById('right-btn').addEventListener('touchstart', (e) => { e.preventDefault(); startMoving('right'); });
         document.getElementById('right-btn').addEventListener('touchend', stopMoving);
-
         document.getElementById('start-game-button').onclick = startGame;
         document.getElementById('restart-button').onclick = startGame;
         document.getElementById('go-to-shop-button').onclick = () => { savePlayerData(); populateShop(); showScreen('shop-screen'); };
@@ -596,7 +625,6 @@
              document.getElementById('welcome-message').textContent = `Bem-vindo de volta, ${playerData.name}!`;
              showScreen('start-screen');
         };
-
         window.onload = () => {
             loadPlayerData();
             showScreen('start-screen');
