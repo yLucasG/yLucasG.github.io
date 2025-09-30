@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Desafio CFO: Versão Final</title>
+    <title>Desafio CFO: Modo Desafio</title>
     <style>
         :root {
             --primary-bg: #2c3e50; --secondary-bg: #34495e; --light-text: #ecf0f1;
@@ -34,7 +34,7 @@
         .restart-button { background-color: var(--accent-red); color: white; }
         .power-button {
             background-color: var(--power-yellow); color: #333; border: 3px solid #f39c12;
-            width: 98%; font-size: 1.2em; margin-top: 10px;
+            width: 100%; font-size: 1.2em; margin-top: 10px; order: 3;
         }
         .power-button.disabled { background-color: #7f8c8d; border-color: #6c7a89; cursor: not-allowed; }
         
@@ -64,12 +64,18 @@
         }
         #touch-controls { display: flex; justify-content: space-between; width: 100%; margin-top: 15px; flex-wrap: wrap; }
         .touch-button {
-            width: 48%; padding: 15px 10px; font-size: 20px; font-weight: bold;
-            text-align: center; background-color: #3498db; color: white;
-            border-radius: 10px; border: 2px solid #2980b9; cursor: pointer;
+            padding: 15px 10px; font-size: 20px; font-weight: bold;
+            text-align: center; color: white;
+            border-radius: 10px; cursor: pointer;
             user-select: none; -webkit-user-select: none;
         }
-        .touch-button:active { background-color: #2980b9; }
+        #left-btn, #right-btn {
+            width: 32%; background-color: #3498db; border: 2px solid #2980b9;
+        }
+        #accelerate-btn {
+             width: 32%; background-color: #1abc9c; border: 2px solid #16a085;
+        }
+        .touch-button:active { filter: brightness(0.8); }
 
         #shop-screen h2 { margin-top: 0; }
         .skin-power-desc { font-size: 0.8em; font-style: italic; color: #bdc3c7; min-height: 2.5em;}
@@ -114,6 +120,7 @@
         </div>
         <div id="touch-controls">
             <div id="left-btn" class="touch-button">Esquerda</div>
+            <div id="accelerate-btn" class="touch-button">Acelerar</div>
             <div id="right-btn" class="touch-button">Direita</div>
             <button id="power-btn" class="button power-button disabled">USAR PODER</button>
         </div>
@@ -147,24 +154,37 @@
         const powerBtn = document.getElementById('power-btn');
         const powerIndicator = document.getElementById('power-indicator');
         
-        // --- VARIÁVEIS DO JOGO ---
+        // --- CONSTANTES DO JOGO ---
         const playerWidth = 30, playerHeight = 50;
         const portalWidth = 80, portalHeight = 40;
         const streetWidth = canvas.width * 0.7;
         const streetX = (canvas.width - streetWidth) / 2;
-        
+        const baseSpeed = 7;
+        const basePortalSpeed = 45;
+
+        // --- VARIÁVEIS DE ESTADO DO JOGO ---
         let player, portals, obstacles, powerUps, answerPopup;
         let score, lives, gameActive, gameLoopId, difficultyLevel;
-        let isFrozen, isSlowed, correctAnswersInARow, powerReady, isNextGolden;
-        let portalSpeed = 0.65;
+        let isPaused, correctAnswersInARow, powerReady, isNextGolden, isAccelerating;
+        let lastTime = 0;
         let playerData = {};
-        const baseSpeed = 7;
+        let activeTimeouts = [];
 
         const questions = [
-            { text: "O Oficial é um líder apenas pelo cargo que exerce, não precisando ser inspirador ou motivador.", answer: false }, { text: "Gestão de Pessoas (GP) é o conjunto de práticas para administrar as pessoas, desconsiderando suas necessidades e motivações.", answer: false }, { text: "Na moderna Gestão de Pessoas, as pessoas constituem o principal ativo da organização.", answer: true }, { text: "Um dos objetivos da GP é proporcionar à organização pessoas bem treinadas e bem motivadas.", answer: true }, { text: "A evolução da Gestão de Pessoas passou de uma abordagem estratégica para uma puramente burocrática.", answer: false }, { text: "Agregar, aplicar, recompensar, desenvolver, manter e monitorar pessoas são os seis processos da GP.", answer: true }, { text: "O recrutamento interno atua sobre candidatos que estão no mercado, fora do serviço público.", answer: false }, { text: "A avaliação de desempenho serve para julgar o valor, a excelência e as competências de uma pessoa ou equipe.", answer: true }, { text: "A avaliação 360 graus é quando o desempenho é avaliado apenas pela chefia imediata.", answer: false }, { text: "O processo de recompensar pessoas é um elemento primordial para o incentivo e a motivação dos colaboradores.", answer: true }, { text: "A remuneração total inclui apenas o salário base, sem considerar benefícios ou incentivos.", answer: false }, { text: "Motivação extrínseca refere-se a fatores internos e pessoais que impulsionam um indivíduo a agir.", answer: false }, { text: "Na pirâmide de Maslow, as necessidades fisiológicas são a base e devem ser satisfeitas primeiro.", answer: true }, { text: "A Teoria X de McGregor pressupõe que o trabalho é uma atividade natural e gratificante para os seres humanos.", answer: false }, { text: "Fatores motivacionais, segundo Herzberg, estão relacionados ao conteúdo do trabalho em si, como reconhecimento e crescimento.", answer: true }, { text: "Treinamento e Desenvolvimento de pessoas têm o mesmo significado e foco.", answer: false }, { text: "O diagnóstico é a etapa inicial do processo de treinamento para identificar as necessidades da organização.", answer: true }, { text: "Liderança é a capacidade de guiar e influenciar um grupo para alcançar um objetivo comum.", answer: true }, { text: "A liderança informal origina-se da autoridade do cargo ocupado na estrutura da organização.", answer: false }, { text: "O estilo de liderança 'Laissez-faire' ou Liberal é caracterizado pelo controle centralizado e rígido do líder.", answer: false }, { text: "A escuta ativa é uma habilidade de comunicação crucial para líderes eficazes.", answer: true }, { text: "A gestão de conflitos busca sempre evitar o conflito, mesmo que isso signifique ignorar o problema.", answer: false }, { text: "O estilo de gestão de conflitos de 'Colaboração' busca uma solução que atenda às necessidades de ambas as partes.", answer: true }, { text: "Grupo e equipe de trabalho são termos com o mesmo significado, representando um conjunto de pessoas com um objetivo.", answer: false }, { text: "No Exército Brasileiro, a chefia militar engloba o comando, a administração e a liderança.", answer: true }, { text: "Um dos princípios da liderança militar é evitar assumir a responsabilidade pelos atos dos subordinados.", answer: false }, { text: "Cultura organizacional é definida como um conjunto de hábitos, crenças, valores e símbolos de uma organização.", answer: true }, { text: "Os artefatos visíveis, como uniformes e layout, são o nível mais profundo e inconsciente da cultura organizacional.", answer: false }, { text: "A resistência à mudança é sempre um fator negativo e deve ser suprimida imediatamente.", answer: false }, { text: "A Qualidade de Vida no Trabalho (QVT) refere-se apenas ao bem-estar físico dos funcionários, ignorando o mental e emocional.", answer: false }
+            { text: "O Oficial é um líder apenas pelo cargo que exerce, não precisando ser inspirador ou motivador.", answer: false }, { text: "Gestão de Pessoas (GP) é o conjunto de práticas para administrar as pessoas, desconsiderando suas necessidades e motivações.", answer: false }, { text: "Na moderna Gestão de Pessoas, as pessoas constituem o principal ativo da organização.", answer: true }, { text: "Um dos objetivos da GP é proporcionar à organização pessoas bem treinadas e bem motivadas.", answer: true }, { text: "A evolução da Gestão de Pessoas passou de uma abordagem estratégica para uma puramente burocrática.", answer: false }, { text: "Agregar, aplicar, recompensar, desenvolver, manter e monitorar pessoas são os seis processos da GP.", answer: true }, { text: "O recrutamento interno atua sobre candidatos que estão no mercado, fora do serviço público.", answer: false }, { text: "A avaliação de desempenho serve para julgar o valor, a excelência e as competências de uma pessoa ou equipe.", answer: true }, { text: "A avaliação 360 graus é quando o desempenho é avaliado apenas pela chefia imediata.", answer: false }, { text: "O processo de recompensar pessoas é um elemento primordial para o incentivo e a motivação dos colaboradores.", answer: true }, { text: "A remuneração total inclui apenas o salário base, sem considerar benefícios ou incentivos.", answer: false }, { text: "Motivação extrínseca refere-se a fatores internos e pessoais que impulsionam um indivíduo a agir.", answer: false }, { text: "Na pirâmide de Maslow, as necessidades fisiológicas são a base e devem ser satisfeitas primeiro.", answer: true }, { text: "A Teoria X de McGregor pressupõe que o trabalho é uma atividade natural e gratificante para os seres humanos.", answer: false }, { text: "Fatores motivacionais, segundo Herzberg, estão relacionados ao conteúdo do trabalho em si, como reconhecimento e crescimento.", answer: true }, { text: "Treinamento e Desenvolvimento de pessoas têm o mesmo significado e foco.", answer: false }, { text: "O diagnóstico é a etapa inicial do processo de treinamento para identificar as necessidades da organização.", answer: true }, { text: "Liderança é a capacidade de guiar e influenciar um grupo para alcançar um objetivo comum.", answer: true }, { text: "A liderança informal origina-se da autoridade do cargo ocupado na estrutura da organização.", answer: false }, { text: "O estilo de liderança 'Laissez-faire' ou Liberal é caracterizado pelo controle centralizado e rígido do líder.", answer: false }, { text: "A escuta ativa é uma habilidade de comunicação crucial para líderes eficazes.", answer: true }, { text: "A gestão de conflitos busca sempre evitar o conflito, mesmo que isso signifique ignorar o problema.", answer: false }, { text: "O estilo de gestão de conflitos de 'Colaboração' busca uma solução que atenda às necessidades de ambas as partes.", answer: true }, { text: "Grupo e equipe de trabalho são termos com o mesmo significado, representando um conjunto de pessoas com um objetivo.", answer: false }, { text: "No Exército Brasileiro, a chefia militar engloba o comando, a administração e a liderança.", answer: true }, { text: "Um dos princípios da liderança militar é evitar assumir a responsabilidade pelos atos dos subordinados.", answer: false }, { text: "Cultura organizacional é definida como um conjunto de hábitos, crenças, valores e símbolos de uma organização.", answer: true }, { text: "Os artefatos visíveis, como uniformes e layout, são o nível mais profundo e inconsciente da cultura organizacional.", answer: false }, { text: "A resistência à mudança é sempre um fator negativo e deve ser suprimida imediatamente.", answer: false }, { text: "A Qualidade de Vida no Trabalho (QVT) refere-se apenas ao bem-estar físico dos funcionários, ignorando o mental e emocional.", answer: false },
+            // NOVAS QUESTÕES
+            { text: "A Teoria Y de McGregor assume que as pessoas são inerentemente preguiçosas e precisam de controle rígido.", answer: false },
+            { text: "No ciclo de mudança diretivo, a mudança é imposta de cima para baixo na organização.", answer: true },
+            { text: "Fatores de higiene, segundo Herzberg, quando presentes, são os principais responsáveis pela motivação duradoura.", answer: false },
+            { text: "A liderança situacional defende que um único estilo de liderança (ex: democrático) é eficaz em todas as situações.", answer: false },
+            { text: "O processo de 'Manter Pessoas' na GP inclui a gestão do clima, cultura organizacional e qualidade de vida.", answer: true },
+            { text: "Na pirâmide de Maslow, a necessidade de 'Auto-Realização' é a mais básica de todas.", answer: false },
+            { text: "O método de avaliação de desempenho de 'incidentes críticos' foca em registrar comportamentos específicos, positivos ou negativos.", answer: true },
+            { text: "A gestão multigeracional é um desafio da GP que lida com a convivência de diferentes gerações no ambiente de trabalho.", answer: true },
+            { text: "O 'Job rotation' (rotação de cargos) é um método de desenvolvimento de pessoas focado fora do cargo.", answer: false },
+            { text: "Um dos efeitos positivos do conflito organizacional é que ele pode estimular a busca por soluções criativas e inovadoras.", answer: true }
         ];
         let availableQuestions = [];
-        let currentQuestion = {};
 
         function shuffle(array) {
             for (let i = array.length - 1; i > 0; i--) {
@@ -173,57 +193,73 @@
             }
         }
         
-        // --- SKINS E PODERES ---
+        function registerTimeout(callback, duration) {
+            const id = setTimeout(() => {
+                callback();
+                activeTimeouts = activeTimeouts.filter(timeoutId => timeoutId !== id);
+            }, duration);
+            activeTimeouts.push(id);
+        }
+
         const skins = [
             { id: 'default', name: 'Padrão', price: 0, draw: drawStickman, power: {name: 'Nenhum', desc: 'Sem poder especial.', execute: ()=>{} } },
-            { id: 'frog', name: 'Sapo', price: 350, draw: (p, ctxRef) => drawEmoji(p, ctxRef, '🐸'), power: {name: 'Salto Rápido', desc: 'Salta uma distância para cima.', execute: ()=> { if(player.y > 150) player.y -= 150; } } },
-            { id: 'pig', name: 'Porco', price: 400, draw: (p, ctxRef) => drawEmoji(p, ctxRef, '🐷'), power: {name: 'Faro de Ouro', desc: 'Garante que a próxima questão seja dourada.', execute: ()=> { isNextGolden = true; } } },
-            { id: 'lion', name: 'Leão', price: 400, draw: (p, ctxRef) => drawEmoji(p, ctxRef, '🦁'), power: {name: 'Rugido Paralisante', desc: 'Congela todos os perigos por 3s.', execute: ()=> { obstacles.forEach(o => o.isStunned = true); setTimeout(()=> obstacles.forEach(o => o.isStunned = false), 3000); } } },
-            { id: 'dog', name: 'Cachorro', price: 500, draw: drawDog, power: {name: 'Faro Fino', desc: 'Atrai o próximo power-up.', execute: ()=> { if (powerUps.length > 0) powerUps[0].isAttracted = true; } } },
-            { id: 'goat', name: 'Bode', price: 500, draw: (p, ctxRef) => drawEmoji(p, ctxRef, '🐐'), power: {name: 'Teimosia', desc: 'Chance de ignorar um dano.', execute: ()=> { if(Math.random() < 0.5) player.isShielded = true; } } },
-            { id: 'monkey', name: 'Macaco', price: 600, draw: (p, ctxRef) => drawEmoji(p, ctxRef, '🐒'), power: {name: 'Super Agilidade', desc: 'Fique invencível por 5s.', execute: ()=> { player.isInvincible = true; setTimeout(()=> player.isInvincible = false, 5000); } } },
-            { id: 'seagull', name: 'Gaivota', price: 600, draw: (p, ctxRef) => drawEmoji(p, ctxRef, '🕊️'), power: {name: 'Voo Lento', desc: 'Deixa tudo em câmera lenta por 5s.', execute: ()=> { isSlowed = true; setTimeout(()=> isSlowed = false, 5000); } } },
-            { id: 'ghost', name: 'Fantasma', price: 700, draw: (p, ctxRef) => drawEmoji(p, ctxRef, '👻'), power: {name: 'Forma Etérea', desc: 'Atravesse perigos por 5s.', execute: ()=> { player.isPhasing = true; setTimeout(()=> player.isPhasing = false, 5000); } } },
-            { id: 'alligator', name: 'Jacaré', price: 750, draw: (p, ctxRef) => drawEmoji(p, ctxRef, '🐊'), power: {name: 'Escudo de Escamas', desc: 'Bloqueia o próximo dano.', execute: ()=> { player.isShielded = true; } } },
-            { id: 'ninja', name: 'Ninja', price: 800, draw: (p, ctxRef) => drawEmoji(p, ctxRef, '🥷'), power: {name: 'Lâmina Oculta', desc: 'Elimina todos os perigos da tela.', execute: ()=> { obstacles = []; } } },
-            { id: 'robot', name: 'Robô', price: 1000, draw: (p, ctxRef) => drawEmoji(p, ctxRef, '🤖'), power: {name: 'Análise Tática', desc: 'Pausa o jogo e revela a resposta.', execute: ()=> { gameActive = false; portals.find(p=>p.isCorrect).isHint = true; setTimeout(()=> { gameActive = true; portals.forEach(p => p.isHint = false); }, 2000); } } },
+            { id: 'frog', name: 'Sapo', price: 250, draw: (p, ctxRef) => drawEmoji(p, ctxRef, '🐸'), power: {name: 'Salto Rápido', desc: 'Salta e retorna em 1s.', execute: ()=> { 
+                if (player.isLeaping || !gameActive) return;
+                player.isLeaping = true;
+                const originalY = player.y;
+                player.y = Math.max(0, player.y - 150);
+                registerTimeout(()=> {
+                    player.y = originalY;
+                    player.isLeaping = false;
+                }, 1000);
+            } } },
+            { id: 'pig', name: 'Porco', price: 300, draw: (p, ctxRef) => drawEmoji(p, ctxRef, '🐷'), power: {name: 'Faro de Ouro', desc: 'Garante que a próxima questão seja dourada.', execute: ()=> { isNextGolden = true; } } },
+            { id: 'lion', name: 'Leão', price: 300, draw: (p, ctxRef) => drawEmoji(p, ctxRef, '🦁'), power: {name: 'Rugido Paralisante', desc: 'Congela todos os perigos por 3s.', execute: ()=> { obstacles.forEach(o => o.isStunned = true); registerTimeout(()=> obstacles.forEach(o => o.isStunned = false), 3000); } } },
+            { id: 'dog', name: 'Cachorro', price: 400, draw: drawDog, power: {name: 'Faro Fino', desc: 'Atrai o próximo power-up.', execute: ()=> { if (powerUps.length > 0) powerUps[0].isAttracted = true; } } },
+            { id: 'goat', name: 'Bode', price: 400, draw: (p, ctxRef) => drawEmoji(p, ctxRef, '🐐'), power: {name: 'Teimosia', desc: '50% de chance de ignorar um dano.', execute: ()=> { if(Math.random() < 0.5) player.isShielded = true; } } },
+            { id: 'monkey', name: 'Macaco', price: 500, draw: (p, ctxRef) => drawEmoji(p, ctxRef, '🐒'), power: {name: 'Super Agilidade', desc: 'Fique invencível por 5s.', execute: ()=> { player.isInvincible = true; registerTimeout(()=> player.isInvincible = false, 5000); } } },
+            { id: 'seagull', name: 'Gaivota', price: 500, draw: (p, ctxRef) => drawEmoji(p, ctxRef, '🕊️'), power: {name: 'Voo Lento', desc: 'Deixa tudo em câmera lenta por 5s.', execute: ()=> { player.slowsTime = true; registerTimeout(()=> player.slowsTime = false, 5000); } } },
+            { id: 'ghost', name: 'Fantasma', price: 600, draw: (p, ctxRef) => drawEmoji(p, ctxRef, '👻'), power: {name: 'Forma Etérea', desc: 'Atravesse perigos por 5s.', execute: ()=> { player.isPhasing = true; registerTimeout(()=> player.isPhasing = false, 5000); } } },
+            { id: 'alligator', name: 'Jacaré', price: 650, draw: (p, ctxRef) => drawEmoji(p, ctxRef, '🐊'), power: {name: 'Escudo de Escamas', desc: 'Bloqueia o próximo dano.', execute: ()=> { player.isShielded = true; } } },
+            { id: 'ninja', name: 'Ninja', price: 700, draw: (p, ctxRef) => drawEmoji(p, ctxRef, '🥷'), power: {name: 'Lâmina Oculta', desc: 'Elimina todos os perigos da tela.', execute: ()=> { obstacles = []; } } },
+            { id: 'robot', name: 'Robô', price: 800, draw: (p, ctxRef) => drawEmoji(p, ctxRef, '🤖'), power: {name: 'Análise Tática', desc: 'Pausa o jogo e revela a resposta.', execute: ()=> { 
+                if (isPaused) return; 
+                isPaused = true;
+                const correctPortal = portals.find(p=>p.isCorrect); 
+                if(correctPortal) correctPortal.isHint = true; 
+                registerTimeout(()=> { 
+                    if(correctPortal) correctPortal.isHint = false; 
+                    isPaused = false;
+                }, 2000); 
+            } } },
         ];
 
-        // --- FUNÇÕES DE DESENHO DE SKINS ---
         function drawStickman(p, ctxRef, color = '#2c3e50') {
             const centerX = p.x + p.width / 2;
             const headRadius = p.width / 3;
             const bodyTop = p.y + headRadius * 2;
             const bodyBottom = p.y + p.height - (p.height / 4);
             ctxRef.strokeStyle = color; ctxRef.fillStyle = color; ctxRef.lineWidth = 4;
-            ctxRef.beginPath();
-            ctxRef.arc(centerX, p.y + headRadius, headRadius, 0, Math.PI * 2);
-            ctxRef.fill();
-            ctxRef.beginPath();
-            ctxRef.moveTo(centerX, bodyTop); ctxRef.lineTo(centerX, bodyBottom);
-            ctxRef.stroke();
-            ctxRef.beginPath();
-            ctxRef.moveTo(centerX, bodyTop + 5); ctxRef.lineTo(p.x, p.y + p.height / 2);
+            ctxRef.beginPath(); ctxRef.arc(centerX, p.y + headRadius, headRadius, 0, Math.PI * 2); ctxRef.fill();
+            ctxRef.beginPath(); ctxRef.moveTo(centerX, bodyTop); ctxRef.lineTo(centerX, bodyBottom); ctxRef.stroke();
+            ctxRef.beginPath(); ctxRef.moveTo(centerX, bodyTop + 5); ctxRef.lineTo(p.x, p.y + p.height / 2);
             ctxRef.moveTo(centerX, bodyTop + 5); ctxRef.lineTo(p.x + p.width, p.y + p.height / 2);
             ctxRef.stroke();
-            ctxRef.beginPath();
-            ctxRef.moveTo(centerX, bodyBottom); ctxRef.lineTo(p.x, p.y + p.height);
+            ctxRef.beginPath(); ctxRef.moveTo(centerX, bodyBottom); ctxRef.lineTo(p.x, p.y + p.height);
             ctxRef.moveTo(centerX, bodyBottom); ctxRef.lineTo(p.x + p.width, p.y + p.height);
             ctxRef.stroke();
         }
         function drawDog(p, ctxRef) {
-            ctxRef.fillStyle = '#966F33'; // Corpo
+            ctxRef.fillStyle = '#966F33'; 
             ctxRef.fillRect(p.x, p.y + p.height*0.25, p.width, p.height*0.75);
-            ctxRef.fillStyle = '#AB927A'; // Cabeça
+            ctxRef.fillStyle = '#AB927A'; 
             ctxRef.fillRect(p.x, p.y, p.width, p.height * 0.4);
-            ctxRef.fillStyle = '#6F4E37'; // Orelhas
+            ctxRef.fillStyle = '#6F4E37'; 
             ctxRef.fillRect(p.x - 5, p.y, 10, p.height * 0.3);
             ctxRef.fillRect(p.x + p.width - 5, p.y, 10, p.height * 0.3);
-            ctxRef.fillStyle = 'black'; // Olhos e nariz
-            ctxRef.beginPath();
-            ctxRef.arc(p.x + p.width*0.3, p.y + p.height*0.2, 3, 0, Math.PI * 2);
-            ctxRef.arc(p.x + p.width*0.7, p.y + p.height*0.2, 3, 0, Math.PI * 2);
-            ctxRef.fill();
+            ctxRef.fillStyle = 'black'; 
+            ctxRef.beginPath(); ctxRef.arc(p.x + p.width*0.3, p.y + p.height*0.2, 3, 0, Math.PI * 2);
+            ctxRef.arc(p.x + p.width*0.7, p.y + p.height*0.2, 3, 0, Math.PI * 2); ctxRef.fill();
             ctxRef.fillRect(p.x + p.width/2 - 2, p.y + p.height * 0.3, 4, 4);
         }
         function drawEmoji(p, ctxRef, emoji = '🙂') {
@@ -233,7 +269,6 @@
             ctxRef.fillText(emoji, p.x + p.width/2, p.y + p.height/2);
         }
 
-        // --- LÓGICA DE SALVAMENTO, NAVEGAÇÃO, E LOJA ---
         function loadPlayerData() {
             const data = localStorage.getItem('cfoGameData');
             if (data) playerData = JSON.parse(data);
@@ -307,22 +342,27 @@
             savePlayerData(); populateShop();
         }
 
-        // --- LÓGICA PRINCIPAL DO JOGO ---
         function resetGame() {
-            player = { x: canvas.width / 2 - playerWidth / 2, y: canvas.height - playerHeight - 20, width: playerWidth, height: playerHeight, speed: baseSpeed, isShielded: false, isInvincible: false, isPhasing: false, controlsSlippery: false };
+            player = { x: canvas.width / 2 - playerWidth / 2, y: canvas.height - playerHeight - 20, width: playerWidth, height: playerHeight, speed: baseSpeed, isShielded: false, isInvincible: false, isPhasing: false, controlsSlippery: false, isLeaping: false, isSlowed: false, slowsTime: false };
             portals = []; obstacles = []; powerUps = []; answerPopup = null;
             score = 0; lives = 3; difficultyLevel = 0; correctAnswersInARow = 0; powerReady = false; isNextGolden = false;
-            isFrozen = false; isSlowed = false;
+            isFrozen = false; isAccelerating = false; isPaused = false;
             shuffle(questions); availableQuestions = [...questions];
             updateGameStatus(); updatePowerIndicator(); nextRound();
         }
         function startGame() {
-            savePlayerData(); showScreen('game-wrapper'); gameActive = true;
-            resetGame(); if(gameLoopId) cancelAnimationFrame(gameLoopId);
-            gameLoop();
+            savePlayerData(); showScreen('game-wrapper');
+            gameActive = true;
+            resetGame(); 
+            if(gameLoopId) cancelAnimationFrame(gameLoopId);
+            lastTime = performance.now();
+            gameLoopId = requestAnimationFrame(gameLoop);
         }
         function endGame(collided = false) {
             gameActive = false;
+            cancelAnimationFrame(gameLoopId);
+            activeTimeouts.forEach(id => clearTimeout(id));
+            activeTimeouts = [];
             const coinsEarned = score; playerData.coins += coinsEarned; savePlayerData();
             document.getElementById('final-score').textContent = score;
             document.getElementById('coins-earned').textContent = coinsEarned;
@@ -330,16 +370,15 @@
             showScreen('game-over-screen');
         }
         function nextRound() {
+            portals = [];
             if (availableQuestions.length === 0) { shuffle(questions); availableQuestions = [...questions]; }
             currentQuestion = availableQuestions.pop();
             document.getElementById('question-area').textContent = currentQuestion.text;
             createObjects();
         }
         function createObjects() {
-            portals = []; 
             const isGolden = Math.random() < 0.25 || isNextGolden;
             if (isNextGolden) isNextGolden = false;
-            
             const portalY = -portalHeight;
             const leftPortalX = streetX + (streetWidth / 4) - (portalWidth / 2);
             const rightPortalX = streetX + (streetWidth * 3 / 4) - (portalWidth / 2);
@@ -348,16 +387,18 @@
             portals.push({ x: positions[0], y: portalY, width: portalWidth, height: portalHeight, isCorrect: currentQuestion.answer === true, text: 'V', isGolden: isGolden });
             portals.push({ x: positions[1], y: portalY, width: portalWidth, height: portalHeight, isCorrect: currentQuestion.answer === false, text: 'F', isGolden: isGolden });
 
-            const obstacleChance = 0.4 + (difficultyLevel * 0.1);
-            if (Math.random() < obstacleChance) {
-                let type = 'cone';
-                if (difficultyLevel >= 4 && Math.random() < 0.3) type = 'hole';
-                else if (difficultyLevel >= 3 && Math.random() < 0.35) type = 'monster';
-                else if (difficultyLevel >= 2 && Math.random() < 0.4) type = 'puddle';
-                if (difficultyLevel >= 1 && Math.random() < 0.4) type = 'tornado';
-                if (difficultyLevel >= 2 && Math.random() < 0.2) type = 'oil';
-                
-                obstacles.push({ type: type, x: streetX + Math.random() * (streetWidth - 30), y: -60 - Math.random() * 100, size: 30 });
+            const attempts = 1 + Math.floor(difficultyLevel); // Aumenta a quantidade de tentativas mais rápido
+            for(let i = 0; i < attempts; i++) {
+                const obstacleChance = 0.4 + (difficultyLevel * 0.15); // Aumenta a chance mais rápido
+                if (Math.random() < obstacleChance) {
+                    let type = 'cone';
+                    if (difficultyLevel >= 4 && Math.random() < 0.3) type = 'hole';
+                    else if (difficultyLevel >= 3 && Math.random() < 0.35) type = 'monster';
+                    else if (difficultyLevel >= 2 && Math.random() < 0.4) type = 'puddle';
+                    else if (difficultyLevel >= 1 && Math.random() < 0.4) type = 'tornado';
+                    if (difficultyLevel >= 2 && Math.random() < 0.2) type = 'oil';
+                    obstacles.push({ type: type, x: streetX + Math.random() * (streetWidth - 30), y: -60 - (i * 120) - Math.random() * 100, size: 30, isStunned: false });
+                }
             }
             if (Math.random() < 0.2) {
                 const type = Math.random() < 0.5 ? 'freeze' : 'life';
@@ -367,19 +408,23 @@
         function updateGameStatus() {
             document.getElementById('score').textContent = `Pontos: ${score}`;
             document.getElementById('lives').innerHTML = `Vidas: ${'❤️'.repeat(lives)}`;
-            const newDifficultyLevel = Math.floor(score / 120);
+            const newDifficultyLevel = Math.floor(score / 70); // Nível a cada 70 pontos
             if (newDifficultyLevel > difficultyLevel) {
                 difficultyLevel = newDifficultyLevel;
                 const indicator = document.getElementById('difficulty-indicator');
-                indicator.textContent = `Nível ${difficultyLevel + 1}!`; indicator.style.opacity = 1;
-                setTimeout(() => { indicator.style.opacity = 0; }, 2000);
+                if (indicator) {
+                    indicator.textContent = `Nível ${difficultyLevel + 1}!`; indicator.style.opacity = 1;
+                    registerTimeout(() => { indicator.style.opacity = 0; }, 2000);
+                }
             }
             if (lives <= 0) endGame();
         }
         function updatePowerIndicator() {
-            powerIndicator.textContent = powerReady ? '⭐' : '';
-            powerBtn.classList.toggle('disabled', !powerReady);
-            powerBtn.disabled = !powerReady;
+            if (powerIndicator) powerIndicator.textContent = powerReady ? '⭐' : '';
+            if (powerBtn) {
+                powerBtn.classList.toggle('disabled', !powerReady);
+                powerBtn.disabled = !powerReady;
+            }
         }
         function checkCollision(a, b) { return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y; }
         function drawAnswerPopup() {
@@ -410,17 +455,28 @@
             updatePowerIndicator();
         }
         
-        // LOOP PRINCIPAL
-        function gameLoop() {
-            if (!gameActive) {
-                if(gameLoopId) cancelAnimationFrame(gameLoopId);
-                return;
+        function gameLoop(timestamp) {
+            if (!gameActive) { return; }
+            
+            const deltaTime = (timestamp - lastTime) / 1000 || 0;
+            lastTime = timestamp;
+
+            if (!isPaused) {
+                let currentSpeedMultiplier = 1;
+                if (isFrozen || player.slowsTime) currentSpeedMultiplier = 0.5;
+                if (isAccelerating) currentSpeedMultiplier *= 3;
+                const moveDistance = basePortalSpeed * currentSpeedMultiplier * deltaTime;
+
+                [...portals, ...obstacles, ...powerUps].forEach(obj => {
+                    if (obj && !obj.isStunned) obj.y += moveDistance;
+                });
             }
+            
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = '#95a5a6'; ctx.fillRect(streetX, 0, streetWidth, canvas.height);
             
             const equippedSkin = skins.find(s => s.id === playerData.equippedSkinId) || skins[0];
-            ctx.globalAlpha = player.isPhasing ? 0.5 : 1.0;
+            ctx.globalAlpha = (player.isPhasing || player.isLeaping) ? 0.5 : 1.0;
             equippedSkin.draw(player, ctx);
             ctx.globalAlpha = 1.0;
             if (player.isShielded || player.isInvincible) {
@@ -428,11 +484,9 @@
                 ctx.beginPath(); ctx.arc(player.x + player.width/2, player.y + player.height/2, player.height/2 + 5, 0, Math.PI * 2); ctx.stroke();
             }
             
-            player.speed = isSlowed ? baseSpeed / 2 : baseSpeed;
-            const currentSpeed = isFrozen ? 0 : portalSpeed;
+            player.speed = player.isSlowed ? baseSpeed / 2 : baseSpeed;
             
             portals.forEach(p => {
-                p.y += currentSpeed;
                 ctx.fillStyle = p.isGolden ? 'gold' : (p.text === 'V' ? '#2ecc71' : '#e74c3c');
                 if (p.isHint) { ctx.strokeStyle = 'white'; ctx.lineWidth = 4; ctx.strokeRect(p.x, p.y, p.width, p.height); }
                 ctx.fillRect(p.x, p.y, p.width, p.height);
@@ -451,6 +505,7 @@
                     updateGameStatus(); if(lives > 0) nextRound();
                 }
             });
+
             if (portals.length > 0 && portals[0].y > canvas.height && lives > 0) {
                 lives--; correctAnswersInARow = 0;
                 answerPopup = { text: 'ERRADO!', color: 'rgba(231, 76, 60, 0.9)', alpha: 1.0 };
@@ -459,15 +514,11 @@
             
             for(let i = obstacles.length - 1; i >= 0; i--) {
                 let o = obstacles[i];
-                if (!o.isStunned) o.y += currentSpeed;
                 if (o.type === 'tornado') o.x += Math.sin(o.y * 0.05) * 2;
-                
                 let emoji, collisionBox = { ...o, width: o.size, height: o.size };
                 switch(o.type) {
-                    case 'cone': emoji = '🚧'; break;
-                    case 'monster': emoji = '👾'; break;
-                    case 'puddle': emoji = '💧'; break;
-                    case 'oil': emoji = '⚫'; break;
+                    case 'cone': emoji = '🚧'; break; case 'monster': emoji = '👾'; break;
+                    case 'puddle': emoji = '💧'; break; case 'oil': emoji = '⚫'; break;
                     case 'tornado': emoji = '🌪️'; break;
                     case 'hole':
                         ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.beginPath();
@@ -476,74 +527,76 @@
                 }
                 ctx.font = `${o.size}px Arial`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 if(emoji) ctx.fillText(emoji, o.x + o.size/2, o.y + o.size/2);
-
                 if (checkCollision(player, collisionBox)) {
+                    obstacles.splice(i, 1);
                     if (o.type === 'puddle') {
-                        if (!isSlowed) { isSlowed = true; setTimeout(() => { isSlowed = false; }, 3000); }
+                        if (!player.isSlowed) { player.isSlowed = true; registerTimeout(() => { player.isSlowed = false; }, 3000); }
                     } else if (o.type === 'oil') {
-                        if (!player.controlsSlippery) { player.controlsSlippery = true; setTimeout(() => { player.controlsSlippery = false; }, 4000); }
+                        if (!player.controlsSlippery) { player.controlsSlippery = true; registerTimeout(() => { player.controlsSlippery = false; }, 4000); }
                     } else if (!player.isInvincible && !player.isPhasing) {
                         if (player.isShielded) { player.isShielded = false; }
                         else if (lives > 0) { lives--; correctAnswersInARow = 0; updateGameStatus(); }
                     }
                     if (lives <= 0) { endGame(true); return; }
-                    obstacles.splice(i, 1);
-                }
+                } else if (o.y > canvas.height) { obstacles.splice(i, 1); }
             }
             
-            powerUps.forEach((p, i) => {
-                p.y += currentSpeed;
+            for(let i = powerUps.length - 1; i >= 0; i--) {
+                let p = powerUps[i];
                 if (p.isAttracted) {
                     const dx = player.x - p.x; const dy = player.y - p.y;
                     const dist = Math.sqrt(dx*dx + dy*dy);
-                    p.x += (dx/dist) * 3; p.y += (dy/dist) * 3;
+                    if (dist > 1) { p.x += (dx/dist) * 3; p.y += (dy/dist) * 3; }
                 }
                 ctx.font = `${p.size}px Arial`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 const emoji = p.type === 'freeze' ? '❄️' : '❤️';
                 ctx.fillText(emoji, p.x + p.size/2, p.y + p.size/2);
                 if (checkCollision(player, { ...p, width: p.size, height: p.size })) {
                     powerUps.splice(i, 1);
-                    if (p.type === 'freeze') { isFrozen = true; setTimeout(() => { isFrozen = false; }, 3000); }
+                    if (p.type === 'freeze') { isFrozen = true; registerTimeout(() => { isFrozen = false; }, 3000); }
                     else if (p.type === 'life' && lives < 5) { lives++; updateGameStatus(); }
-                }
-            });
-
+                } else if (p.y > canvas.height) { powerUps.splice(i, 1); }
+            }
             drawAnswerPopup();
-            if(gameActive) gameLoopId = requestAnimationFrame(gameLoop);
+            gameLoopId = requestAnimationFrame(gameLoop);
         };
-
-        // --- CONTROLES E LISTENERS ---
+        
         let moveInterval = null;
         function startMoving(direction) {
-            if (!gameActive) return;
+            if (!gameActive || isPaused) return;
             clearInterval(moveInterval);
-            let moveDir = direction;
-            if (player.controlsSlippery) moveDir = direction === 'left' ? 'right' : 'left';
-            
+            let moveDir = player.controlsSlippery ? (direction === 'left' ? 'right' : 'left') : direction;
             moveInterval = setInterval(() => {
                 if (moveDir === 'left' && player.x > streetX) { player.x -= player.speed; }
                 else if (moveDir === 'right' && player.x < streetX + streetWidth - player.width) { player.x += player.speed; }
             }, 16);
         }
         function stopMoving() { clearInterval(moveInterval); }
+
         document.addEventListener('keydown', e => {
             if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') startMoving('left');
             if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') startMoving('right');
+            if (e.key === 'ArrowUp' || e.key.toLowerCase() === 'w') isAccelerating = true;
             if (e.key === ' ') usePower();
         });
         document.addEventListener('keyup', e => {
             if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a' || e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') stopMoving();
+            if (e.key === 'ArrowUp' || e.key.toLowerCase() === 'w') isAccelerating = false;
         });
+
+        powerBtn.addEventListener('click', usePower);
+        const accelerateBtn = document.getElementById('accelerate-btn');
         document.getElementById('left-btn').addEventListener('touchstart', (e) => { e.preventDefault(); startMoving('left'); });
         document.getElementById('left-btn').addEventListener('touchend', stopMoving);
         document.getElementById('right-btn').addEventListener('touchstart', (e) => { e.preventDefault(); startMoving('right'); });
         document.getElementById('right-btn').addEventListener('touchend', stopMoving);
-        powerBtn.addEventListener('click', usePower);
+        accelerateBtn.addEventListener('touchstart', (e) => { e.preventDefault(); isAccelerating = true; });
+        accelerateBtn.addEventListener('touchend', () => { isAccelerating = false; });
 
         document.getElementById('start-game-button').onclick = startGame;
         document.getElementById('restart-button').onclick = startGame;
-        document.getElementById('go-to-shop-button').onclick = () => { savePlayerData(); populateShop(); showScreen('shop-screen'); };
-        document.getElementById('go-to-shop-from-over-button').onclick = () => { populateShop(); showScreen('shop-screen'); };
+        document.getElementById('go-to-shop-button').onclick = () => { savePlayerData(); updateCoinDisplays(); populateShop(); showScreen('shop-screen'); };
+        document.getElementById('go-to-shop-from-over-button').onclick = () => { updateCoinDisplays(); populateShop(); showScreen('shop-screen'); };
         document.getElementById('back-to-start-button').onclick = () => {
              document.getElementById('welcome-message').textContent = `Bem-vindo de volta, ${playerData.name}!`;
              showScreen('start-screen');
