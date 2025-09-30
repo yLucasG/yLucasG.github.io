@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Desafio CFO: Modo Desafio</title>
+    <title>Desafio CFO: Versão Definitiva</title>
     <style>
         :root {
             --primary-bg: #2c3e50; --secondary-bg: #34495e; --light-text: #ecf0f1;
@@ -91,6 +91,10 @@
         .shop-button-equip { background-color: #9b59b6; }
         .shop-button-equipped { background-color: #27ae60; cursor: not-allowed; }
         .shop-button-owned { background-color: #7f8c8d; }
+
+        #error-report { text-align: left; max-height: 150px; overflow-y: auto; background-color: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; margin-top: 15px;}
+        #error-report p { margin: 0 0 10px 0; }
+        #error-report strong { color: var(--accent-red); }
         
         .hidden { display: none; }
     </style>
@@ -105,7 +109,10 @@
             <button id="start-game-button" class="button play-button">Jogar</button>
             <button id="go-to-shop-button" class="button shop-button">Loja</button>
         </div>
-        <p style="margin-top: 20px;"><strong>Moedas:</strong> <span id="start-coins">0</span></p>
+        <p style="margin-top: 20px;">
+            <strong>Moedas:</strong> <span id="start-coins">0</span> | 
+            <strong>Recorde:</strong> <span id="high-score">0</span>
+        </p>
     </div>
 
     <div id="game-wrapper" class="hidden">
@@ -130,6 +137,7 @@
         <h2 id="game-over-title">Fim de Jogo</h2>
         <p>Pontuação final: <span id="final-score">0</span></p>
         <p>Moedas ganhas: <span id="coins-earned">0</span></p>
+        <div id="report-container"></div>
         <div>
             <button id="restart-button" class="button restart-button">Jogar Novamente</button>
             <button id="go-to-shop-from-over-button" class="button shop-button">Ir para a Loja</button>
@@ -163,26 +171,25 @@
         const basePortalSpeed = 45;
 
         // --- VARIÁVEIS DE ESTADO DO JOGO ---
-        let player, portals, obstacles, powerUps, answerPopup;
+        let player, portals, obstacles, powerUps, projectiles, answerPopup;
         let score, lives, gameActive, gameLoopId, difficultyLevel;
         let isPaused, correctAnswersInARow, powerReady, isNextGolden, isAccelerating;
         let lastTime = 0;
         let playerData = {};
         let activeTimeouts = [];
+        let incorrectAnswers = [];
 
         const questions = [
-            { text: "O Oficial é um líder apenas pelo cargo que exerce, não precisando ser inspirador ou motivador.", answer: false }, { text: "Gestão de Pessoas (GP) é o conjunto de práticas para administrar as pessoas, desconsiderando suas necessidades e motivações.", answer: false }, { text: "Na moderna Gestão de Pessoas, as pessoas constituem o principal ativo da organização.", answer: true }, { text: "Um dos objetivos da GP é proporcionar à organização pessoas bem treinadas e bem motivadas.", answer: true }, { text: "A evolução da Gestão de Pessoas passou de uma abordagem estratégica para uma puramente burocrática.", answer: false }, { text: "Agregar, aplicar, recompensar, desenvolver, manter e monitorar pessoas são os seis processos da GP.", answer: true }, { text: "O recrutamento interno atua sobre candidatos que estão no mercado, fora do serviço público.", answer: false }, { text: "A avaliação de desempenho serve para julgar o valor, a excelência e as competências de uma pessoa ou equipe.", answer: true }, { text: "A avaliação 360 graus é quando o desempenho é avaliado apenas pela chefia imediata.", answer: false }, { text: "O processo de recompensar pessoas é um elemento primordial para o incentivo e a motivação dos colaboradores.", answer: true }, { text: "A remuneração total inclui apenas o salário base, sem considerar benefícios ou incentivos.", answer: false }, { text: "Motivação extrínseca refere-se a fatores internos e pessoais que impulsionam um indivíduo a agir.", answer: false }, { text: "Na pirâmide de Maslow, as necessidades fisiológicas são a base e devem ser satisfeitas primeiro.", answer: true }, { text: "A Teoria X de McGregor pressupõe que o trabalho é uma atividade natural e gratificante para os seres humanos.", answer: false }, { text: "Fatores motivacionais, segundo Herzberg, estão relacionados ao conteúdo do trabalho em si, como reconhecimento e crescimento.", answer: true }, { text: "Treinamento e Desenvolvimento de pessoas têm o mesmo significado e foco.", answer: false }, { text: "O diagnóstico é a etapa inicial do processo de treinamento para identificar as necessidades da organização.", answer: true }, { text: "Liderança é a capacidade de guiar e influenciar um grupo para alcançar um objetivo comum.", answer: true }, { text: "A liderança informal origina-se da autoridade do cargo ocupado na estrutura da organização.", answer: false }, { text: "O estilo de liderança 'Laissez-faire' ou Liberal é caracterizado pelo controle centralizado e rígido do líder.", answer: false }, { text: "A escuta ativa é uma habilidade de comunicação crucial para líderes eficazes.", answer: true }, { text: "A gestão de conflitos busca sempre evitar o conflito, mesmo que isso signifique ignorar o problema.", answer: false }, { text: "O estilo de gestão de conflitos de 'Colaboração' busca uma solução que atenda às necessidades de ambas as partes.", answer: true }, { text: "Grupo e equipe de trabalho são termos com o mesmo significado, representando um conjunto de pessoas com um objetivo.", answer: false }, { text: "No Exército Brasileiro, a chefia militar engloba o comando, a administração e a liderança.", answer: true }, { text: "Um dos princípios da liderança militar é evitar assumir a responsabilidade pelos atos dos subordinados.", answer: false }, { text: "Cultura organizacional é definida como um conjunto de hábitos, crenças, valores e símbolos de uma organização.", answer: true }, { text: "Os artefatos visíveis, como uniformes e layout, são o nível mais profundo e inconsciente da cultura organizacional.", answer: false }, { text: "A resistência à mudança é sempre um fator negativo e deve ser suprimida imediatamente.", answer: false }, { text: "A Qualidade de Vida no Trabalho (QVT) refere-se apenas ao bem-estar físico dos funcionários, ignorando o mental e emocional.", answer: false },
-            // NOVAS QUESTÕES
-            { text: "A Teoria Y de McGregor assume que as pessoas são inerentemente preguiçosas e precisam de controle rígido.", answer: false },
-            { text: "No ciclo de mudança diretivo, a mudança é imposta de cima para baixo na organização.", answer: true },
-            { text: "Fatores de higiene, segundo Herzberg, quando presentes, são os principais responsáveis pela motivação duradoura.", answer: false },
-            { text: "A liderança situacional defende que um único estilo de liderança (ex: democrático) é eficaz em todas as situações.", answer: false },
-            { text: "O processo de 'Manter Pessoas' na GP inclui a gestão do clima, cultura organizacional e qualidade de vida.", answer: true },
-            { text: "Na pirâmide de Maslow, a necessidade de 'Auto-Realização' é a mais básica de todas.", answer: false },
-            { text: "O método de avaliação de desempenho de 'incidentes críticos' foca em registrar comportamentos específicos, positivos ou negativos.", answer: true },
-            { text: "A gestão multigeracional é um desafio da GP que lida com a convivência de diferentes gerações no ambiente de trabalho.", answer: true },
-            { text: "O 'Job rotation' (rotação de cargos) é um método de desenvolvimento de pessoas focado fora do cargo.", answer: false },
-            { text: "Um dos efeitos positivos do conflito organizacional é que ele pode estimular a busca por soluções criativas e inovadoras.", answer: true }
+            { text: "O Oficial é um líder apenas pelo cargo que exerce, não precisando ser inspirador ou motivador.", answer: false }, { text: "Gestão de Pessoas (GP) é o conjunto de práticas para administrar as pessoas, desconsiderando suas necessidades e motivações.", answer: false }, { text: "Na moderna Gestão de Pessoas, as pessoas constituem o principal ativo da organização.", answer: true }, { text: "Um dos objetivos da GP é proporcionar à organização pessoas bem treinadas e bem motivadas.", answer: true }, { text: "A evolução da Gestão de Pessoas passou de uma abordagem estratégica para uma puramente burocrática.", answer: false }, { text: "Agregar, aplicar, recompensar, desenvolver, manter e monitorar pessoas são os seis processos da GP.", answer: true }, { text: "O recrutamento interno atua sobre candidatos que estão no mercado, fora do serviço público.", answer: false }, { text: "A avaliação de desempenho serve para julgar o valor, a excelência e as competências de uma pessoa ou equipe.", answer: true }, { text: "A avaliação 360 graus é quando o desempenho é avaliado apenas pela chefia imediata.", answer: false }, { text: "O processo de recompensar pessoas é um elemento primordial para o incentivo e a motivação dos colaboradores.", answer: true }, 
+            { text: "A remuneração total inclui apenas o salário base, sem considerar benefícios ou incentivos.", answer: false }, { text: "Motivação extrínseca refere-se a fatores internos e pessoais que impulsionam um indivíduo a agir.", answer: false }, { text: "Na pirâmide de Maslow, as necessidades fisiológicas são a base e devem ser satisfeitas primeiro.", answer: true }, { text: "A Teoria X de McGregor pressupõe que o trabalho é uma atividade natural e gratificante para os seres humanos.", answer: false }, { text: "Fatores motivacionais, segundo Herzberg, estão relacionados ao conteúdo do trabalho em si, como reconhecimento e crescimento.", answer: true }, { text: "Treinamento e Desenvolvimento de pessoas têm o mesmo significado e foco.", answer: false }, { text: "O diagnóstico é a etapa inicial do processo de treinamento para identificar as necessidades da organização.", answer: true }, { text: "Liderança é a capacidade de guiar e influenciar um grupo para alcançar um objetivo comum.", answer: true }, { text: "A liderança informal origina-se da autoridade do cargo ocupado na estrutura da organização.", answer: false }, { text: "O estilo de liderança 'Laissez-faire' ou Liberal é caracterizado pelo controle centralizado e rígido do líder.", answer: false }, 
+            { text: "A escuta ativa é uma habilidade de comunicação crucial para líderes eficazes.", answer: true }, { text: "A gestão de conflitos busca sempre evitar o conflito, mesmo que isso signifique ignorar o problema.", answer: false }, { text: "O estilo de gestão de conflitos de 'Colaboração' busca uma solução que atenda às necessidades de ambas as partes.", answer: true }, { text: "Grupo e equipe de trabalho são termos com o mesmo significado, representando um conjunto de pessoas com um objetivo.", answer: false }, { text: "No Exército Brasileiro, a chefia militar engloba o comando, a administração e a liderança.", answer: true }, { text: "Um dos princípios da liderança militar é evitar assumir a responsabilidade pelos atos dos subordinados.", answer: false }, { text: "Cultura organizacional é definida como um conjunto de hábitos, crenças, valores e símbolos de uma organização.", answer: true }, { text: "Os artefatos visíveis, como uniformes e layout, são o nível mais profundo e inconsciente da cultura organizacional.", answer: false }, { text: "A resistência à mudança é sempre um fator negativo e deve ser suprimida imediatamente.", answer: false }, { text: "A Qualidade de Vida no Trabalho (QVT) refere-se apenas ao bem-estar físico dos funcionários, ignorando o mental e emocional.", answer: false },
+            { text: "A Teoria Y de McGregor assume que as pessoas são inerentemente preguiçosas e precisam de controle rígido.", answer: false }, { text: "No ciclo de mudança diretivo, a mudança é imposta de cima para baixo na organização.", answer: true }, { text: "Fatores de higiene, segundo Herzberg, quando presentes, são os principais responsáveis pela motivação duradoura.", answer: false }, { text: "A liderança situacional defende que um único estilo de liderança (ex: democrático) é eficaz em todas as situações.", answer: false }, { text: "O processo de 'Manter Pessoas' na GP inclui a gestão do clima, cultura organizacional e qualidade de vida.", answer: true }, { text: "Na pirâmide de Maslow, a necessidade de 'Auto-Realização' é a mais básica de todas.", answer: false }, { text: "O método de avaliação de desempenho de 'incidentes críticos' foca em registrar comportamentos específicos, positivos ou negativos.", answer: true }, { text: "A gestão multigeracional é um desafio da GP que lida com a convivência de diferentes gerações no ambiente de trabalho.", answer: true }, { text: "O 'Job rotation' (rotação de cargos) é um método de desenvolvimento de pessoas focado fora do cargo.", answer: false }, { text: "Um dos efeitos positivos do conflito organizacional é que ele pode estimular a busca por soluções criativas e inovadoras.", answer: true },
+            { text: "A gestão de pessoas no setor público é idêntica à do setor privado, buscando apenas o interesse da organização.", answer: false }, { text: "Pessoas são consideradas 'parceiras da organização' na moderna gestão de pessoas, investindo trabalho e sendo recompensadas.", answer: true }, { text: "O principal objetivo da GP é promover o alinhamento entre os objetivos individuais dos colaboradores e os objetivos organizacionais.", answer: true }, { text: "A Administração de Pessoal, primeiro estágio da evolução da GP, tinha um foco estratégico e pouco burocrático.", answer: false }, { text: "Os processos de GP são independentes e uma falha em um deles não afeta os outros.", answer: false }, { text: "O recrutamento externo é sempre mais rápido e barato que o recrutamento interno.", answer: false }, { text: "A avaliação por objetivos e resultados foca no processo de trabalho, e não nos resultados alcançados.", answer: false }, { text: "Incentivos não financeiros, como flexibilidade de horários, fazem parte da remuneração total de um colaborador.", answer: true }, { text: "A motivação interna (intrínseca) surge de fatores externos, como recompensas e punições.", answer: false }, { text: "O líder democrático centraliza todas as decisões e não busca a participação da equipe.", answer: false },
+            { text: "A comunicação não verbal (linguagem corporal, tom de voz) não é relevante para um líder eficaz.", answer: false }, { text: "No estilo 'Evitamento' de gestão de conflitos, o gestor ignora a situação, o que pode agravar o problema a longo prazo.", answer: true }, { text: "Um grupo de trabalho se caracteriza pela sinergia positiva, onde o esforço coletivo é maior que a soma das partes individuais.", answer: false }, { text: "O comando, segundo a doutrina da Marinha, é o exercício da chefia e da liderança para cumprir a missão.", answer: true }, { text: "Conhecer a si mesmo e procurar o autoaperfeiçoamento é um dos princípios da liderança militar.", answer: true }, { text: "Pressupostos básicos são o nível mais superficial e visível da cultura organizacional, segundo Schein.", answer: false }, { text: "O clima organizacional refere-se à estrutura física da empresa, como prédios e equipamentos.", answer: false }, { text: "A mudança organizacional é sempre um processo fácil e raramente encontra resistência dos colaboradores.", answer: false }, { text: "Programas de Qualidade de Vida no Trabalho (QVT) visam criar uma organização mais humanizada.", answer: true }, { text: "Liderança ágil e adaptável é uma tendência na gestão de pessoas do setor público.", answer: true },
+            { text: "Chiavenato destaca que gerir pessoas é se responsabilizar por cuidar do capital humano da empresa.", answer: true }, { text: "A Gestão de Pessoas na área pública busca, em última instância, atender os anseios da sociedade.", answer: true }, { text: "A moderna GP vê as pessoas como meros recursos passivos e inertes da organização.", answer: false }, { text: "Um dos objetivos da GP é desenvolver e elevar a Qualidade de Vida no Trabalho (QVT).", answer: true }, { text: "A etapa de 'Seleção' de pessoal vem antes da etapa de 'Recrutamento'.", answer: false }, { text: "No setor público, o concurso pode contemplar somente provas de títulos, sem prova escrita ou prática.", answer: false }, { text: "A autoavaliação é um método de avaliação de desempenho onde o próprio colaborador julga sua performance.", answer: true }, { text: "A remuneração variável, como bônus e PLR, é um exemplo de programa de incentivo.", answer: true }, { text: "Treinamento foca no desenvolvimento de competências para o cargo atual, a curto prazo.", answer: true }, { text: "Desenvolvimento de pessoas foca no crescimento do colaborador a longo prazo, visando a carreira futura.", answer: true },
+            { text: "A Teoria dos Traços defende que a liderança pode ser aprendida e desenvolvida por qualquer pessoa.", answer: false }, { text: "Um líder autoritário busca ativamente envolver os membros da equipe na tomada de decisões.", answer: false }, { text: "A mediação é uma ferramenta de gestão de conflitos que utiliza um terceiro imparcial para facilitar a comunicação.", answer: true }, { text: "Uma equipe de trabalho funciona com cada membro focado apenas em sua tarefa individual, sem colaboração.", answer: false }, { text: "A doutrina de liderança militar é estática e não prevê adaptação do líder a diferentes situações.", answer: false }, { text: "Manter os subordinados bem informados é um dos princípios de liderança militar.", answer: true }, { text: "Valores compartilhados representam as crenças e princípios amplamente aceitos pelos membros da organização.", answer: true }, { text: "O ciclo de mudança participativa tende a ser mais rápido, porém menos duradouro que o ciclo diretivo.", answer: false }, { text: "Adoção de tecnologias e gestão da mudança são desafios importantes para a GP no serviço público.", answer: true }, { text: "O conceito de Comando e Liderança são idênticos em todas as doutrinas militares.", answer: false },
+            { text: "A avaliação 360 graus coleta feedback de múltiplas fontes, como chefes, pares e subordinados.", answer: true }, { text: "Segundo Maslow, uma pessoa só buscará satisfazer necessidades sociais após ter suas necessidades de segurança atendidas.", answer: true }, { text: "A Teoria X assume que as pessoas são auto motivadas e buscam responsabilidades.", answer: false }, { text: "O principal foco do 'Mentoring' é o apoio individualizado de um profissional mais experiente para um menos experiente.", answer: true }, { text: "A falta de confiança entre os membros é um fator que facilita o trabalho em equipe.", answer: false }, { text: "O conceito de chefia militar no Exército Brasileiro é mais restrito que o de comando.", answer: false }, { text: "O clima organizacional é um reflexo direto da cultura e influencia o comportamento e a satisfação no trabalho.", answer: true }, { text: "A implementação de programas de QVT pode ajudar a reduzir o absenteísmo e a rotatividade de pessoal.", answer: true }, { text: "O planejamento estratégico de GP deve estar alinhado com a estratégia geral da organização.", answer: true }, { text: "O processo de 'Aplicar Pessoas' inclui atividades como desenho de cargos e avaliação de desempenho.", answer: true },
+            { text: "Recompensas não financeiras, como reconhecimento e ambiente de trabalho agradável, não impactam a motivação.", answer: false }, { text: "A motivação intrínseca é geralmente mais duradoura e significativa que a extrínseca.", answer: true }, { text: "O objetivo do treinamento por competências é apenas transmitir informações gerais sobre a empresa.", answer: false }, { text: "Inteligência emocional é a habilidade de reconhecer e gerenciar as próprias emoções e as dos outros.", answer: true }, { text: "O estilo de gestão de conflito 'Competitividade' busca uma solução ganha-ganha para ambas as partes.", answer: false }, { text: "A principal diferença entre grupo e equipe é a presença de um objetivo comum, que só existe em equipes.", answer: false }, { text: "No processo admissional do serviço público, a posse ocorre antes da nomeação.", answer: false }, { text: "O método de avaliação 'escolha forçada' exige que o avaliador escolha frases que melhor descrevem o colaborador.", answer: true }, { text: "Flexibilidade no trabalho, como home office, é uma tendência irrelevante para a gestão de pessoas no serviço público.", answer: false }, { text: "O poder do 'Sapo' no jogo permite que ele se teletransporte permanentemente para uma nova posição.", answer: false },
         ];
         let availableQuestions = [];
 
@@ -272,7 +279,8 @@
         function loadPlayerData() {
             const data = localStorage.getItem('cfoGameData');
             if (data) playerData = JSON.parse(data);
-            else playerData = { name: "", coins: 0, ownedSkins: ['default'], equippedSkinId: 'default' };
+            else playerData = { name: "", coins: 0, highScore: 0, ownedSkins: ['default'], equippedSkinId: 'default' };
+            if (!playerData.highScore) playerData.highScore = 0;
             if (playerData.name) {
                 document.getElementById('player-name-input').value = playerData.name;
                 document.getElementById('welcome-message').textContent = `Bem-vindo de volta, ${playerData.name}!`;
@@ -282,9 +290,9 @@
             playerData.name = document.getElementById('player-name-input').value.trim() || "Cadete";
             localStorage.setItem('cfoGameData', JSON.stringify(playerData));
         }
-        function updateCoinDisplays() {
+        function updateStartScreenDisplays() {
             document.getElementById('start-coins').textContent = playerData.coins;
-            document.getElementById('shop-coins').textContent = playerData.coins;
+            document.getElementById('high-score').textContent = playerData.highScore;
         }
         function showScreen(screenId) {
             ['start-screen', 'game-wrapper', 'game-over-screen', 'shop-screen'].forEach(id => {
@@ -295,6 +303,7 @@
         function populateShop() {
             const container = document.getElementById('shop-items');
             container.innerHTML = '';
+            document.getElementById('shop-coins').textContent = playerData.coins;
             skins.forEach(skin => {
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'shop-item';
@@ -334,7 +343,7 @@
         function buySkin(skinId, price) {
             if (playerData.coins >= price) {
                 playerData.coins -= price; playerData.ownedSkins.push(skinId);
-                savePlayerData(); updateCoinDisplays(); populateShop();
+                savePlayerData(); updateStartScreenDisplays(); populateShop();
             }
         }
         function equipSkin(skinId) {
@@ -344,9 +353,10 @@
 
         function resetGame() {
             player = { x: canvas.width / 2 - playerWidth / 2, y: canvas.height - playerHeight - 20, width: playerWidth, height: playerHeight, speed: baseSpeed, isShielded: false, isInvincible: false, isPhasing: false, controlsSlippery: false, isLeaping: false, isSlowed: false, slowsTime: false };
-            portals = []; obstacles = []; powerUps = []; answerPopup = null;
+            portals = []; obstacles = []; powerUps = []; projectiles = []; answerPopup = null;
             score = 0; lives = 3; difficultyLevel = 0; correctAnswersInARow = 0; powerReady = false; isNextGolden = false;
             isFrozen = false; isAccelerating = false; isPaused = false;
+            incorrectAnswers = [];
             shuffle(questions); availableQuestions = [...questions];
             updateGameStatus(); updatePowerIndicator(); nextRound();
         }
@@ -363,10 +373,26 @@
             cancelAnimationFrame(gameLoopId);
             activeTimeouts.forEach(id => clearTimeout(id));
             activeTimeouts = [];
+
+            if (score > playerData.highScore) { playerData.highScore = score; }
             const coinsEarned = score; playerData.coins += coinsEarned; savePlayerData();
+            
             document.getElementById('final-score').textContent = score;
             document.getElementById('coins-earned').textContent = coinsEarned;
             document.getElementById('game-over-title').textContent = collided ? "Fim de Jogo: Colisão!" : "Fim de Jogo";
+            
+            const reportContainer = document.getElementById('report-container');
+            if (incorrectAnswers.length > 0) {
+                let reportHTML = `<p>Você respondeu ${questions.length - availableQuestions.length} questões. Erros:</p><div id="error-report">`;
+                incorrectAnswers.forEach(item => {
+                    reportHTML += `<p>${item.question}<br><strong>Resposta correta: ${item.correctAnswer}</strong></p>`;
+                });
+                reportHTML += '</div>';
+                reportContainer.innerHTML = reportHTML;
+            } else {
+                reportContainer.innerHTML = `<p>Você respondeu ${questions.length - availableQuestions.length} questões sem erros!</p>`;
+            }
+
             showScreen('game-over-screen');
         }
         function nextRound() {
@@ -387,16 +413,21 @@
             portals.push({ x: positions[0], y: portalY, width: portalWidth, height: portalHeight, isCorrect: currentQuestion.answer === true, text: 'V', isGolden: isGolden });
             portals.push({ x: positions[1], y: portalY, width: portalWidth, height: portalHeight, isCorrect: currentQuestion.answer === false, text: 'F', isGolden: isGolden });
 
-            const attempts = 1 + Math.floor(difficultyLevel); // Aumenta a quantidade de tentativas mais rápido
+            const attempts = 1 + Math.floor(difficultyLevel);
             for(let i = 0; i < attempts; i++) {
-                const obstacleChance = 0.4 + (difficultyLevel * 0.15); // Aumenta a chance mais rápido
+                const obstacleChance = 0.4 + (difficultyLevel * 0.15);
                 if (Math.random() < obstacleChance) {
                     let type = 'cone';
-                    if (difficultyLevel >= 4 && Math.random() < 0.3) type = 'hole';
+                    if (difficultyLevel >= 7 && Math.random() < 0.2) type = 'dinosaur';
+                    else if (difficultyLevel >= 6 && Math.random() < 0.25) type = 'clown';
+                    else if (difficultyLevel >= 5 && Math.random() < 0.3) type = 'wizard';
+                    else if (difficultyLevel >= 4 && Math.random() < 0.3) type = 'hole';
                     else if (difficultyLevel >= 3 && Math.random() < 0.35) type = 'monster';
                     else if (difficultyLevel >= 2 && Math.random() < 0.4) type = 'puddle';
                     else if (difficultyLevel >= 1 && Math.random() < 0.4) type = 'tornado';
                     if (difficultyLevel >= 2 && Math.random() < 0.2) type = 'oil';
+                    if (difficultyLevel >= 5 && Math.random() < 0.25) type = 'spiderweb';
+
                     obstacles.push({ type: type, x: streetX + Math.random() * (streetWidth - 30), y: -60 - (i * 120) - Math.random() * 100, size: 30, isStunned: false });
                 }
             }
@@ -408,7 +439,7 @@
         function updateGameStatus() {
             document.getElementById('score').textContent = `Pontos: ${score}`;
             document.getElementById('lives').innerHTML = `Vidas: ${'❤️'.repeat(lives)}`;
-            const newDifficultyLevel = Math.floor(score / 70); // Nível a cada 70 pontos
+            const newDifficultyLevel = Math.floor(score / 70);
             if (newDifficultyLevel > difficultyLevel) {
                 difficultyLevel = newDifficultyLevel;
                 const indicator = document.getElementById('difficulty-indicator');
@@ -448,7 +479,7 @@
             answerPopup.alpha -= 0.015;
         }
         function usePower() {
-            if (!gameActive || !powerReady) return;
+            if (!gameActive || !powerReady || isPaused) return;
             const equippedSkin = skins.find(s => s.id === playerData.equippedSkinId) || skins[0];
             equippedSkin.power.execute();
             powerReady = false; correctAnswersInARow = 0;
@@ -457,23 +488,24 @@
         
         function gameLoop(timestamp) {
             if (!gameActive) { return; }
-            
+            gameLoopId = requestAnimationFrame(gameLoop);
+
             const deltaTime = (timestamp - lastTime) / 1000 || 0;
             lastTime = timestamp;
-
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#95a5a6'; ctx.fillRect(streetX, 0, streetWidth, canvas.height);
+            
             if (!isPaused) {
                 let currentSpeedMultiplier = 1;
                 if (isFrozen || player.slowsTime) currentSpeedMultiplier = 0.5;
                 if (isAccelerating) currentSpeedMultiplier *= 3;
                 const moveDistance = basePortalSpeed * currentSpeedMultiplier * deltaTime;
 
-                [...portals, ...obstacles, ...powerUps].forEach(obj => {
+                [...portals, ...obstacles, ...powerUps, ...projectiles].forEach(obj => {
                     if (obj && !obj.isStunned) obj.y += moveDistance;
                 });
             }
-            
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#95a5a6'; ctx.fillRect(streetX, 0, streetWidth, canvas.height);
             
             const equippedSkin = skins.find(s => s.id === playerData.equippedSkinId) || skins[0];
             ctx.globalAlpha = (player.isPhasing || player.isLeaping) ? 0.5 : 1.0;
@@ -501,6 +533,7 @@
                     } else {
                         lives--; correctAnswersInARow = 0;
                         answerPopup = { text: 'ERRADO!', color: 'rgba(231, 76, 60, 0.9)', alpha: 1.0 };
+                        incorrectAnswers.push({ question: currentQuestion.text, correctAnswer: currentQuestion.answer ? 'Verdadeiro' : 'Falso' });
                     }
                     updateGameStatus(); if(lives > 0) nextRound();
                 }
@@ -509,17 +542,25 @@
             if (portals.length > 0 && portals[0].y > canvas.height && lives > 0) {
                 lives--; correctAnswersInARow = 0;
                 answerPopup = { text: 'ERRADO!', color: 'rgba(231, 76, 60, 0.9)', alpha: 1.0 };
+                incorrectAnswers.push({ question: currentQuestion.text, correctAnswer: currentQuestion.answer ? 'Verdadeiro' : 'Falso' });
                 updateGameStatus(); if(lives > 0) nextRound();
             }
             
             for(let i = obstacles.length - 1; i >= 0; i--) {
                 let o = obstacles[i];
-                if (o.type === 'tornado') o.x += Math.sin(o.y * 0.05) * 2;
+                if (o.type === 'tornado' && !isPaused) o.x += Math.sin(o.y * 0.05) * 2;
+                if (o.type === 'wizard' && !isPaused && o.y > 0 && Math.random() < 0.005) {
+                    projectiles.push({ x: o.x + o.size / 2, y: o.y + o.size, size: 10 });
+                }
+
                 let emoji, collisionBox = { ...o, width: o.size, height: o.size };
                 switch(o.type) {
                     case 'cone': emoji = '🚧'; break; case 'monster': emoji = '👾'; break;
                     case 'puddle': emoji = '💧'; break; case 'oil': emoji = '⚫'; break;
-                    case 'tornado': emoji = '🌪️'; break;
+                    case 'tornado': emoji = '🌪️'; break; case 'wizard': emoji = '🧙'; break;
+                    case 'spider': emoji = '🕷️'; break; case 'bat': emoji = '🦇'; break;
+                    case 'dinosaur': emoji = '🦖'; break; case 'clown': emoji = '🤡'; break;
+                    case 'spiderweb': emoji = '🕸️'; break;
                     case 'hole':
                         ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.beginPath();
                         ctx.arc(o.x + o.size/2, o.y + o.size/2, o.size/2, 0, Math.PI * 2);
@@ -527,9 +568,10 @@
                 }
                 ctx.font = `${o.size}px Arial`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 if(emoji) ctx.fillText(emoji, o.x + o.size/2, o.y + o.size/2);
+
                 if (checkCollision(player, collisionBox)) {
                     obstacles.splice(i, 1);
-                    if (o.type === 'puddle') {
+                    if (o.type === 'puddle' || o.type === 'spiderweb') {
                         if (!player.isSlowed) { player.isSlowed = true; registerTimeout(() => { player.isSlowed = false; }, 3000); }
                     } else if (o.type === 'oil') {
                         if (!player.controlsSlippery) { player.controlsSlippery = true; registerTimeout(() => { player.controlsSlippery = false; }, 4000); }
@@ -539,6 +581,20 @@
                     }
                     if (lives <= 0) { endGame(true); return; }
                 } else if (o.y > canvas.height) { obstacles.splice(i, 1); }
+            }
+
+            for(let i = projectiles.length - 1; i >= 0; i--) {
+                let p = projectiles[i];
+                ctx.fillStyle = '#9b59b6';
+                ctx.font = `${p.size}px Arial`; ctx.fillText('✨', p.x, p.y);
+                if (checkCollision(player, { ...p, width: p.size, height: p.size })) {
+                    projectiles.splice(i, 1);
+                    if (!player.isInvincible && !player.isPhasing) {
+                        if (player.isShielded) { player.isShielded = false; }
+                        else if (lives > 0) { lives--; correctAnswersInARow = 0; updateGameStatus(); }
+                    }
+                    if (lives <= 0) { endGame(true); return; }
+                } else if (p.y > canvas.height) { projectiles.splice(i, 1); }
             }
             
             for(let i = powerUps.length - 1; i >= 0; i--) {
@@ -558,7 +614,6 @@
                 } else if (p.y > canvas.height) { powerUps.splice(i, 1); }
             }
             drawAnswerPopup();
-            gameLoopId = requestAnimationFrame(gameLoop);
         };
         
         let moveInterval = null;
@@ -595,8 +650,8 @@
 
         document.getElementById('start-game-button').onclick = startGame;
         document.getElementById('restart-button').onclick = startGame;
-        document.getElementById('go-to-shop-button').onclick = () => { savePlayerData(); updateCoinDisplays(); populateShop(); showScreen('shop-screen'); };
-        document.getElementById('go-to-shop-from-over-button').onclick = () => { updateCoinDisplays(); populateShop(); showScreen('shop-screen'); };
+        document.getElementById('go-to-shop-button').onclick = () => { savePlayerData(); updateStartScreenDisplays(); populateShop(); showScreen('shop-screen'); };
+        document.getElementById('go-to-shop-from-over-button').onclick = () => { updateStartScreenDisplays(); populateShop(); showScreen('shop-screen'); };
         document.getElementById('back-to-start-button').onclick = () => {
              document.getElementById('welcome-message').textContent = `Bem-vindo de volta, ${playerData.name}!`;
              showScreen('start-screen');
