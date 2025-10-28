@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SGA v2 - Alocador de Punições</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        h1, h2 { color: #1a237e; border-bottom: 2px solid #e0e0e0; padding-bottom: 5px; }
+        
+        /* Estilo das Abas */
+        .tab-nav {
+            border-bottom: 2px solid #ccc;
+            display: flex;
+            margin-bottom: 20px;
+        }
+        .tab-button {
+            background: #eee;
+            border: 1px solid #ccc;
+            border-bottom: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 5px;
+            border-radius: 5px 5px 0 0;
+            position: relative;
+            top: 2px;
+        }
+        .tab-button.active {
+            background: #fff;
+            border-bottom: 2px solid #fff;
+            font-weight: bold;
+            color: #1a237e;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Estilo dos Formulários */
+        .form-grupo {
+            margin-bottom: 15px;
+        }
+        .form-grupo label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-grupo input[type="text"],
+        .form-grupo select {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            box-sizing: border-box; /* Garante que o padding não estoure a largura */
+        }
+        button {
+            background-color: #1a237e;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover { background-color: #3949ab; }
+        #btnLimparDB { background-color: #c62828; }
+        #btnLimparDB:hover { background-color: #e53935; }
+
+        /* Estilo dos Resultados */
+        .aluno-card {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 10px;
+            background-color: #fafafa;
+        }
+        .aluno-nome { font-weight: bold; font-size: 1.2em; color: #004d40; }
+        .turno-alocado { color: #2e7d32; font-weight: bold; }
+        .turno-conflito { color: #d32f2f; font-weight: bold; }
+        .turno-pendente { color: #f57f17; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🚀 SGA v2: Punições e localStorage</h1>
+
+        <nav class="tab-nav">
+            <button class="tab-button active" onclick="mostrarTab('tab-alocar')">Gerar Lista</button>
+            <button class="tab-button" onclick="mostrarTab('tab-punicao')">Registrar Punição</button>
+            <button class="tab-button" onclick="mostrarTab('tab-alunos')">Gerenciar Alunos</button>
+        </nav>
+
+        <div id="tab-alocar" class="tab-content active">
+            <h2>Resultados da Alocação:</h2>
+            <button id="btnGerar">Gerar Lista do Fim de Semana</button>
+            <div id="resultado" style="margin-top: 20px;"></div>
+        </div>
+
+        <div id="tab-punicao" class="tab-content">
+            <h2>Registrar Nova Punição</h2>
+            <form id="form-punicao">
+                <div class="form-grupo">
+                    <label for="select-aluno-punicao">Aluno:</label>
+                    <select id="select-aluno-punicao" required></select>
+                </div>
+                <div class="form-grupo">
+                    <label for="select-tipo-punicao">Classificação (Decreto 13.1.1):</label>
+                    <select id="select-tipo-punicao" required>
+                        <option value="">-- Selecione o Tipo --</option>
+                        <option value="LEVE">Leve</option>
+                        <option value="MEDIA">Média</option>
+                        <option value="GRAVE">Grave</option>
+                    </select>
+                </div>
+                <div class="form-grupo">
+                    <label for="select-motivo-punicao">Motivo (Decreto 13.1.4):</label>
+                    <select id="select-motivo-punicao" required>
+                        <option value="">-- Selecione o tipo primeiro --</option>
+                    </select>
+                </div>
+                <div class="form-grupo">
+                    <label for="input-motivo-custom">Ou digite um motivo customizado:</label>
+                    <input type="text" id="input-motivo-custom" placeholder="Ex: Faixa costurada (do PDF anterior)">
+                </div>
+                <button type="submit">Adicionar Punição</button>
+            </form>
+        </div>
+
+        <div id="tab-alunos" class="tab-content">
+            <h2>Gerenciar Alunos</h2>
+            <form id="form-aluno">
+                <div class="form-grupo">
+                    <label for="input-aluno-nome">Nome do Aluno:</label>
+                    <input type="text" id="input-aluno-nome" required placeholder="Ex: AL CFO 107 CLAUDIONOR">
+                </div>
+                <div class="form-grupo">
+                    <label for="select-aluno-plantao">Plantão (para regras de conflito):</label>
+                    <select id="select-aluno-plantao" required>
+                        <option value="GOLF">Folga (GOLF)</option>
+                        <option value="HOTEL">Plantão Sexta (HOTEL)</option>
+                        <option value="FOXTROT">Plantão Sábado (FOXTROT)</option>
+                        <option value="INDIA">Plantão Domingo (INDIA)</option>
+                    </select>
+                </div>
+                <button type="submit">Salvar Aluno</button>
+            </form>
+            
+            <hr style="margin: 30px 0;">
+            <h3>Alunos Cadastrados</h3>
+            <div id="lista-alunos"></div>
+            <button id="btnLimparDB" style="margin-top: 20px;">Limpar Todos os Dados</button>
+        </div>
+    </div>
+
+    <script>
+        // --- INÍCIO DO JAVASCRIPT ---
+
+        // ===================================================================
+        // PASSO 1: DADOS (Vindo do Decreto e do "DB")
+        // ===================================================================
+
+        // Fonte: decreto.pdf, Seção 13.1.4. Das Transgressões Escolares
+        const TRANSGRESSOES = {
+            LEVE: [
+                [span_0](start_span)"Quando na condição de chefe ou subchefe de turma, deixar a sala de aula suja ou desorganizada", //[span_0](end_span)
+                [span_1](start_span)"Em qualquer situação, não se apresentar de forma compatível com os parâmetros estabelecidos na normativa escolar", //[span_1](end_span)
+                [span_2](start_span)"Apresentar documento fora das normas de correspondência militar", //[span_2](end_span)
+                [span_3](start_span)"Deixar de executar, ou fizer de forma errada, as ações de Comando", //[span_3](end_span)
+                [span_4](start_span)"Preencher incorretamente, ou rasurar, o registro de alterações e demais formulários", //[span_4](end_span)
+                [span_5](start_span)"Portar equipamentos eletrônicos em horários de atividades pedagógicas, sem autorização", //[span_5](end_span)
+                [span_6](start_span)"Apresentar-se com o traje sujo, amarrotado ou com irregularidade", //[span_6](end_span)
+                [span_7](start_span)"Deixar de apresentar-se com o material necessário às atividades acadêmicas", //[span_7](end_span)
+                [span_8](start_span)"Apresentar-se incorretamente na prática de sinais de respeito", //[span_8](end_span)
+                [span_9](start_span)"Deixar cama ou armário desarrumado, ou ainda fora dos padrões", //[span_9](end_span)
+                [span_10](start_span)"Descuidar-se na conservação e organização de objetos ou coisas pessoais", //[span_10](end_span)
+                [span_11](start_span)"Faltar com a devida presteza no cumprimento de ordens recebidas", //[span_11](end_span)
+                [span_12](start_span)"Estar desatento em instrução" //[span_12](end_span)
+            ],
+            MEDIA: [
+                [span_13](start_span)"Não ter controle de tropa sob seu comando", //[span_13](end_span)
+                [span_14](start_span)"Desrespeitar as normas e convenções sociais", //[span_14](end_span)
+                [span_15](start_span)"Chegar atrasado a qualquer ato ou instrução", //[span_15](end_span)
+                [span_16](start_span)"Mexer, conversar, sorrir, cuspir ou mastigar em forma", //[span_16](end_span)
+                [span_17](start_span)"Executar movimento a pé firme ou em deslocamento de forma relaxada", //[span_17](end_span)
+                [span_18](start_span)"Transitar em local não autorizado", //[span_18](end_span)
+                [span_19](start_span)"Não ter os devidos cuidados com qualquer material ou bem, que estiver sob sua responsabilidade", //[span_19](end_span)
+                [span_20](start_span)"Deixar de comunicar ao superior a execução da ordem por ele recebida", //[span_20](end_span)
+                [span_21](start_span)"Deixar de cumprir determinação previamente estabelecida quando de serviço", //[span_21](end_span)
+                [span_22](start_span)"Faltar com os cuidados higiênicos pessoais e/ou coletivo", //[span_22](end_span)
+                [span_23](start_span)"Perturbar o silêncio em ambiente cuja natureza, horário ou ordem assim o exigir", //[span_23](end_span)
+                [span_24](start_span)"Desrespeitar ou desconsiderar os companheiros de curso ou demais integrantes", //[span_24](end_span)
+                [span_25](start_span)"Deixar de informar incontinenti ao Corpo de Alunos (...) impossibilidade de comparecer" //[span_25](end_span)
+            ],
+            GRAVE: [
+                [span_26](start_span)"Não respeitar o comandamento ou a autoridade do chefe de turma ou aluno de serviço", //[span_26](end_span)
+                [span_27](start_span)"Ausentar-se da instrução ou do aquartelamento sem autorização", //[span_27](end_span)
+                [span_28](start_span)"Utilizar-se do anonimato para qualquer fim", //[span_28](end_span)
+                [span_29](start_span)"Conduta inadequada em qualquer serviço ou instrução", //[span_29](end_span)
+                [span_30](start_span)"Entrar ou tentar entrar em alojamento distinto do seu, sem autorização", //[span_30](end_span)
+                [span_31](start_span)"Procurar desacreditar superiores ou pares, em qualquer ocasião", //[span_31](end_span)
+                [span_32](start_span)"Concorrer para discórdia ou desarmonia entre os companheiros", //[span_32](end_span)
+                [span_33](start_span)"Tratar superiores ou pares, de forma descortês, deseducada ou incompatível", //[span_33](end_span)
+                [span_34](start_span)"Portar-se em público (...) de modo inconveniente, sem compostura", //[span_34](end_span)
+                [span_35](start_span)"Promover escândalo, ou nele se envolver, comprometendo a imagem da Corporação", //[span_35](end_span)
+                [span_36](start_span)"Não executar de forma adequada e atenta, os atos inerentes ao serviço", //[span_36](end_span)
+                [span_37](start_span)"Deixar de cumprir orientações do docente", //[span_37](end_span)
+                [span_38](start_span)"Faltar, sem justificação, a qualquer atividade que deva comparecer", //[span_38](end_span)
+                [span_39](start_span)"Deixar de cumprir ordem legal estabelecida" //[span_39](end_span)
+            ]
+        };
+
+        const PLANTOES_FDS = {
+            'HOTEL': { sexta: true, sabado: false, domingo: false },
+            'FOXTROT': { sexta: false, sabado: true, domingo: false },
+            'INDIA': { sexta: false, sabado: false, domingo: true },
+            'GOLF': { sexta: false, sabado: false, domingo: false },
+        };
+
+        const REGRAS_ALOCACAO = {
+            1: ['sabManha'],
+            2: ['sabManha', 'sabTarde'],
+            3: ['sabManha', 'sabTarde', 'domManha'],
+            4: ['sabManha', 'sabTarde', 'domManha', 'domTarde'],
+        };
+
+        const NOMES_TURNOS = {
+            'sabManha': 'Sábado (Manhã)',
+            'sabTarde': 'Sábado (Tarde)',
+            'domManha': 'Domingo (Manhã)',
+            'domTarde': 'Domingo (Tarde)',
+        };
+
+        // ===================================================================
+        // PASSO 2: FUNÇÕES DO "BANCO DE DADOS" (localStorage)
+        // ===================================================================
+
+        function getAlunosDB() {
+            // Pega os alunos do localStorage. Se não existir, retorna um array vazio.
+            const alunos = localStorage.getItem('alunosDB');
+            return alunos ? JSON.parse(alunos) : [];
+        }
+
+        function salvarAlunosDB(alunos) {
+            // Salva a lista de alunos no localStorage
+            localStorage.setItem('alunosDB', JSON.stringify(alunos));
+        }
+
+        function adicionarAluno(nome, plantao) {
+            const alunos = getAlunosDB();
+            const novoAluno = {
+                id: Date.now(), // ID único baseado no tempo
+                nome: nome,
+                plantao: plantao,
+                punicoes: 0, // Começa com 0 punições
+                motivos: []
+            };
+            alunos.push(novoAluno);
+            salvarAlunosDB(alunos);
+            alert('Aluno salvo com sucesso!');
+        }
+
+        function adicionarPunicao(alunoId, tipo, motivo) {
+            const alunos = getAlunosDB();
+            const alunoIndex = alunos.findIndex(a => a.id == alunoId);
+
+            if (alunoIndex === -1) {
+                alert('Erro: Aluno não encontrado.');
+                return;
+            }
+            
+            alunos[alunoIndex].punicoes += 1; // Incrementa a contagem
+            alunos[alunoIndex].motivos.push(`(${tipo}) ${motivo}`);
+            
+            salvarAlunosDB(alunos);
+            alert(`Punição adicionada para ${alunos[alunoIndex].nome}! Total agora: ${alunos[alunoIndex].punicoes}`);
+        }
+        
+        function limparDB() {
+            if (confirm('TEM CERTEZA? Isso vai apagar TODOS os alunos e punições.')) {
+                localStorage.removeItem('alunosDB');
+                alert('Dados limpos.');
+                iniciarApp(); // Reinicia a interface
+            }
+        }
+
+        // ===================================================================
+        // PASSO 3: O "MOTOR DE REGRAS" (Lógica Principal - igual ao V1)
+        // ===================================================================
+
+        function calcularAlocacao() {
+            const alunosDB = getAlunosDB(); // A ÚNICA MUDANÇA: Lê do localStorage
+            let resultados = [];
+            let alunosAtualizados = [...alunosDB]; // Cópia para atualizar
+
+            for (let i = 0; i < alunosAtualizados.length; i++) {
+                const aluno = alunosAtualizados[i];
+                
+                // Só processa quem tem punição
+                if (aluno.punicoes === 0) continue; 
+
+                let resultadoAluno = {
+                    nome: aluno.nome,
+                    plantao: aluno.plantao,
+                    alocados: [],
+                    conflitos: [],
+                    pendentesProximoFDS: 0,
+                    motivos: aluno.motivos
+                };
+
+                const cronogramaPlantao = PLANTOES_FDS[aluno.plantao];
+                let qtdTurnos = Math.min(aluno.punicoes, 4);
+                let turnosParaCumprir = REGRAS_ALOCACAO[qtdTurnos] ? [...REGRAS_ALOCACAO[qtdTurnos]] : [];
+                
+                // Salva o que sobra
+                resultadoAluno.pendentesProximoFDS = Math.max(0, aluno.punicoes - 4);
+                // ATUALIZA O ALUNO no "banco de dados" para o próximo FDS
+                alunosAtualizados[i].punicoes = resultadoAluno.pendentesProximoFDS; 
+                alunosAtualizados[i].motivos = []; // Limpa os motivos, pois foram processados
+
+                for (const turno of turnosParaCumprir) {
+                    let houveConflito = false;
+
+                    if (cronogramaPlantao.sexta && turno === 'sabManha') {
+                        resultadoAluno.conflitos.push({ turno: turno, motivo: 'Plantão na Sexta-feira' });
+                        houveConflito = true;
+                    }
+                    
+                    if (cronogramaPlantao.sabado && turno === 'domManha') {
+                        resultadoAluno.conflitos.push({ turno: turno, motivo: 'Plantão no Sábado' });
+                        houveConflito = true;
+                    }
+                    
+                    if (!houveConflito) {
+                        resultadoAluno.alocados.push(turno);
+                    }
+                }
+                resultados.push(resultadoAluno);
+            }
+            
+            // Salva o DB atualizado (com as punições zeradas ou acumuladas)
+            salvarAlunosDB(alunosAtualizados);
+            return resultados;
+        }
+
+        // ===================================================================
+        // PASSO 4: A "INTERFACE" (Funções de UI)
+        // ===================================================================
+
+        function mostrarTab(tabId) {
+            // Esconde todas as tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            // Tira o 'active' de todos os botões
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+
+            // Mostra a tab clicada
+            document.getElementById(tabId).classList.add('active');
+            // Adiciona 'active' no botão clicado
+            document.querySelector(`.tab-button[onclick="mostrarTab('${tabId}')"]`).classList.add('active');
+        }
+
+        function renderizarResultados(resultados) {
+            const divResultado = document.getElementById('resultado');
+            divResultado.innerHTML = ''; 
+
+            if (resultados.length === 0) {
+                divResultado.innerHTML = '<p>Nenhum aluno com punição foi processado.</p>';
+                return;
+            }
+
+            for (const res of resultados) {
+                let cardHTML = `<div class="aluno-card">`;
+                cardHTML += `<div class="aluno-nome">${res.nome} (Plantão: ${res.plantao})</div>`;
+                
+                cardHTML += '<strong>Motivos Processados:</strong><ul>';
+                res.motivos.forEach(motivo => { cardHTML += `<li>${motivo}</li>`; });
+                cardHTML += '</ul>';
+
+                if (res.alocados.length > 0) {
+                    cardHTML += '<strong>Turnos Alocados:</strong><ul>';
+                    res.alocados.forEach(turno => { cardHTML += `<li class="turno-alocado">✅ ${NOMES_TURNOS[turno]}</li>`; });
+                    cardHTML += '</ul>';
+                }
+
+                if (res.conflitos.length > 0) {
+                    cardHTML += '<strong>Conflitos (Não Alocados):</strong><ul>';
+                    res.conflitos.forEach(conflito => { cardHTML += `<li class="turno-conflito">❌ ${NOMES_TURNOS[conflito]} (Motivo: ${conflito.motivo})</li>`; });
+                    cardHTML += '</ul>';
+                }
+                
+                if (res.pendentesProximoFDS > 0) {
+                    cardHTML += `<div class="turno-pendente">⚠️ Acumulou ${res.pendentesProximoFDS} punição(ões) para o próximo FDS.</div>`;
+                }
+
+                cardHTML += `</div>`;
+                divResultado.innerHTML += cardHTML;
+            }
+            // Após gerar, atualiza as listas da UI
+            renderizarListaAlunos(); 
+        }
+
+        function renderizarListaAlunos() {
+            const divLista = document.getElementById('lista-alunos');
+            const alunos = getAlunosDB();
+            divLista.innerHTML = '';
+            
+            if (alunos.length === 0) {
+                divLista.innerHTML = '<p>Nenhum aluno cadastrado.</p>';
+                return;
+            }
+
+            alunos.forEach(aluno => {
+                divLista.innerHTML += `<div class="aluno-card">
+                    ${aluno.nome} (Plantão: ${aluno.plantao}) - <strong>Punições Pendentes: ${aluno.punicoes}</strong>
+                </div>`;
+            });
+        }
+        
+        function popularSelectAlunos() {
+            const select = document.getElementById('select-aluno-punicao');
+            const alunos = getAlunosDB();
+            select.innerHTML = '<option value="">-- Selecione um Aluno --</option>'; // Limpa
+
+            alunos.forEach(aluno => {
+                select.innerHTML += `<option value="${aluno.id}">${aluno.nome}</option>`;
+            });
+        }
+
+        function popularSelectMotivos(tipo) {
+            const select = document.getElementById('select-motivo-punicao');
+            select.innerHTML = ''; // Limpa
+
+            if (!tipo || !TRANSGRESSOES[tipo]) {
+                select.innerHTML = '<option value="">-- Selecione o tipo primeiro --</option>';
+                return;
+            }
+            
+            TRANSGRESSOES[tipo].forEach(motivo => {
+                // Pega os primeiros 80 caracteres para o dropdown
+                let motivoCurto = motivo.length > 80 ? motivo.substring(0, 80) + '...' : motivo;
+                select.innerHTML += `<option value="${motivo}">${motivoCurto}</option>`;
+            });
+        }
+
+        // ===================================================================
+        // PASSO 5: INICIALIZAÇÃO E EVENT LISTENERS
+        // ===================================================================
+        
+        function iniciarApp() {
+            // Funções de inicialização
+            renderizarListaAlunos();
+            popularSelectAlunos();
+            popularSelectMotivos(null);
+            
+            // Limpa o resultado da geração anterior
+            document.getElementById('resultado').innerHTML = '';
+        }
+
+        // Listener para o botão Gerar Lista
+        document.getElementById('btnGerar').addEventListener('click', () => {
+            if (confirm('Isso irá processar as punições e ZERAR a contagem da semana (ou acumular se for > 4). Deseja continuar?')) {
+                const resultadosFinais = calcularAlocacao();
+                renderizarResultados(resultadosFinais);
+                alert('Lista gerada e punições da semana processadas!');
+                // Atualiza a lista de alunos na aba "Gerenciar" e no select "Punição"
+                renderizarListaAlunos();
+                popularSelectAlunos();
+            }
+        });
+
+        // Listener para o formulário de Aluno
+        document.getElementById('form-aluno').addEventListener('submit', (e) => {
+            e.preventDefault(); // Impede o recarregamento da página
+            const nome = document.getElementById('input-aluno-nome').value;
+            const plantao = document.getElementById('select-aluno-plantao').value;
+            
+            adicionarAluno(nome, plantao);
+            
+            // Limpa o formulário e atualiza as listas
+            document.getElementById('form-aluno').reset();
+            renderizarListaAlunos();
+            popularSelectAlunos(); // Atualiza o select da outra aba
+        });
+
+        // Listener para o formulário de Punição
+        document.getElementById('form-punicao').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const alunoId = document.getElementById('select-aluno-punicao').value;
+            const tipo = document.getElementById('select-tipo-punicao').value;
+            const motivoDecreto = document.getElementById('select-motivo-punicao').value;
+            const motivoCustom = document.getElementById('input-motivo-custom').value;
+            
+            // Prioriza o motivo customizado, se ele for preenchido
+            const motivoFinal = motivoCustom.trim() !== '' ? motivoCustom.trim() : motivoDecreto;
+            
+            if (!alunoId || !tipo || !motivoFinal) {
+                alert('Por favor, preencha todos os campos obrigatórios (Aluno, Tipo e Motivo).');
+                return;
+            }
+            
+            adicionarPunicao(alunoId, tipo, motivoFinal);
+
+            // Limpa o formulário e atualiza as listas
+            document.getElementById('form-punicao').reset();
+            popularSelectMotivos(null); // Reseta o select de motivos
+            renderizarListaAlunos(); // Atualiza a contagem na aba "Gerenciar"
+        });
+
+        // Listener para o select de TIPO de punição
+        document.getElementById('select-tipo-punicao').addEventListener('change', (e) => {
+            popularSelectMotivos(e.target.value);
+        });
+        
+        // Listener do botão de Limpar DB
+        document.getElementById('btnLimparDB').addEventListener('click', limparDB);
+
+        // --- Inicia o app quando a página carrega ---
+        document.addEventListener('DOMContentLoaded', iniciarApp);
+
+    </script>
+</body>
+</html>
