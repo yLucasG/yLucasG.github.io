@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Relatório - Plataforma do Cadete</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Variáveis de CSS baseadas no design da sua plataforma */
+        :root {
+            --bg-dark-primary: #101827;
+            --bg-dark-secondary: #162033;
+            --card-bg: #1F2840;
+            --accent-blue: #3E66FB;
+            --accent-blue-light: #5A7FFF;
+            --text-primary: #E0E7FF;
+            --text-secondary: #A0AEC0;
+            --border-color: #2D3748;
+        }
+
+        /* Estilos Globais */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-dark-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        /* Container principal da página única */
+        .page-container {
+            max-width: 1100px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        /* Estilos do Conteúdo Principal */
+        .page-container h1 {
+            font-size: 2.25rem;
+            margin-bottom: 24px;
+            color: white;
+            border-bottom: 2px solid var(--accent-blue);
+            padding-bottom: 16px;
+        }
+        
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border-color);
+        }
+
+        .card h2 {
+            color: var(--text-primary);
+            font-size: 1.25rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        input[type="text"],
+        input[type="date"],
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            box-sizing: border-box;
+            background-color: var(--bg-dark-secondary);
+            color: var(--text-primary);
+            font-family: 'Poppins', sans-serif;
+            font-size: 16px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        
+        input[type="text"][readonly],
+        textarea[readonly] {
+            background-color: #2D3748; /* Fundo um pouco diferente para campos somente leitura */
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(62, 102, 251, 0.3);
+        }
+
+        .file-upload-section {
+            background-color: var(--card-bg);
+            border: 2px dashed var(--accent-blue);
+            padding: 40px 20px;
+            border-radius: 12px;
+            text-align: center;
+            transition: background-color 0.2s;
+            cursor: pointer;
+        }
+        
+        .file-upload-section.drag-over {
+            background-color: var(--bg-dark-secondary);
+        }
+
+        .file-upload-section label {
+            font-size: 1.2em;
+            color: var(--accent-blue-light);
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .file-upload-section input[type="file"] {
+            display: none;
+        }
+
+        #status {
+            margin-top: 16px;
+            font-weight: 500;
+            font-size: 1rem;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .button-primary {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-blue-light));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 25px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .button-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(62, 102, 251, 0.4);
+        }
+
+        /* ===== NOVO ESTILO ADICIONADO ===== */
+        .button-nav {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: var(--card-bg);
+            color: var(--accent-blue-light);
+            border: 1px solid var(--accent-blue);
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            margin-bottom: 24px; /* Espaçamento abaixo do botão */
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .button-nav:hover {
+            background-color: var(--accent-blue);
+            color: var(--text-primary);
+            box-shadow: 0 2px 10px rgba(62, 102, 251, 0.3);
+        }
+        /* ================================== */
+
+
+        #resultado {
+            margin-top: 20px;
+            background-color: var(--bg-dark-primary);
+            color: #f8f9fa;
+            font-family: "Courier New", Courier, monospace;
+            min-height: 400px;
+            border-color: var(--border-color);
+        }
+
+        @media (max-width: 768px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+            .page-container {
+                margin: 20px auto;
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="page-container">
+    <h1>Gerador de Relatório de Serviço</h1>
+
+    <a href="caapmp.html" class="button-nav">Acessar Painel CAAPMP</a>
+    <div class="card">
+        <h2>Upload da Escala</h2>
+        <div class="file-upload-section" id="dropZone">
+            <label for="pdfFile">Arraste e solte o PDF da escala aqui</label>
+            <input type="file" id="pdfFile" accept="application/pdf">
+            <div id="status">Aguardando IA...</div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <h2>Informações Gerais</h2>
+        <div class="grid-container">
+            <div><label for="oficialDia">Oficial de Dia:</label><input type="text" id="oficialDia" value="A PREENCHER"></div>
+            <div><label for="dataServico">Data do Serviço:</label><input type="date" id="dataServico"></div>
+            <div><label for="auxiliar">Seu Nome/Matrícula (Auxiliar):</label><input type="text" id="auxiliar" placeholder="AL CFO PM XXX SEUNOME/PEL/CIA"></div>
+            <div><label for="adjunto">Nome/Matrícula (Adjunto):</label><input type="text" id="adjunto" placeholder="AL CFO PM YYY NOMEADJUNTO/PEL/CIA"></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Informações da Escala (Preenchido pela IA)</h2>
+        <label for="plantaoNome">Nome do Plantão:</label><input type="text" id="plantaoNome" readonly>
+        <label for="escalaServico">Escala de Permanência:</label><textarea id="escalaServico" rows="18"></textarea>
+        <label for="alunosServico">Alunos de Serviço (Ordenados por Nº):</label><textarea id="alunosServico" rows="15" readonly></textarea>
+        <label for="observacoes">Observações da Escala:</label><textarea id="observacoes" rows="5"></textarea>
+    </div>
+
+    <div class="card">
+        <h2>Ocorrências do Dia (Adicionar Manualmente)</h2>
+        <label for="comunicacoes">📢 Comunicações (uma por linha):</label><textarea id="comunicacoes" rows="4"></textarea>
+        <label for="passes">📜 Passes (uma por linha):</label><textarea id="passes" rows="4"></textarea>
+        <label for="instrucoes">🏫 Instrução Externa (uma por linha):</label><textarea id="instrucoes" rows="4"></textarea>
+        <label for="permutas">🔄 Permutas / Alterações:</label><textarea id="permutas" rows="2" placeholder="Sem alterações."></textarea>
+    </div>
+
+    <button class="button-primary" onclick="gerarRelatorio()">Gerar Relatório Final</button>
+
+    <div class="card">
+        <h2>Resultado Final (Pronto para Copiar)</h2>
+        <textarea id="resultado" readonly onclick="this.select()"></textarea>
+    </div>
+</div>
+
+<script>
+    // =========================================================================
+    // O JAVASCRIPT ABAIXO É O MESMO DA VERSÃO FUNCIONAL ANTERIOR
+    // NENHUMA ALTERAÇÃO FOI FEITA NA LÓGICA DE COMUNICAÇÃO COM A IA
+    // =========================================================================
+
+    const SERVER_URL = 'https://meucfo2025.pythonanywhere.com/processar-pdf';
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('pdfFile');
+    const statusDiv = document.getElementById('status');
+    
+    // Lógica de arrastar e soltar
+    dropZone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', (e) => handleFileSelect(e.target.files[0]));
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        handleFileSelect(e.dataTransfer.files[0]);
+    });
+
+    async function handleFileSelect(file) {
+        if (!file || file.type !== 'application/pdf') {
+            statusDiv.textContent = 'Por favor, selecione um arquivo PDF.';
+            statusDiv.style.color = 'red';
+            return;
+        }
+
+        statusDiv.textContent = `Enviando para a IA... (${file.name})`;
+        statusDiv.style.color = '#5A7FFF'; // Cor de destaque para o status
+
+        const formData = new FormData();
+        formData.append('pdf', file);
+
+        try {
+            const response = await fetch(SERVER_URL, { method: 'POST', body: formData });
+            const data = await response.json();
+
+            if (!response.ok) { throw new Error(data.erro || 'Erro desconhecido no servidor'); }
+
+            document.getElementById('alunosServico').value = data.alunosServico;
+            document.getElementById('escalaServico').value = data.escalaPermanencia;
+            document.getElementById('plantaoNome').value = data.plantao;
+            document.getElementById('observacoes').value = data.observacoes;
+
+            statusDiv.textContent = 'Análise concluída com sucesso!';
+            statusDiv.style.color = '#38A169'; // Verde para sucesso
+
+        } catch (error) {
+            console.error('Erro:', error);
+            statusDiv.textContent = `Falha na comunicação com a IA: ${error.message}`;
+            statusDiv.style.color = '#E53E3E'; // Vermelho para erro
+        }
+    }
+    
+    function formatarSecao(titulo, conteudo, msgPadrao) {
+        if (!conteudo.trim()) return `\n\n${titulo}\n${msgPadrao}`;
+        const itens = conteudo.trim().split('\n').map(item => `* ${item}`).join('\n\n');
+        return `\n\n${titulo}\n\n${itens}`;
+    }
+    
+    function gerarRelatorio() {
+        const oficialDia = document.getElementById('oficialDia').value;
+        const auxiliar = document.getElementById('auxiliar').value;
+        const adjunto = document.getElementById('adjunto').value;
+        const plantaoNome = document.getElementById('plantaoNome').value.toUpperCase();
+        const dataInput = new Date(document.getElementById('dataServico').value + 'T03:00:00Z');
+        const dataFim = new Date(dataInput);
+        dataFim.setDate(dataInput.getDate() + 1);
+        const options = { day: 'numeric', month: 'long', year: 'numeric' };
+        const dataInicioFormatada = dataInput.toLocaleDateString('pt-BR', options);
+        const dataFimFormatada = dataFim.toLocaleDateString('pt-BR', options);
+        const alunosArray = document.getElementById('alunosServico').value.trim().split('\n').filter(Boolean);
+        const alunosTexto = alunosArray.join('\n');
+        const totalAlunos = alunosArray.length;
+        const escala = document.getElementById('escalaServico').value;
+        const passes = formatarSecao('📜 PASSES', document.getElementById('passes').value, 'Sem alterações.');
+        const comunicacoes = formatarSecao('📢 COMUNICAÇÕES', document.getElementById('comunicacoes').value, 'Sem alterações.');
+        const instrucoes = formatarSecao('🏫 INSTRUÇÃO EXTERNA', document.getElementById('instrucoes').value, 'Sem alterações.');
+        const permutas = formatarSecao('🔄 PERMUTAS / ALTERAÇÕES DO PLANTÃO', document.getElementById('permutas').value, 'Sem alterações.');
+        const observacoes = formatarSecao('📌 OBSERVAÇÕES', document.getElementById('observacoes').value, 'Sem alterações.');
+        const nomeAuxiliar = (auxiliar.split('/')[0] || '').trim();
+        const nomeAdjunto = (adjunto.split('/')[0] || '').trim();
+        const cidade = "Paudalho - PE";
+        const relatorio = `🔰 SDS - PMPE - DGA - DEIP – APMP 🔰
+
+📌 RELATÓRIO DE PASSAGEM DO SERVIÇO DE AUXILIAR DO OFICIAL DE DIA - 1ª CIA
+
+📌 OFICIAL DE DIA: ${oficialDia}
+
+📌 AUXILIAR DO OFICIAL DE DIA: ${auxiliar}
+
+📌 ADJUNTO AO AUXILIAR DO OFICIAL DE DIA: ${adjunto}
+
+🗓️ DATA: ${dataInicioFormatada} ao dia ${dataFimFormatada} ⏰ HORÁRIO: 07h00 às 07h00
+
+🪖 PLANTÃO DE SERVIÇO: ${plantaoNome}
+
+🔎 ALUNOS DE SERVIÇO:
+${alunosTexto}
+
+➕ TOTAL DE SERVIÇO: ${totalAlunos}
+
+${escala.trim()}
+${passes}
+${comunicacoes}
+${instrucoes}
+${permutas}
+${observacoes}
+
+
+📍 ${cidade}, ${dataInicioFormatada}
+
+_________________________
+${nomeAuxiliar}
+Auxiliar do Oficial de Dia - 1ª CIA
+
+_________________________
+${nomeAdjunto}
+Adjunto ao Auxiliar do Oficial de Dia da 1ª Companhia
+
+_________________________
+EMANUELA PATRÍCIA SOUZA LINS - MAJ QOPM
+Comandante do Corpo de Alunos`;
+        document.getElementById('resultado').value = relatorio.trim();
+    }
+</script>
+
+</body>
+</html>
