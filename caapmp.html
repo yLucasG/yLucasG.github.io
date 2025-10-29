@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SGA-APMP v1.6</title>
+    <title>SGA-APMP v2.4 - UI Refinada</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root {
@@ -27,6 +27,8 @@
         .form-grupo label { display: block; margin-bottom: 8px; font-weight: 600; }
         .form-grupo input, .form-grupo select, .form-grupo textarea { width: 100%; padding: 12px; font-size: 1rem; border-radius: 6px; border: 1px solid #ccc; background-color: #fdfdfd; }
         .form-grupo textarea { min-height: 120px; }
+        .sei-table input, .sei-table select { padding: 5px; font-size: 11pt; border-radius: 4px; border: 1px solid #ccc; font-family: 'Times New Roman', Times, serif; }
+        .sei-table input:disabled, .sei-table select:disabled { background-color: #eee; border-color: #ddd; }
         button { display: block; width: 100%; background-color: var(--primary-color); color: var(--light-text-color); padding: 14px 20px; border: none; border-radius: 6px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: background-color 0.3s; }
         button:disabled { background-color: #aaa; cursor: not-allowed; }
         .btn-small { padding: 5px 10px; font-size: 0.8rem; width: auto; display: inline-block; margin-left: 5px;}
@@ -42,6 +44,7 @@
         @media (min-width: 600px) { .grid-2-col { grid-template-columns: 1fr 1fr; } }
         .aluno-card { border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin-bottom: 12px; background-color: #fafafa; cursor: pointer; transition: box-shadow 0.2s; }
         .aluno-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .aluno-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .aluno-nome { font-weight: 600; font-size: 1.1rem; color: #004d40; }
         .output-container { margin-top: 20px; border: 1px solid #ccc; padding: 15px; border-radius: 8px; }
         .table-wrapper { overflow-x: auto; }
@@ -49,9 +52,6 @@
         .sei-table th, .sei-table td { border: 1px solid black; padding: 5px; text-align: left; vertical-align: top; }
         .sei-table th { background-color: #f2f2f2; text-align: center; font-weight: bold; }
         .hidden { display: none; }
-        .verification-area { background-color: #f0f8ff; border: 1px solid #b0c4de; border-radius: 6px; padding: 15px; margin-top: 15px; }
-        .report-output h3 { margin-top: 20px; margin-bottom: 5px; font-family: 'Times New Roman', Times, serif; font-weight: bold; } 
-        .report-output p { margin: 5px 0; font-family: 'Times New Roman', Times, serif; }
         .instructions { background-color: #fffbe6; border: 1px solid #ffe58f; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-size: 0.9rem; }
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s; }
         .modal-overlay.active { opacity: 1; visibility: visible; }
@@ -60,31 +60,35 @@
         .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; padding-bottom: 10px; margin-bottom: 20px; }
         .modal-header h2 { margin: 0; font-size: 1.3rem; }
         .modal-close-btn { background: none; border: none; font-size: 1.8rem; cursor: pointer; color: #555; }
-        .punicao-list { list-style-type: none; padding: 0; }
         .punicao-list-item { background: #f9f9f9; border: 1px solid #eee; padding: 10px; border-radius: 4px; margin-bottom: 10px; }
-        .punicao-view { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
-        .punicao-edit-form .form-grupo { margin-bottom: 10px; }
-        .punicao-edit-form .form-grupo label { font-size: 0.8rem; margin-bottom: 4px; }
+        .punicao-info { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .status-badge { padding: 3px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; color: #fff; }
+        .status-pendente { background-color: var(--info-color); }
+        .status-agendada { background-color: var(--warning-color); }
+        .status-cumprida { background-color: var(--success-color); }
+        .calendario-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #eee; }
     </style>
 </head>
 <body>
 
-    <header><h1>SGA-APMP v1.6</h1><p>Sistema de Gestão Acadêmica</p></header>
+    <header><h1>SGA-APMP v2.4</h1><p>Sistema de Gestão Acadêmica</p></header>
 
     <div class="container">
         <main>
             <nav class="tab-nav">
-                <button class="tab-button active" onclick="mostrarTab('tab-relatorio')">Gerar Relatório</button>
-                <button class="tab-button" onclick="mostrarTab('tab-atas')">Gerar Atas</button>
-                <button class="tab-button" onclick="mostrarTab('tab-punicao')">Punição Indiv.</button>
+                <button class="tab-button active" onclick="mostrarTab('tab-visao-geral')">Visão Geral</button>
+                <button class="tab-button" onclick="mostrarTab('tab-atas')">Atas</button>
+                <button class="tab-button" onclick="mostrarTab('tab-calendario')">Calendário</button>
                 <button class="tab-button" onclick="mostrarTab('tab-punicao-massa')">Punição em Massa</button>
                 <button class="tab-button" onclick="mostrarTab('tab-importar')">Importar</button>
                 <button class="tab-button" onclick="mostrarTab('tab-permuta')">Permuta</button>
                 <button class="tab-button" onclick="mostrarTab('tab-alunos')">Alunos</button>
             </nav>
 
-            <div id="tab-relatorio" class="tab-content active"></div><div id="tab-atas" class="tab-content"></div><div id="tab-punicao" class="tab-content"></div><div id="tab-punicao-massa" class="tab-content"></div><div id="tab-importar" class="tab-content"></div><div id="tab-permuta" class="tab-content"></div>
-
+            <div id="tab-visao-geral" class="tab-content active"></div>
+            <div id="tab-atas" class="tab-content"></div>
+            <div id="tab-calendario" class="tab-content"></div>
+            <div id="tab-punicao-massa" class="tab-content"></div><div id="tab-importar" class="tab-content"></div><div id="tab-permuta" class="tab-content"></div>
             <div id="tab-alunos" class="tab-content">
                 <h2>Gerenciar Alunos</h2>
                 <div class="form-grupo"><input type="search" id="search-alunos-tab" placeholder="Pesquisar por nome ou número..."></div>
@@ -94,399 +98,547 @@
         </main>
     </div>
 
-    <div class="modal-overlay" id="modal-aluno">
-        <div class="modal-container">
-            <div class="modal-header"><h2 id="modal-aluno-nome"></h2><button class="modal-close-btn" onclick="fecharModalAluno()">&times;</button></div>
-            <form id="form-edit-aluno">
-                <input type="hidden" id="edit-aluno-id">
-                <div class="grid-2-col">
-                    <div class="form-grupo"><label for="edit-aluno-plantao">Plantão:</label><select id="edit-aluno-plantao"></select></div>
-                    <div class="form-grupo"><label for="edit-aluno-pelotao">Pelotão:</label><select id="edit-aluno-pelotao"></select></div>
-                </div>
-                <button type="submit">Salvar Alterações do Aluno</button>
-            </form>
-            <hr style="margin: 20px 0;">
-            <h4>Punições Pendentes:</h4>
-            <div id="modal-punicoes-list" class="punicao-list"></div>
-            <button type="button" id="btn-toggle-add-punicao-modal" class="btn-secondary" style="margin-top: 15px;">Adicionar Nova Punição</button>
-            <div id="add-punicao-modal-form" class="hidden" style="margin-top: 15px; border-top: 1px solid #ccc; padding-top: 15px;">
-                <h4>Nova Punição</h4>
-                <div class="grid-2-col">
-                    <div class="form-grupo"><label for="modal-punicao-modalidade">Modalidade:</label><select id="modal-punicao-modalidade"><option value="medida">Medida Educativa</option><option value="extraclasse">Extraclasse</option></select></div>
-                    <div class="form-grupo" id="modal-punicao-classificacao-wrapper"><label for="modal-punicao-tipo">Classificação:</label><select id="modal-punicao-tipo"><option value="LEVE">Leve</option><option value="MEDIA">Média</option><option value="GRAVE">Grave</option></select></div>
-                </div>
-                <div class="form-grupo"><label for="modal-punicao-data">Data:</label><input type="date" id="modal-punicao-data"></div>
-                <div class="form-grupo"><label for="modal-punicao-motivo">Motivo:</label><input type="text" id="modal-punicao-motivo" required></div>
-                <div class="form-grupo"><label for="modal-punicao-sei">SEI (Opcional):</label><input type="text" id="modal-punicao-sei"></div>
-                <button type="button" id="btn-salvar-punicao-modal">Salvar Punição</button>
-            </div>
-        </div>
-    </div>
-
+    <div class="modal-overlay" id="modal-aluno"><div class="modal-container"><div class="modal-header"><h2 id="modal-aluno-nome"></h2><button class="modal-close-btn" onclick="fecharModalAluno()">&times;</button></div><form id="form-edit-aluno"><input type="hidden" id="edit-aluno-id"><div class="grid-2-col"><div class="form-grupo"><label for="edit-aluno-plantao">Plantão:</label><select id="edit-aluno-plantao"></select></div><div class="form-grupo"><label for="edit-aluno-pelotao">Pelotão:</label><select id="edit-aluno-pelotao"></select></div></div><button type="submit">Salvar Alterações</button></form><hr style="margin: 20px 0;"><h4>Histórico de Punições:</h4><div id="modal-punicoes-list"></div><button type="button" id="btn-toggle-add-punicao-modal" class="btn-secondary" style="margin-top: 15px;">Adicionar Punição</button><div id="add-punicao-modal-form" class="hidden" style="margin-top: 15px; border-top: 1px solid #ccc; padding-top: 15px;"><h4>Nova Punição</h4><div class="grid-2-col"><div class="form-grupo"><label for="modal-punicao-modalidade">Modalidade:</label><select id="modal-punicao-modalidade"><option value="medida">Medida Educativa</option><option value="extraclasse">Extraclasse</option></select></div><div class="form-grupo" id="modal-punicao-classificacao-wrapper"><label for="modal-punicao-tipo">Classificação:</label><select id="modal-punicao-tipo"><option value="LEVE">Leve</option><option value="MEDIA">Média</option><option value="GRAVE">Grave</option></select></div></div><div class="form-grupo"><label for="modal-punicao-data">Data:</label><input type="date" id="modal-punicao-data"></div><div class="form-grupo"><label for="modal-punicao-motivo">Motivo:</label><input type="text" id="modal-punicao-motivo" required></div><div class="form-grupo"><label for="modal-punicao-sei">SEI (Opcional):</label><input type="text" id="modal-punicao-sei"></div><button type="button" id="btn-salvar-punicao-modal">Salvar Punição</button></div></div></div>
 
     <script>
-        const DADOS_INICIAIS_ALUNOS = [ { id: 1, nome: "MÁRCIO SOUZA", plantao: "FOXTROT", pelotao: "1º PEL" }, { id: 5, nome: "SILVANA", plantao: "FOXTROT", pelotao: "5º PEL" }, { id: 7, nome: "ARCOVERDE", plantao: "FOXTROT", pelotao: "1º PEL" }, { id: 13, nome: "BRENDA", plantao: "FOXTROT", pelotao: "3º PEL" }, { id: 16, nome: "THIAGO TAVARES", plantao: "FOXTROT", pelotao: "4º PEL" }, { id: 21, nome: "MANOEL", plantao: "FOXTROT", pelotao: "5º PEL" }, { id: 25, nome: "DAVI OLIVEIRA", plantao: "FOXTROT", pelotao: "3º PEL" }, { id: 34, nome: "GIOVANNI", plantao: "FOXTROT", pelotao: "1º PEL" }, { id: 37, nome: "VALDECI", plantao: "FOXTROT", pelotao: "2º PEL" }, { id: 38, nome: "W. SILVA", plantao: "FOXTROT", pelotao: "4º PEL" }, { id: 42, nome: "CARLA ARAÚJO", plantao: "FOXTROT", pelotao: "2º PEL" }, { id: 45, nome: "WALYSON", plantao: "FOXTROT", pelotao: "5º PEL" }, { id: 49, nome: "JEFERSON SILVA", plantao: "FOXTROT", pelotao: "6º PEL" }, { id: 53, nome: "G. SILVA", plantao: "FOXTROT", pelotao: "1º PEL" }, { id: 58, nome: "WESLEY", plantao: "FOXTROT", pelotao: "5º PEL" }, { id: 63, nome: "PAULO", plantao: "FOXTROT", pelotao: "1º PEL" }, { id: 67, nome: "LAYANNE", plantao: "FOXTROT", pelotao: "1º PEL" }, { id: 69, nome: "FALCÃO", plantao: "FOXTROT", pelotao: "3º PEL" }, { id: 73, nome: "PEREIRA", plantao: "FOXTROT", pelotao: "2º PEL" }, { id: 79, nome: "DIÓGENES", plantao: "FOXTROT", pelotao: "4º PEL" }, { id: 83, nome: "P. SOUZA", plantao: "FOXTROT", pelotao: "2º PEL" }, { id: 87, nome: "ARYCLAYTON", plantao: "FOXTROT", pelotao: "6º PEL" }, { id: 91, nome: "GESSICA", plantao: "FOXTROT", pelotao: "5º PEL" }, { id: 93, nome: "REVERTHON", plantao: "FOXTROT", pelotao: "1º PEL" }, { id: 98, nome: "EMANNUEL", plantao: "FOXTROT", pelotao: "4º PEL" }, { id: 102, nome: "ALLAN MARIANO", plantao: "FOXTROT", pelotao: "5º PEL" }, { id: 103, nome: "RAÍSSA SOARES", plantao: "FOXTROT", pelotao: "2º PEL" }, { id: 110, nome: "CÉSAR MEDEIROS", plantao: "FOXTROT", pelotao: "1º PEL" }, { id: 114, nome: "BARBALHO", plantao: "FOXTROT", pelotao: "5º PEL" }, { id: 118, nome: "DURVAL", plantao: "FOXTROT", pelotao: "1º PEL" }, { id: 122, nome: "BATISTA", plantao: "FOXTROT", pelotao: "4º PEL" }, { id: 128, nome: "ALEXANDRO GOMES", plantao: "FOXTROT", pelotao: "4º PEL" }, { id: 131, nome: "RENATA", plantao: "FOXTROT", pelotao: "6º PEL" }, { id: 133, nome: "ISRAEL", plantao: "FOXTROT", pelotao: "2º PEL" }, { id: 140, nome: "VICTOR COSTA", plantao: "FOXTROT", pelotao: "1º PEL" }, { id: 141, nome: "JULIANE CORDEIRO", plantao: "FOXTROT", pelotao: "4º PEL" }, { id: 147, nome: "JORGE FILHO", plantao: "FOXTROT", pelotao: "1º PEL" }, { id: 153, nome: "AFONSO", plantao: "FOXTROT", pelotao: "3º PEL" }, { id: 154, nome: "DAYANE", plantao: "FOXTROT", pelotao: "2º PEL" }, { id: 158, nome: "HEYVERSON", plantao: "FOXTROT", pelotao: "5º PEL" }, { id: 164, nome: "CIBELE", plantao: "FOXTROT", pelotao: "6º PEL" }, { id: 166, nome: "FELIPE FÉLIX", plantao: "FOXTROT", pelotao: "3º PEL" }, { id: 170, nome: "ΑΝΤΟΝΙΟ REIS", plantao: "FOXTROT", pelotao: "4º PEL" }, { id: 174, nome: "LIMA PAIVA", plantao: "FOXTROT", pelotao: "6º PEL" }, { id: 182, nome: "JOSINALDO", plantao: "FOXTROT", pelotao: "4º PEL" }, { id: 191, nome: "SELTON", plantao: "FOXTROT", pelotao: "4º PEL" }, { id: 2, nome: "RENATO", plantao: "GOLF", pelotao: "2º PEL" }, { id: 6, nome: "DANIELLE PRADO", plantao: "GOLF", pelotao: "6º PEL" }, { id: 9, nome: "R. FERREIRA", plantao: "GOLF", pelotao: "1º PEL" }, { id: 14, nome: "AMANDA COELHO", plantao: "GOLF", pelotao: "4º PEL" }, { id: 15, nome: "JUNIOR", plantao: "GOLF", pelotao: "3º PEL" }, { id: 20, nome: "LUAN PEREIRA", plantao: "GOLF", pelotao: "4º PEL" }, { id: 24, nome: "MATHEUS MESQUITA", plantao: "GOLF", pelotao: "2º PEL" }, { id: 30, nome: "M ALBUQUERQUE", plantao: "GOLF", pelotao: "2º PEL" }, { id: 33, nome: "KAROLINE ABREU", plantao: "GOLF", pelotao: "1º PEL" }, { id: 35, nome: "PAULINO", plantao: "GOLF", pelotao: "6º PEL" }, { id: 39, nome: "ELLIO", plantao: "GOLF", pelotao: "2º PEL" }, { id: 46, nome: "GRANGEIRO", plantao: "GOLF", pelotao: "3º PEL" }, { id: 50, nome: "QUEIROZ", plantao: "GOLF", pelotao: "6º PEL" }, { id: 54, nome: "FRANÇA", plantao: "GOLF", pelotao: "1º PEL" }, { id: 59, nome: "RAYANNE", plantao: "GOLF", pelotao: "6º PEL" }, { id: 60, nome: "S.GOMES", plantao: "GOLF", pelotao: "6º PEL" }, { id: 64, nome: "BONFIM", plantao: "GOLF", pelotao: "6º PEL" }, { id: 71, nome: "SERAFIM", plantao: "GOLF", pelotao: "4º PEL" }, { id: 74, nome: "GABRIEL", plantao: "GOLF", pelotao: "6º PEL" }, { id: 78, nome: "GISELE FERREIRA", plantao: "GOLF", pelotao: "4º PEL" }, { id: 80, nome: "JOSÉ", plantao: "GOLF", pelotao: "5º PEL" }, { id: 84, nome: "SIDNEI ARAÚJO", plantao: "GOLF", pelotao: "3º PEL" }, { id: 88, nome: "S. NETO", plantao: "GOLF", pelotao: "1º PEL" }, { id: 99, nome: "G. GOMES", plantao: "GOLF", pelotao: "4º PEL" }, { id: 105, nome: "JOSÉ NETO", plantao: "GOLF", pelotao: "5º PEL" }, { id: 108, nome: "HENRIQUE", plantao: "GOLF", pelotao: "1º PEL" }, { id: 113, nome: "AURÉLIO", plantao: "GOLF", pelotao: "4º PEL" }, { id: 119, nome: "VINÍCIUS SOUZA", plantao: "GOLF", pelotao: "2º PEL" }, { id: 123, nome: "GONZAGA", plantao: "GOLF", pelotao: "5º PEL" }, { id: 129, nome: "LUIZ NUNES", plantao: "GOLF", pelotao: "5º PEL" }, { id: 134, nome: "SAMEA FERRAZ", plantao: "GOLF", pelotao: "2º PEL" }, { id: 135, nome: "JOÃO HENRIQUE", plantao: "GOLF", pelotao: "3º PEL" }, { id: 142, nome: "JABNER", plantao: "GOLF", pelotao: "2º PEL" }, { id: 143, nome: "SAMARA MELO", plantao: "GOLF", pelotao: "5º PEL" }, { id: 152, nome: "MOURA", plantao: "GOLF", pelotao: "2º PEL" }, { id: 156, nome: "MONALIZA", plantao: "GOLF", pelotao: "3º PEL" }, { id: 161, nome: "JOSE ALISSON", plantao: "GOLF", pelotao: "6º PEL" }, { id: 165, nome: "GUSTAVO", plantao: "GOLF", pelotao: "2º PEL" }, { id: 168, nome: "LEONAM", plantao: "GOLF", pelotao: "5º PEL" }, { id: 172, nome: "FRANCISCO", plantao: "GOLF", pelotao: "1º PEL" }, { id: 180, nome: "NOBREGA", plantao: "GOLF", pelotao: "5º PEL" }, { id: 181, nome: "THAYNARA", plantao: "GOLF", pelotao: "3º PEL" }, { id: 190, nome: "JÚLIA", plantao: "GOLF", pelotao: "5º PEL" }, { id: 192, nome: "JEFFERSON GOMES", plantao: "GOLF", pelotao: "1º PEL" }, { id: 196, nome: "CARDOSO", plantao: "GOLF", pelotao: "6º PEL" }, { id: 3, nome: "FERNANDO", plantao: "HOTEL", pelotao: "3º PEL" }, { id: 8, nome: "AUREA", plantao: "HOTEL", pelotao: "1º PEL" }, { id: 10, nome: "VICTOR FERREIRA", plantao: "HOTEL", pelotao: "2º PEL" }, { id: 17, nome: "MURILO", plantao: "HOTEL", pelotao: "5º PEL" }, { id: 18, nome: "ARYANA", plantao: "HOTEL", pelotao: "5º PEL" }, { id: 28, nome: "LEMOS", plantao: "HOTEL", pelotao: "1º PEL" }, { id: 31, nome: "ALLATAS SOUSA", plantao: "HOTEL", pelotao: "3º PEL" }, { id: 32, nome: "KAYO GABRIEL", plantao: "HOTEL", pelotao: "5º PEL" }, { id: 36, nome: "M. FEITOSA", plantao: "HOTEL", pelotao: "1º PEL" }, { id: 40, nome: "MARINHO", plantao: "HOTEL", pelotao: "3º PEL" }, { id: 43, nome: "CINTIA SOUZA", plantao: "HOTEL", pelotao: "3º PEL" }, { id: 47, nome: "MACEDO", plantao: "HOTEL", pelotao: "4º PEL" }, { id: 66, nome: "JÕNATAS SANTOS", plantao: "HOTEL", pelotao: "2º PEL" }, { id: 70, nome: "MEIRA", plantao: "HOTEL", pelotao: "3º PEL" }, { id: 75, nome: "PEDRO", plantao: "HOTEL", pelotao: "3º PEL" }, { id: 77, nome: "EDUARDA", plantao: "HOTEL", pelotao: "3º PEL" }, { id: 81, nome: "COSTA", plantao: "HOTEL", pelotao: "6º PEL" }, { id: 85, nome: "ANDERSON", plantao: "HOTEL", pelotao: "4º PEL" }, { id: 89, nome: "SILVA", plantao: "HOTEL", pelotao: "2º PEL" }, { id: 94, nome: "FERNANDA SOARES", plantao: "HOTEL", pelotao: "1º PEL" }, { id: 96, nome: "ERIVELTON", plantao: "HOTEL", pelotao: "2º PEL" }, { id: 106, nome: "LUCAS RANIELLE", plantao: "HOTEL", pelotao: "2º PEL" }, { id: 107, nome: "LUCIANO", plantao: "HOTEL", pelotao: "6º PEL" }, { id: 109, nome: "ERIKA DUARTE", plantao: "HOTEL", pelotao: "4º PEL" }, { id: 111, nome: "FELIPE MORAIS", plantao: "HOTEL", pelotao: "2º PEL" }, { id: 115, nome: "VINICIUS OLIVEIRA", plantao: "HOTEL", pelotao: "2º PEL" }, { id: 125, nome: "MEDEIROS", plantao: "HOTEL", pelotao: "3º PEL" }, { id: 127, nome: "CAIO GUIMARÃES", plantao: "HOTEL", pelotao: "6º PEL" }, { id: 136, nome: "PATRICIA", plantao: "HOTEL", pelotao: "1º PEL" }, { id: 137, nome: "RAFAEL PEREIRA", plantao: "HOTEL", pelotao: "6º PEL" }, { id: 138, nome: "ICARO", plantao: "HOTEL", pelotao: "5º PEL" }, { id: 144, nome: "EDJANE", plantao: "HOTEL", pelotao: "6º PEL" }, { id: 149, nome: "CAVALCANTI", plantao: "HOTEL", pelotao: "6º PEL" }, { id: 151, nome: "OLIVEIRA JÚNIOR", plantao: "HOTEL", pelotao: "5º PEL" }, { id: 162, nome: "JESUS", plantao: "HOTEL", pelotao: "1º PEL" }, { id: 171, nome: "JHONEY", plantao: "HOTEL", pelotao: "5º PEL" }, { id: 175, nome: "LUIZ LEAL", plantao: "HOTEL", pelotao: "2º PEL" }, { id: 177, nome: "DIONIZIO", plantao: "HOTEL", pelotao: "4º PEL" }, { id: 179, nome: "DÉBORA GOUVEIA", plantao: "HOTEL", pelotao: "2º PEL" }, { id: 183, nome: "JULIO ABRAAO", plantao: "HOTEL", pelotao: "5º PEL" }, { id: 184, nome: "RONILSON", plantao: "HOTEL", pelotao: "6º PEL" }, { id: 185, nome: "BELEM", plantao: "HOTEL", pelotao: "1º PEL" }, { id: 187, nome: "KAMYLA", plantao: "HOTEL", pelotao: "4º PEL" }, { id: 189, nome: "JAILTON", plantao: "HOTEL", pelotao: "6º PEL" }, { id: 193, nome: "JAILTON", plantao: "HOTEL", pelotao: "6º PEL" }, { id: 197, nome: "ISRAEL OLIVEIRA", plantao: "HOTEL", pelotao: "4º PEL" }, { id: 4, nome: "ROBERTO FREITAS", plantao: "INDIA", pelotao: "4º PEL" }, { id: 11, nome: "ORLANDO", plantao: "INDIA", pelotao: "2º PEL" }, { id: 12, nome: "ISABELLA", plantao: "INDIA", pelotao: "2º PEL" }, { id: 19, nome: "ALENCAR", plantao: "INDIA", pelotao: "3º PEL" }, { id: 26, nome: "MARCOLINO", plantao: "INDIA", pelotao: "4º PEL" }, { id: 27, nome: "FÁTIMA AGUIAR", plantao: "INDIA", pelotao: "6º PEL" }, { id: 29, nome: "MACIEL", plantao: "INDIA", pelotao: "6º PEL" }, { id: 41, nome: "MALAQUIAS", plantao: "INDIA", pelotao: "4º PEL" }, { id: 44, nome: "PRISCILA CORREIA", plantao: "INDIA", pelotao: "4º PEL" }, { id: 48, nome: "ELVIS", plantao: "INDIA", pelotao: "5º PEL" }, { id: 52, nome: "RUBSLEY", plantao: "INDIA", pelotao: "2º PEL" }, { id: 57, nome: "SANTANA", plantao: "INDIA", pelotao: "2º PEL" }, { id: 61, nome: "FIRMINO", plantao: "INDIA", pelotao: "4º PEL" }, { id: 62, nome: "LUCAS MAGALHÃES", plantao: "INDIA", pelotao: "5º PEL" }, { id: 68, nome: "KAROLINNE MOREIRA", plantao: "INDIA", pelotao: "2º PEL" }, { id: 72, nome: "NONATO", plantao: "INDIA", pelotao: "5º PEL" }, { id: 76, nome: "FERREIRA", plantao: "INDIA", pelotao: "4º PEL" }, { id: 82, nome: "MARCOS NASCIMENTO", plantao: "INDIA", pelotao: "1º PEL" }, { id: 86, nome: "FERNANDO CRUZ", plantao: "INDIA", pelotao: "5º PEL" }, { id: 90, nome: "RAFAEL BEZERRA", plantao: "INDIA", pelotao: "3º PEL" }, { id: 92, nome: "ALINE", plantao: "INDIA", pelotao: "6º PEL" }, { id: 95, nome: "BRUNO", plantao: "INDIA", pelotao: "5º PEL" }, { id: 97, nome: "ÍTALO", plantao: "INDIA", pelotao: "3º PEL" }, { id: 100, nome: "RENAN", plantao: "INDIA", pelotao: "6º PEL" }, { id: 112, nome: "MARQUES", plantao: "INDIA", pelotao: "3º PEL" }, { id: 116, nome: "SANTIAGO", plantao: "INDIA", pelotao: "6º PEL" }, { id: 120, nome: "EGITO", plantao: "INDIA", pelotao: "3º PEL" }, { id: 121, nome: "JOÃO NASCIMENTO", plantao: "INDIA", pelotao: "2º PEL" }, { id: 126, "nome": "GILMARA", "plantao": "INDIA", "pelotao": "5º PEL" }, { "id": 130, "nome": "PAULO ROBERTO", "plantao": "INDIA", "pelotao": "6º PEL" }, { "id": 132, "nome": "SÉRGIO", "plantao": "INDIA", "pelotao": "1º PEL" }, { "id": 139, "nome": "JULIANA GONDIM", "plantao": "INDIA", "pelotao": "3º PEL" }, { "id": 145, "nome": "HIGOR ALVES", "plantao": "INDIA", "pelotao": "5º PEL" }, { "id": 146, "nome": "PEREIRA MORAIS", "plantao": "INDIA", "pelotao": "6º PEL" }, { "id": 148, "nome": "OLAVO", "plantao": "INDIA", "pelotao": "3º PEL" }, { "id": 150, "nome": "ROBERTA", "plantao": "INDIA", "pelotao": "1º PEL" }, { "id": 157, "nome": "VALADARES", "plantao": "INDIA", "pelotao": "3º PEL" }, { "id": 163, "nome": "NATÁLIA", "plantao": "INDIA", "pelotao": "5º PEL" }, { "id": 169, "nome": "MATHEUS BARROS", "plantao": "INDIA", "pelotao": "6º PEL" }, { "id": 173, "nome": "IURY", "plantao": "INDIA", "pelotao": "3º PEL" }, { "id": 176, "nome": "RHAYSA", "plantao": "INDIA", "pelotao": "1º PEL" }, { "id": 178, "nome": "HIAGO", "plantao": "INDIA", "pelotao": "4º PEL" }, { "id": 186, "nome": "SOUTO", "plantao": "INDIA", "pelotao": "3º PEL" }, { "id": 188, "nome": "ΜΑΧEMBERG", "plantao": "INDIA", "pelotao": "3º PEL" }, { "id": 194, "nome": "KLEVER", "plantao": "INDIA", "pelotao": "5º PEL" }, { "id": 195, "nome": "PETTERSON", "plantao": "INDIA", "pelotao": "2º PEL" }];
-        const TRANSGRESSOES = { LEVE: ["Deixar sala de aula suja/desorganizada", "Apresentação pessoal incompatível", "Documento fora das normas", "Executar ações de Comando de forma errada", "Preencher/rasurar formulários incorretamente", "Portar eletrônicos sem autorização", "Traje sujo, amarrotado ou irregular", "Deixar de apresentar material necessário", "Incorreto na prática de sinais de respeito", "Cama ou armário desarrumado", " descuido com objetos pessoais", "Faltar com presteza no cumprimento de ordens", "Desatento em instrução"], MEDIA: ["Não ter controle de tropa", "Desrespeitar normas sociais", "Chegar atrasado", "Conversar, sorrir, etc., em forma", "Executar movimento de forma relaxada", "Transitar em local não autorizado", "Falta de cuidado com material", "Deixar de comunicar execução de ordem", "Deixar de cumprir determinação de serviço", "Faltar com cuidados higiênicos", "Perturbar o silêncio", "Desrespeitar/desconsiderar companheiros", "Deixar de informar impossibilidade de comparecer"], GRAVE: ["Não respeitar autoridade do chefe de turma/aluno de serviço", "Ausentar-se sem autorização", "Utilizar-se do anonimato", "Conduta inadequada em serviço/instrução", "Entrar em alojamento distinto sem autorização", "Procurar desacreditar superiores ou pares", "Concorrer para discórdia ou desarmonia", "Tratar superiores ou pares de forma descortês", "Portar-se em público de modo inconveniente", "Promover ou envolver-se em escândalo", "Não executar atos de serviço de forma adequada", "Deixar de cumprir orientações do docente", "Faltar, sem justificação, a qualquer atividade", "Deixar de cumprir ordem legal"] };
-        const DB_KEYS = { alunos: 'sga_alunosDB_v1.6', permutas: 'sga_permutasDB_v1.6' };
-        let alunosVerificadosMassa = [];
-        let punicoesImportadas = [];
-        
-        // --- FUNÇÕES DE BANCO DE DADOS (localStorage) ---
-        function getDB(key) { return JSON.parse(localStorage.getItem(key) || '[]'); }
-        function saveDB(key, data) { localStorage.setItem(key, JSON.stringify(data)); }
-        function popularDadosIniciais() {
-            let alunos = DADOS_INICIAIS_ALUNOS.map(a => ({ ...a, nomeCompleto: `AL CFO PM ${String(a.id).padStart(2, '0')} ${a.nome}`, punicoes: [] }));
-            saveDB(DB_KEYS.alunos, alunos);
-        }
-
-        // --- FUNÇÕES DE LÓGICA DE NEGÓCIO ---
-        function adicionarPunicao(alunoId, data, modalidade, tipo, motivo, sei) {
-            const alunos = getDB(DB_KEYS.alunos);
-            const aluno = alunos.find(a => a.id == alunoId);
-            if (!aluno) return false;
-            aluno.punicoes.push({ id: Date.now(), data, modalidade, tipo, motivo, sei: sei || '', status: 'pendente' });
-            saveDB(DB_KEYS.alunos, alunos);
-            return true;
-        }
-        function registrarPermuta(idA, dataA, idB, dataB) {
-            let permutas = getDB(DB_KEYS.permutas);
-            permutas.push({ id: Date.now(), idAlunoA: idA, dataA, idAlunoB: idB, dataB });
-            saveDB(DB_KEYS.permutas, permutas);
-            alert('Permuta registrada com sucesso!');
-        }
-
-        // --- FUNÇÕES DE GERAÇÃO DE DOCUMENTOS ---
-        function gerarRelatorio() {
-            const dataServico = document.getElementById('data-servico').value;
-            if (!dataServico) { alert("Por favor, selecione a data do serviço."); return; }
-            const auxiliarDia = document.getElementById('auxiliar-dia').value;
-            if (!auxiliarDia) { alert("Por favor, preencha o nome do Auxiliar do Oficial de Dia."); return; }
-
-            const todosAlunos = getDB(DB_KEYS.alunos);
-            const punicoesDoDia = todosAlunos.flatMap(a => a.punicoes.filter(p => p.data === dataServico).map(p => ({ aluno: a, punicao: p })));
-
-            const medidas = punicoesDoDia.filter(p => p.punicao.modalidade === 'medida');
-            const extraclasses = punicoesDoDia.filter(p => p.punicao.modalidade === 'extraclasse');
-            const extraclassesAgrupadas = extraclasses.reduce((acc, curr) => {
-                (acc[curr.punicao.motivo] = acc[curr.punicao.motivo] || []).push(curr);
-                return acc;
-            }, {});
-
-            let comunicacoesHtml = `<p><strong>COMUNICAÇÕES 2ª CIA</strong></p>`;
-            if (medidas.length > 0) {
-                comunicacoesHtml += `<table class="sei-table"><thead><tr><th>QTD.</th><th>GRAD</th><th>PEL</th><th>NOME</th><th>MOTIVO</th><th>OFICIAL COMUNICANTE</th></tr></thead><tbody>`;
-                medidas.forEach((item, index) => {
-                    comunicacoesHtml += `<tr><td>${String(index + 1).padStart(2, '0')}</td><td>AL CFO PM</td><td>${item.aluno.pelotao}</td><td>${item.aluno.nome}</td><td>${item.punicao.motivo}</td><td>2º TEN QOPM PEDRO LIMA</td></tr>`;
-                });
-                comunicacoesHtml += `</tbody></table>`;
-            }
-
-            for (const motivo in extraclassesAgrupadas) {
-                comunicacoesHtml += `<table class="sei-table" style="margin-top: 15px;"><thead><tr><th>QTD.</th><th>PEL</th><th>NOME</th><th>MOTIVO</th><th>OFICIAL</th></tr></thead><tbody>`;
-                extraclassesAgrupadas[motivo].forEach((item, index) => {
-                    comunicacoesHtml += `<tr><td>${String(index + 1).padStart(2, '0')}</td><td>${item.aluno.pelotao}</td><td>${item.aluno.nome}</td><td>${motivo}</td><td>2º TEN QOPM PEDRO LIMA</td></tr>`;
-                });
-                comunicacoesHtml += `</tbody></table>`;
-            }
-
-            if (medidas.length === 0 && Object.keys(extraclassesAgrupadas).length === 0) {
-                comunicacoesHtml += `<p>SEM ALTERAÇÕES</p>`;
-            }
-
-            const dataFormatada = new Date(dataServico + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
-            
-            const relatorioHtml = `
-                <div id="relatorio-completo" class="report-output">
-                    <p><strong>OFICIAL DE DIA:</strong> ${document.getElementById('oficial-dia').value}</p>
-                    <p><strong>AUX. DO OFICIAL DE DIA 2º CIA:</strong> ${document.getElementById('auxiliar-dia').value.replace(/ - AL CFO PM/i, '')}</p>
-                    <p><strong>ADJ. DO AUX. DO OFICIAL DE DIA 2º CIA:</strong> ${document.getElementById('adjunto-dia').value}</p>
-                    <p><strong>DATA:</strong> DO DIA ${new Date(dataServico + 'T00:00:00').toLocaleDateString('pt-BR')} AO DIA ${new Date(new Date(dataServico).getTime() + 86400000).toLocaleDateString('pt-BR')}</p>
-                    <p><strong>HORA:</strong> 07h00min às 07h00min</p>
-                    <p><strong>POSTOS DE SERVIÇOS -</strong> ${document.getElementById('plantao-dia').value}</p>
-                    <p>(SEI Nº &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)</p>
-                    <h3>PASSES:</h3><p>SEM ALTERAÇÕES</p>
-                    <h3>LICENÇAS, DISPENSAS E DECLARAÇÕES:</h3><p>SEM ALTERAÇÕES</p>
-                    <br>${comunicacoesHtml}<br>
-                    <h3>INSTRUÇÃO EXTERNA:</h3><p>SEM ALTERAÇÃO</p>
-                    <h3>OBSERVAÇÕES:</h3><p>SEM ALTERAÇÕES</p>
-                    <br><br>
-                    <p style="text-align: center;">Paudalho - PE, ${dataFormatada}.</p>
-                    <br>
-                    <p style="text-align: center; font-weight: bold; text-transform: uppercase;">${auxiliarDia}</p>
-                    <p style="text-align: center;">Auxiliar do Oficial de Dia da 2ª Companhia</p>
-                </div>
-                <button class="btn-copy" onclick="copyHtmlToClipboard('relatorio-completo')">Copiar Relatório Completo</button>`;
-            
-            const outputDiv = document.getElementById('output-relatorio');
-            outputDiv.innerHTML = relatorioHtml;
-            outputDiv.classList.remove('hidden');
-        }
-
-        function gerarAtas() {
-            const todosAlunos = getDB(DB_KEYS.alunos);
-            const permutas = getDB(DB_KEYS.permutas);
-            const punicoesPendentes = todosAlunos.flatMap(a => a.punicoes.filter(p => p.status === 'pendente').map(p => ({ aluno: a, punicao: p })));
-            
-            const extraclasse = punicoesPendentes.filter(p => p.punicao.modalidade === 'extraclasse');
-            const medida = punicoesPendentes.filter(p => p.punicao.modalidade === 'medida');
-
-            const outputDiv = document.getElementById('output-atas');
-            outputDiv.innerHTML = `${gerarTabelaExtraclasse(extraclasse, permutas, todosAlunos)} ${gerarTabelaMedida(medida, permutas, todosAlunos)}`;
-            
-            if (punicoesPendentes.length > 0 && confirm("Atas geradas! Deseja marcar todas as punições pendentes como 'cumpridas' e limpar as permutas?")) {
-                todosAlunos.forEach(aluno => aluno.punicoes.forEach(p => { if(p.status === 'pendente') p.status = 'cumprida'; }));
-                saveDB(DB_KEYS.alunos, todosAlunos);
-                saveDB(DB_KEYS.permutas, []);
-                alert('Punições atualizadas e permutas limpas.');
-                renderizarUI();
-            }
-        }
-
-        function getPlantaoDoDia(aluno, dia, permutas, todosAlunos) {
-            const permuta = permutas.find(p => (p.idAlunoA == aluno.id && p.dataA === dia) || (p.idAlunoB == aluno.id && p.dataB === dia));
-            if (!permuta) return aluno.plantao;
-            const parceiro = todosAlunos.find(a => a.id == (permuta.idAlunoA == aluno.id ? permuta.idAlunoB : permuta.idAlunoA));
-            return parceiro ? parceiro.plantao : aluno.plantao;
-        }
-
-        function gerarTabelaExtraclasse(punidos, permutas, todosAlunos) {
-            if (punidos.length === 0) return '<h3>Ata de Atividade Extraclasse</h3><p>Nenhum aluno para esta ata.</p>';
-            let rows = punidos.sort((a,b) => a.aluno.id - b.aluno.id).map(({aluno, punicao}) => `
-                <tr>
-                    <td>${new Date(punicao.data + 'T00:00:00').toLocaleDateString('pt-BR')}</td><td>${String(aluno.id).padStart(2, '0')}</td><td>${aluno.nome}</td>
-                    <td>${getPlantaoDoDia(aluno, punicao.data, permutas, todosAlunos)}</td><td>${aluno.pelotao || ''}</td><td>${punicao.sei || ''}</td>
-                    <td>${punicao.motivo}</td><td></td>
-                </tr>`).join('');
-            return `<div class="output-container"><h3>Ata de Atividade Extraclasse</h3><div class="table-wrapper"><table class="sei-table" id="tabela-extraclasse"><thead><tr><th>DATA</th><th>Nº</th><th>ALUNO</th><th>PLANTÃO</th><th>PELOTÃO/CIA</th><th>SEI</th><th>RESUMO</th><th>ASSINATURA</th></tr></thead><tbody>${rows}</tbody></table></div><button class="btn-copy" onclick="copyHtmlToClipboard('tabela-extraclasse')">Copiar Tabela</button></div>`;
-        }
-
-        function gerarTabelaMedida(punidos, permutas, todosAlunos) {
-            if (punidos.length === 0) return '<h3>Ata de Medida Educativa</h3><p>Nenhum aluno para esta ata.</p>';
-            let rows = punidos.sort((a,b) => a.aluno.id - b.aluno.id).map(({aluno, punicao}) => `
-                <tr>
-                    <td>${String(aluno.id).padStart(2, '0')}</td><td>${aluno.nome}</td>
-                    <td>${getPlantaoDoDia(aluno, punicao.data, permutas, todosAlunos)}</td>
-                    <td>${punicao.sei || ''}</td><td>${punicao.tipo}</td><td>REVISTA DO RECOLHER</td>
-                    <td>${new Date(punicao.data + 'T00:00:00').toLocaleDateString('pt-BR')}</td><td>21H</td><td></td>
-                </tr>`).join('');
-            return `<div class="output-container"><h3>Ata de Medida Educativa</h3><div class="table-wrapper"><table class="sei-table" id="tabela-medida"><thead><tr><th>Nº</th><th>NOME DE GUERRA</th><th>PLANTÃO</th><th>Nº DE NOTIFICAÇÃO SEI</th><th>NATUREZA</th><th>COMPARECIMENTO</th><th>DATA</th><th>HORÁRIO</th><th>ASSINATURA</th></tr></thead><tbody>${rows}</tbody></table></div><button class="btn-copy" onclick="copyHtmlToClipboard('tabela-medida')">Copiar Tabela</button></div>`;
-        }
-
-        function copyHtmlToClipboard(elementId) {
-            const element = document.getElementById(elementId);
-            navigator.clipboard.writeText(element.outerHTML).then(() => alert('Conteúdo copiado com sucesso!'), () => alert('Falha ao copiar.'));
-        }
-
-        // --- Funções de UI e Event Listeners ---
-        function mostrarTab(tabId) {
-            document.querySelectorAll('.tab-content, .tab-button').forEach(el => el.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            document.querySelector(`.tab-button[onclick="mostrarTab('${tabId}')"]`).classList.add('active');
-        }
-        function renderizarUI(searchTerm = '') {
-            const alunos = getDB(DB_KEYS.alunos);
-            const permutas = getDB(DB_KEYS.permutas);
-            const listaAlunosDiv = document.getElementById('lista-alunos');
-            const listaPermutasDiv = document.getElementById('lista-permutas');
-            
-            listaAlunosDiv.innerHTML = '';
-            const termoBusca = searchTerm.toLowerCase();
-            const alunosFiltrados = alunos.filter(a => a.nomeCompleto.toLowerCase().includes(termoBusca));
-
-            alunosFiltrados.sort((a,b) => a.id - b.id).forEach(aluno => {
-                const pendentes = aluno.punicoes.filter(p => p.status === 'pendente').length;
-                const card = document.createElement('div');
-                card.className = 'aluno-card';
-                card.dataset.alunoId = aluno.id;
-                card.innerHTML = `<div class="aluno-nome">${aluno.nomeCompleto}</div><small>Plantão: ${aluno.plantao} | Pelotão: ${aluno.pelotao} | Punições Pendentes: <strong>${pendentes}</strong></small>`;
-                card.addEventListener('click', () => abrirModalAluno(aluno.id));
-                listaAlunosDiv.appendChild(card);
-            });
-
-            listaPermutasDiv.innerHTML = permutas.length > 0 ? '' : '<p>Nenhuma permuta ativa.</p>';
-            permutas.forEach(p => {
-                const aA = alunos.find(a => a.id == p.idAlunoA), aB = alunos.find(a => a.id == p.idAlunoB);
-                if (aA && aB) listaPermutasDiv.innerHTML += `<div class="aluno-card" style="cursor:default;">${aA.nomeCompleto} (${p.dataA}) ⇄ ${aB.nomeCompleto} (${p.dataB})</div>`;
-            });
-        }
-        function setupSearch(inputId, resultsId, hiddenInputId) {
-            const input = document.getElementById(inputId), resultsDiv = document.getElementById(resultsId), hiddenInput = document.getElementById(hiddenInputId);
-            input.addEventListener('input', () => {
-                const term = input.value.toLowerCase();
-                hiddenInput.value = '';
-                if (term.length < 1) { resultsDiv.innerHTML = ''; return; }
-                const filtered = getDB(DB_KEYS.alunos).filter(a => a.nomeCompleto.toLowerCase().includes(term));
-                resultsDiv.innerHTML = filtered.slice(0, 5).map(aluno => `<div class="result-item" data-id="${aluno.id}">${aluno.nomeCompleto}</div>`).join('');
-            });
-            resultsDiv.addEventListener('click', e => {
-                if(e.target.classList.contains('result-item')) {
-                    hiddenInput.value = e.target.dataset.id;
-                    input.value = e.target.textContent;
-                    resultsDiv.innerHTML = '';
-                }
-            });
-        }
-        
-        // --- Funções do Modal de Aluno ---
-        function abrirModalAluno(alunoId) {
-            const alunos = getDB(DB_KEYS.alunos);
-            const aluno = alunos.find(a => a.id == alunoId);
-            if (!aluno) return;
-            
-            document.getElementById('modal-aluno-nome').textContent = aluno.nomeCompleto;
-            document.getElementById('edit-aluno-id').value = aluno.id;
-            
-            const plantaoSelect = document.getElementById('edit-aluno-plantao');
-            const pelotaoSelect = document.getElementById('edit-aluno-pelotao');
-            plantaoSelect.value = aluno.plantao;
-            pelotaoSelect.value = aluno.pelotao;
-            
-            renderizarPunicoesModal(alunoId);
-            
-            document.getElementById('add-punicao-modal-form').classList.add('hidden');
-            document.getElementById('modal-punicao-data').value = new Date().toISOString().split('T')[0];
-            document.getElementById('modal-punicao-motivo').value = '';
-            document.getElementById('modal-punicao-sei').value = '';
-            
-            document.getElementById('modal-aluno').classList.add('active');
-        }
-
-        function fecharModalAluno() {
-            document.getElementById('modal-aluno').classList.remove('active');
-        }
-
-        function renderizarPunicoesModal(alunoId) {
-            const aluno = getDB(DB_KEYS.alunos).find(a => a.id == alunoId);
-            if (!aluno) return;
-
-            const punicoesList = document.getElementById('modal-punicoes-list');
-            const punicoesPendentes = aluno.punicoes.filter(p => p.status === 'pendente');
-            
-            if (punicoesPendentes.length === 0) {
-                punicoesList.innerHTML = '<p>Nenhuma punição pendente.</p>';
-                return;
-            }
-
-            punicoesList.innerHTML = punicoesPendentes.map(p => `
-                <div class="punicao-list-item" id="punicao-item-${p.id}">
-                    <div class="punicao-view">
-                        <span>${p.motivo} <strong>(${p.modalidade})</strong> - ${p.data}</span>
-                        <div>
-                            <button type="button" class="btn-small btn-secondary" onclick="togglePunicaoEdit('${aluno.id}', ${p.id})">Editar</button>
-                            <button type="button" class="btn-small btn-danger" onclick="removerPunicao('${aluno.id}', ${p.id})">Remover</button>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function togglePunicaoEdit(alunoId, punicaoId, cancel = false) {
-            const itemDiv = document.getElementById(`punicao-item-${punicaoId}`);
-            if (!itemDiv) return;
-
-            if (cancel || itemDiv.querySelector('.punicao-edit-form')) {
-                renderizarPunicoesModal(alunoId);
-                return;
-            }
-
-            const aluno = getDB(DB_KEYS.alunos).find(a => a.id == alunoId);
-            const punicao = aluno.punicoes.find(p => p.id == punicaoId);
-
-            itemDiv.innerHTML = `
-                <div class="punicao-edit-form">
-                    <div class="form-grupo"><label>Data:</label><input type="date" id="edit-punicao-data-${punicao.id}" value="${punicao.data}"></div>
-                    <div class="form-grupo"><label>Motivo:</label><input type="text" id="edit-punicao-motivo-${punicao.id}" value="${punicao.motivo}"></div>
-                    <div class="form-grupo"><label>SEI:</label><input type="text" id="edit-punicao-sei-${punicao.id}" value="${punicao.sei}"></div>
-                    <button type="button" class="btn-small" onclick="salvarPunicaoEdit('${aluno.id}', ${punicao.id})">Salvar</button>
-                    <button type="button" class="btn-small btn-secondary" onclick="togglePunicaoEdit('${aluno.id}', ${punicao.id}, true)">Cancelar</button>
-                </div>
-            `;
-        }
-
-        function salvarPunicaoEdit(alunoId, punicaoId) {
-            const alunos = getDB(DB_KEYS.alunos);
-            const aluno = alunos.find(a => a.id == alunoId);
-            const punicao = aluno.punicoes.find(p => p.id == punicaoId);
-
-            punicao.data = document.getElementById(`edit-punicao-data-${punicaoId}`).value;
-            punicao.motivo = document.getElementById(`edit-punicao-motivo-${punicaoId}`).value;
-            punicao.sei = document.getElementById(`edit-punicao-sei-${punicaoId}`).value;
-
-            saveDB(DB_KEYS.alunos, alunos);
-            renderizarPunicoesModal(alunoId);
-        }
-
-        function removerPunicao(alunoId, punicaoId) {
-            if (!confirm("Tem certeza que deseja remover esta punição?")) return;
-            const alunos = getDB(DB_KEYS.alunos);
-            const aluno = alunos.find(a => a.id == alunoId);
-            aluno.punicoes = aluno.punicoes.filter(p => p.id != punicaoId);
-            saveDB(DB_KEYS.alunos, alunos);
-            renderizarPunicoesModal(alunoId);
-            renderizarUI(document.getElementById('search-alunos-tab').value);
-        }
-        
-        // --- INICIALIZAÇÃO E LISTENERS ---
         document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('tab-relatorio').innerHTML = `<h2>Gerar Relatório de Passagem de Serviço</h2><form id="form-relatorio"><div class="form-grupo"><label for="data-servico">Data do Serviço:</label><input type="date" id="data-servico" required></div><div class="form-grupo"><label for="oficial-dia">Oficial de Dia:</label><input type="text" id="oficial-dia" value="2º TEN QOPM PEDRO LIMA"></div><div class="form-grupo"><label for="auxiliar-dia">Auxiliar do Oficial de Dia (Nome Completo - Posto/Grad):</label><input type="text" id="auxiliar-dia" placeholder="Ex: RAMOM TALYSON DAS NEVES SOARES - AL CFO PM"></div><div class="form-grupo"><label for="adjunto-dia">Adjunto do Auxiliar:</label><input type="text" id="adjunto-dia" placeholder="Ex: AL CFO PM 168 LEONAM / 5º PEL"></div><div class="form-grupo"><label for="plantao-dia">Plantão de Serviço:</label><input type="text" id="plantao-dia" placeholder="Ex: PLANTÃO ÍNDIA / 2ª CIA"></div><button type="button" id="btnGerarRelatorio">Gerar Relatório</button></form><div id="output-relatorio" class="output-container hidden"></div>`;
-            document.getElementById('tab-atas').innerHTML = `<button id="btnGerarAtas">Gerar Atas de Punições Pendentes</button><div id="output-atas"></div>`;
-            document.getElementById('tab-punicao').innerHTML = `<h2>Registrar Punição Individual</h2><form id="form-punicao"><div class="grid-2-col"><div class="form-grupo"><label for="modalidade-punicao">Modalidade:</label><select id="modalidade-punicao" required><option value="medida">Medida Educativa</option><option value="extraclasse">Extraclasse</option></select></div><div class="form-grupo" id="classificacao-wrapper"><label for="select-tipo-punicao">Classificação:</label><select id="select-tipo-punicao"><option value="" disabled selected>-- Selecione --</option><option value="LEVE">Leve</option><option value="MEDIA">Média</option><option value="GRAVE">Grave</option></select></div></div><div class="form-grupo"><label for="data-punicao">Data da Ocorrência:</label><input type="date" id="data-punicao" required></div><div class="form-grupo"><label for="search-aluno-punicao">Aluno:</label><div class="search-container"><input type="text" id="search-aluno-punicao" placeholder="Digite o nome ou nº..." autocomplete="off" required><div class="search-results" id="results-punicao"></div><input type="hidden" id="selected-aluno-punicao"></div></div><div class="form-grupo"><label for="input-sei">Nº de Notificação SEI (Opcional):</label><input type="text" id="input-sei" placeholder="Ex: 74607929"></div><div class="form-grupo"><label for="select-motivo-punicao">Motivo (Regulamentar):</label><select id="select-motivo-punicao" required><option value="">-- Selecione a modalidade --</option></select></div><div class="form-grupo"><label for="input-motivo-custom">Ou digite um motivo customizado:</label><input type="text" id="input-motivo-custom" placeholder="Deixe em branco se usar o motivo acima"></div><button type="submit">Adicionar Punição</button></form>`;
-            document.getElementById('tab-punicao-massa').innerHTML = `<h2>Registrar Punição em Massa</h2><form id="form-punicao-massa"><div class="form-grupo"><label for="selecao-massa-tipo">Selecionar Alunos por:</label><select id="selecao-massa-tipo"><option value="manual">Digitar Nomes/Números</option><option value="companhia">Companhia</option><option value="plantao">Plantão</option><option value="pelotao">Pelotão</option></select></div><div class="form-grupo hidden" id="grupo-plantao-wrapper"><label for="selecao-massa-plantao">Plantão:</label><select id="selecao-massa-plantao"></select></div><div class="form-grupo hidden" id="grupo-pelotao-wrapper"><label for="selecao-massa-pelotao">Pelotão:</label><select id="selecao-massa-pelotao"></select></div><div class="form-grupo" id="grupo-manual-wrapper"><label for="input-alunos-massa">Nomes ou Números (um por linha):</label><textarea id="input-alunos-massa"></textarea></div><button type="button" class="btn-secondary" id="btn-verificar-massa">Verificar Alunos</button><div class="verification-area hidden" id="verification-area-massa"></div><hr style="margin: 20px 0;"><p><strong>Detalhes da Punição (para todos os selecionados):</strong></p><div class="grid-2-col"><div class="form-grupo"><label for="modalidade-punicao-massa">Modalidade:</label><select id="modalidade-punicao-massa" required><option value="medida">Medida Educativa</option><option value="extraclasse">Extraclasse</option></select></div><div class="form-grupo" id="classificacao-wrapper-massa"><label for="select-tipo-punicao-massa">Classificação:</label><select id="select-tipo-punicao-massa"><option value="" disabled selected>-- Selecione --</option><option value="LEVE">Leve</option><option value="MEDIA">Média</option><option value="GRAVE">Grave</option></select></div></div><div class="form-grupo"><label for="data-punicao-massa">Data da Ocorrência:</label><input type="date" id="data-punicao-massa" required></div><div class="form-grupo"><label for="input-sei-massa">Nº de Notificação SEI (Opcional):</label><input type="text" id="input-sei-massa" placeholder="Aplicado a todos"></div><div class="form-grupo"><label for="input-motivo-massa">Motivo da Punição:</label><input type="text" id="input-motivo-massa" required></div><button type="submit" id="btn-aplicar-massa" disabled>Aplicar Punição em Massa</button></form>`;
-            document.getElementById('tab-importar').innerHTML = `<h2>Importar Punições de Planilha</h2><div class="instructions"><p>Envie um arquivo (.xlsx, .xls, .csv) com as seguintes colunas:</p><ul><li><strong>NumAluno</strong> (obrigatório) - Ex: 7 ou 185</li><li><strong>Data</strong> (obrigatório) - Formato AAAA-MM-DD</li><li><strong>Modalidade</strong> (obrigatório) - 'medida' ou 'extraclasse'</li><li><strong>Tipo</strong> - 'LEVE', 'MEDIA', 'GRAVE' (só para 'medida')</li><li><strong>Motivo</strong> (obrigatório)</li><li><strong>SEI</strong> (opcional)</li></ul></div><div class="form-grupo"><label for="import-file">Selecione o arquivo:</label><input type="file" id="import-file" accept=".xlsx, .xls, .csv"></div><div id="import-preview" class="verification-area hidden"></div><button id="btn-confirm-import" class="hidden">Confirmar Importação</button>`;
-            document.getElementById('tab-permuta').innerHTML = `<h2>Registrar Permuta</h2><form id="form-permuta"><div class="grid-2-col"><div class="form-grupo"><label for="search-aluno-a">Aluno A (sai do serviço):</label><div class="search-container"><input type="text" id="search-aluno-a" placeholder="Buscar Aluno A..." autocomplete="off" required><div class="search-results" id="results-a"></div><input type="hidden" id="selected-aluno-a"></div><label for="data-permuta-a" style="margin-top:10px;">Data do Serviço de A:</label><input type="date" id="data-permuta-a" required></div><div class="form-grupo"><label for="search-aluno-b">Aluno B (entra no serviço):</label><div class="search-container"><input type="text" id="search-aluno-b" placeholder="Buscar Aluno B..." autocomplete="off" required><div class="search-results" id="results-b"></div><input type="hidden" id="selected-aluno-b"></div><label for="data-permuta-b" style="margin-top:10px;">Data do Serviço de B:</label><input type="date" id="data-permuta-b" required></div></div><button type="submit">Confirmar Permuta</button></form><h3 style="margin-top:30px;">Permutas Ativas</h3><div id="lista-permutas"></div>`;
+
+            const DADOS_INICIAIS_ALUNOS = [ { id: 1, nome: "MÁRCIO SOUZA", plantao: "FOXTROT", pelotao: "1º PEL" }, { id: 5, nome: "SILVANA", plantao: "FOXTROT", pelotao: "5º PEL" }, { id: 7, nome: "ARCOVERDE", plantao: "FOXTROT", pelotao: "1º PEL" }, { id: 13, nome: "BRENDA", plantao: "FOXTROT", pelotao: "3º PEL" }, { id: 16, nome: "THIAGO TAVARES", plantao: "FOXTROT", pelotao: "4º PEL" }, { id: 21, nome: "MANOEL", plantao: "FOXTROT", pelotao: "5º PEL" }, { id: 25, nome: "DAVI OLIVEIRA", plantao: "FOXTROT", pelotao: "3º PEL" }, { id: 34, nome: "GIOVANNI", plantao: "FOXTROT", pelotao: "1º PEL" }, { id: 37, nome: "VALDECI", plantao: "FOXTROT", pelotao: "2º PEL" }, { id: 38, nome: "W. SILVA", plantao: "FOXTROT", pelotao: "4º PEL" }, { id: 42, nome: "CARLA ARAÚJO", plantao: "FOXTROT", pelotao: "2º PEL" }, { id: 45, nome: "WALYSON", plantao: "FOXTROT", pelotao: "5º PEL" }, { id: 49, nome: "JEFERSON SILVA", plantao: "FOXTROT", pelotao: "6º PEL" }, { id: 53, nome: "G. SILVA", plantao: "FOXTROT", pelotao: "1º PEL" }, { id: 58, nome: "WESLEY", plantao: "FOXTROT", pelotao: "5º PEL" }, { id: 63, nome: "PAULO", plantao: "FOXTROT", pelotao: "1º PEL" }, { id: 67, nome: "LAYANNE", plantao: "FOXTROT", pelotao: "1º PEL" }, { id: 69, nome: "FALCÃO", plantao: "FOXTROT", pelotao: "3º PEL" }, { id: 73, nome: "PEREIRA", plantao: "FOXTROT", pelotao: "2º PEL" }, { id: 79, nome: "DIÓGENES", plantao: "FOXTROT", pelotao: "4º PEL" }, { id: 83, nome: "P. SOUZA", plantao: "FOXTROT", pelotao: "2º PEL" }, { id: 87, nome: "ARYCLAYTON", plantao: "FOXTROT", pelotao: "6º PEL" }, { id: 91, nome: "GESSICA", plantao: "FOXTROT", pelotao: "5º PEL" }, { id: 93, nome: "REVERTHON", plantao: "FOXTROT", pelotao: "1º PEL" }, { id: 98, nome: "EMANNUEL", plantao: "FOXTROT", pelotao: "4º PEL" }, { id: 102, nome: "ALLAN MARIANO", plantao: "FOXTROT", pelotao: "5º PEL" }, { id: 103, nome: "RAÍSSA SOARES", plantao: "FOXTROT", pelotao: "2º PEL" }, { id: 110, nome: "CÉSAR MEDEIROS", plantao: "FOXTROT", pelotao: "1º PEL" }, { id: 114, nome: "BARBALHO", plantao: "FOXTROT", pelotao: "5º PEL" }, { id: 118, nome: "DURVAL", plantao: "FOXTROT", pelotao: "1º PEL" }, { id: 122, nome: "BATISTA", plantao: "FOXTROT", pelotao: "4º PEL" }, { id: 128, nome: "ALEXANDRO GOMES", plantao: "FOXTROT", pelotao: "4º PEL" }, { id: 131, nome: "RENATA", plantao: "FOXTROT", pelotao: "6º PEL" }, { id: 133, nome: "ISRAEL", plantao: "FOXTROT", pelotao: "2º PEL" }, { id: 140, nome: "VICTOR COSTA", plantao: "FOXTROT", pelotao: "1º PEL" }, { id: 141, nome: "JULIANE CORDEIRO", plantao: "FOXTROT", pelotao: "4º PEL" }, { id: 147, nome: "JORGE FILHO", plantao: "FOXTROT", pelotao: "1º PEL" }, { id: 153, nome: "AFONSO", plantao: "FOXTROT", pelotao: "3º PEL" }, { id: 154, nome: "DAYANE", plantao: "FOXTROT", pelotao: "2º PEL" }, { id: 158, nome: "HEYVERSON", plantao: "FOXTROT", pelotao: "5º PEL" }, { id: 164, nome: "CIBELE", plantao: "FOXTROT", pelotao: "6º PEL" }, { id: 166, nome: "FELIPE FÉLIX", plantao: "FOXTROT", pelotao: "3º PEL" }, { id: 170, nome: "ΑΝΤΟΝΙΟ REIS", plantao: "FOXTROT", pelotao: "4º PEL" }, { id: 174, nome: "LIMA PAIVA", plantao: "FOXTROT", pelotao: "6º PEL" }, { id: 182, nome: "JOSINALDO", plantao: "FOXTROT", pelotao: "4º PEL" }, { id: 191, nome: "SELTON", plantao: "FOXTROT", pelotao: "4º PEL" }, { id: 2, nome: "RENATO", plantao: "GOLF", pelotao: "2º PEL" }, { id: 6, nome: "DANIELLE PRADO", plantao: "GOLF", pelotao: "6º PEL" }, { id: 9, nome: "R. FERREIRA", plantao: "GOLF", pelotao: "1º PEL" }, { id: 14, nome: "AMANDA COELHO", plantao: "GOLF", pelotao: "4º PEL" }, { id: 15, nome: "JUNIOR", plantao: "GOLF", pelotao: "3º PEL" }, { id: 20, nome: "LUAN PEREIRA", plantao: "GOLF", pelotao: "4º PEL" }, { id: 24, nome: "MATHEUS MESQUITA", plantao: "GOLF", pelotao: "2º PEL" }, { id: 30, nome: "M ALBUQUERQUE", plantao: "GOLF", pelotao: "2º PEL" }, { id: 33, nome: "KAROLINE ABREU", plantao: "GOLF", pelotao: "1º PEL" }, { id: 35, nome: "PAULINO", plantao: "GOLF", pelotao: "6º PEL" }, { id: 39, nome: "ELLIO", plantao: "GOLF", pelotao: "2º PEL" }, { id: 46, nome: "GRANGEIRO", plantao: "GOLF", pelotao: "3º PEL" }, { id: 50, nome: "QUEIROZ", plantao: "GOLF", pelotao: "6º PEL" }, { id: 54, nome: "FRANÇA", plantao: "GOLF", pelotao: "1º PEL" }, { id: 59, nome: "RAYANNE", plantao: "GOLF", pelotao: "6º PEL" }, { id: 60, nome: "S.GOMES", plantao: "GOLF", pelotao: "6º PEL" }, { id: 64, nome: "BONFIM", plantao: "GOLF", pelotao: "6º PEL" }, { id: 71, nome: "SERAFIM", plantao: "GOLF", pelotao: "4º PEL" }, { id: 74, nome: "GABRIEL", plantao: "GOLF", pelotao: "6º PEL" }, { id: 78, nome: "GISELE FERREIRA", plantao: "GOLF", pelotao: "4º PEL" }, { id: 80, nome: "JOSÉ", plantao: "GOLF", pelotao: "5º PEL" }, { id: 84, nome: "SIDNEI ARAÚJO", plantao: "GOLF", pelotao: "3º PEL" }, { id: 88, nome: "S. NETO", plantao: "GOLF", pelotao: "1º PEL" }, { id: 99, nome: "G. GOMES", plantao: "GOLF", pelotao: "4º PEL" }, { id: 105, nome: "JOSÉ NETO", plantao: "GOLF", pelotao: "5º PEL" }, { id: 108, nome: "HENRIQUE", plantao: "GOLF", pelotao: "1º PEL" }, { id: 113, nome: "AURÉLIO", plantao: "GOLF", pelotao: "4º PEL" }, { id: 119, nome: "VINÍCIUS SOUZA", plantao: "GOLF", pelotao: "2º PEL" }, { id: 123, nome: "GONZAGA", plantao: "GOLF", pelotao: "5º PEL" }, { id: 129, nome: "LUIZ NUNES", plantao: "GOLF", pelotao: "5º PEL" }, { id: 134, nome: "SAMEA FERRAZ", plantao: "GOLF", pelotao: "2º PEL" }, { id: 135, nome: "JOÃO HENRIQUE", plantao: "GOLF", pelotao: "3º PEL" }, { id: 142, nome: "JABNER", plantao: "GOLF", pelotao: "2º PEL" }, { id: 143, nome: "SAMARA MELO", plantao: "GOLF", pelotao: "5º PEL" }, { id: 152, nome: "MOURA", plantao: "GOLF", pelotao: "2º PEL" }, { id: 156, nome: "MONALIZA", plantao: "GOLF", pelotao: "3º PEL" }, { id: 161, nome: "JOSE ALISSON", plantao: "GOLF", pelotao: "6º PEL" }, { id: 165, nome: "GUSTAVO", plantao: "GOLF", pelotao: "2º PEL" }, { id: 168, nome: "LEONAM", plantao: "GOLF", pelotao: "5º PEL" }, { id: 172, nome: "FRANCISCO", plantao: "GOLF", pelotao: "1º PEL" }, { id: 180, nome: "NOBREGA", plantao: "GOLF", pelotao: "5º PEL" }, { id: 181, nome: "THAYNARA", plantao: "GOLF", pelotao: "3º PEL" }, { id: 190, nome: "JÚLIA", plantao: "GOLF", pelotao: "5º PEL" }, { id: 192, nome: "JEFFERSON GOMES", plantao: "GOLF", pelotao: "1º PEL" }, { id: 196, nome: "CARDOSO", plantao: "GOLF", pelotao: "6º PEL" }, { id: 3, nome: "FERNANDO", plantao: "HOTEL", pelotao: "3º PEL" }, { id: 8, nome: "AUREA", plantao: "HOTEL", pelotao: "1º PEL" }, { id: 10, nome: "VICTOR FERREIRA", plantao: "HOTEL", pelotao: "2º PEL" }, { id: 17, nome: "MURILO", plantao: "HOTEL", pelotao: "5º PEL" }, { id: 18, nome: "ARYANA", plantao: "HOTEL", pelotao: "5º PEL" }, { id: 28, nome: "LEMOS", plantao: "HOTEL", pelotao: "1º PEL" }, { id: 31, nome: "ALLATAS SOUSA", plantao: "HOTEL", pelotao: "3º PEL" }, { id: 32, nome: "KAYO GABRIEL", plantao: "HOTEL", pelotao: "5º PEL" }, { id: 36, nome: "M. FEITOSA", plantao: "HOTEL", pelotao: "1º PEL" }, { id: 40, nome: "MARINHO", plantao: "HOTEL", pelotao: "3º PEL" }, { id: 43, nome: "CINTIA SOUZA", plantao: "HOTEL", pelotao: "3º PEL" }, { id: 47, nome: "MACEDO", plantao: "HOTEL", pelotao: "4º PEL" }, { id: 66, nome: "JÕNATAS SANTOS", plantao: "HOTEL", pelotao: "2º PEL" }, { id: 70, nome: "MEIRA", plantao: "HOTEL", pelotao: "3º PEL" }, { id: 75, nome: "PEDRO", plantao: "HOTEL", pelotao: "3º PEL" }, { id: 77, nome: "EDUARDA", plantao: "HOTEL", pelotao: "3º PEL" }, { id: 81, nome: "COSTA", plantao: "HOTEL", pelotao: "6º PEL" }, { id: 85, nome: "ANDERSON", plantao: "HOTEL", pelotao: "4º PEL" }, { id: 89, nome: "SILVA", plantao: "HOTEL", pelotao: "2º PEL" }, { id: 94, nome: "FERNANDA SOARES", plantao: "HOTEL", pelotao: "1º PEL" }, { id: 96, nome: "ERIVELTON", plantao: "HOTEL", pelotao: "2º PEL" }, { id: 106, nome: "LUCAS RANIELLE", plantao: "HOTEL", pelotao: "2º PEL" }, { id: 107, nome: "LUCIANO", plantao: "HOTEL", pelotao: "6º PEL" }, { id: 109, nome: "ERIKA DUARTE", plantao: "HOTEL", pelotao: "4º PEL" }, { id: 111, nome: "FELIPE MORAIS", plantao: "HOTEL", pelotao: "2º PEL" }, { id: 115, nome: "VINICIUS OLIVEIRA", plantao: "HOTEL", pelotao: "2º PEL" }, { id: 125, nome: "MEDEIROS", plantao: "HOTEL", pelotao: "3º PEL" }, { id: 127, nome: "CAIO GUIMARÃES", plantao: "HOTEL", pelotao: "6º PEL" }, { id: 136, nome: "PATRICIA", plantao: "HOTEL", pelotao: "1º PEL" }, { id: 137, nome: "RAFAEL PEREIRA", plantao: "HOTEL", pelotao: "6º PEL" }, { id: 138, nome: "ICARO", plantao: "HOTEL", pelotao: "5º PEL" }, { id: 144, nome: "EDJANE", plantao: "HOTEL", pelotao: "6º PEL" }, { id: 149, nome: "CAVALCANTI", plantao: "HOTEL", pelotao: "6º PEL" }, { id: 151, nome: "OLIVEIRA JÚNIOR", plantao: "HOTEL", pelotao: "5º PEL" }, { id: 162, nome: "JESUS", plantao: "HOTEL", pelotao: "1º PEL" }, { id: 171, nome: "JHONEY", plantao: "HOTEL", pelotao: "5º PEL" }, { id: 175, nome: "LUIZ LEAL", plantao: "HOTEL", pelotao: "2º PEL" }, { id: 177, nome: "DIONIZIO", plantao: "HOTEL", pelotao: "4º PEL" }, { id: 179, nome: "DÉBORA GOUVEIA", plantao: "HOTEL", pelotao: "2º PEL" }, { id: 183, nome: "JULIO ABRAAO", plantao: "HOTEL", pelotao: "5º PEL" }, { id: 184, nome: "RONILSON", plantao: "HOTEL", pelotao: "6º PEL" }, { id: 185, nome: "BELEM", plantao: "HOTEL", pelotao: "1º PEL" }, { id: 187, nome: "KAMYLA", plantao: "HOTEL", pelotao: "4º PEL" }, { id: 189, nome: "JAILTON", plantao: "HOTEL", pelotao: "6º PEL" }, { id: 193, nome: "JAILTON", plantao: "HOTEL", pelotao: "6º PEL" }, { id: 197, nome: "ISRAEL OLIVEIRA", plantao: "HOTEL", pelotao: "4º PEL" }, { id: 4, nome: "ROBERTO FREITAS", plantao: "INDIA", pelotao: "4º PEL" }, { id: 11, nome: "ORLANDO", plantao: "INDIA", pelotao: "2º PEL" }, { id: 12, nome: "ISABELLA", plantao: "INDIA", pelotao: "2º PEL" }, { id: 19, nome: "ALENCAR", plantao: "INDIA", pelotao: "3º PEL" }, { id: 26, nome: "MARCOLINO", plantao: "INDIA", pelotao: "4º PEL" }, { id: 27, nome: "FÁTIMA AGUIAR", plantao: "INDIA", pelotao: "6º PEL" }, { id: 29, nome: "MACIEL", plantao: "INDIA", pelotao: "6º PEL" }, { id: 41, nome: "MALAQUIAS", plantao: "INDIA", pelotao: "4º PEL" }, { id: 44, nome: "PRISCILA CORREIA", plantao: "INDIA", pelotao: "4º PEL" }, { id: 48, nome: "ELVIS", plantao: "INDIA", pelotao: "5º PEL" }, { id: 52, nome: "RUBSLEY", plantao: "INDIA", pelotao: "2º PEL" }, { id: 57, nome: "SANTANA", plantao: "INDIA", pelotao: "2º PEL" }, { id: 61, nome: "FIRMINO", plantao: "INDIA", pelotao: "4º PEL" }, { id: 62, nome: "LUCAS MAGALHÃES", plantao: "INDIA", pelotao: "5º PEL" }, { id: 68, nome: "KAROLINNE MOREIRA", plantao: "INDIA", pelotao: "2º PEL" }, { id: 72, nome: "NONATO", plantao: "INDIA", pelotao: "5º PEL" }, { id: 76, nome: "FERREIRA", plantao: "INDIA", pelotao: "4º PEL" }, { id: 82, nome: "MARCOS NASCIMENTO", plantao: "INDIA", pelotao: "1º PEL" }, { id: 86, nome: "FERNANDO CRUZ", plantao: "INDIA", pelotao: "5º PEL" }, { id: 90, nome: "RAFAEL BEZERRA", plantao: "INDIA", pelotao: "3º PEL" }, { id: 92, nome: "ALINE", plantao: "INDIA", pelotao: "6º PEL" }, { id: 95, nome: "BRUNO", plantao: "INDIA", pelotao: "5º PEL" }, { id: 97, nome: "ÍTALO", plantao: "INDIA", pelotao: "3º PEL" }, { id: 100, nome: "RENAN", plantao: "INDIA", pelotao: "6º PEL" }, { id: 112, nome: "MARQUES", plantao: "INDIA", pelotao: "3º PEL" }, { id: 116, nome: "SANTIAGO", plantao: "INDIA", pelotao: "6º PEL" }, { id: 120, nome: "EGITO", plantao: "INDIA", pelotao: "3º PEL" }, { id: 121, nome: "JOÃO NASCIMENTO", plantao: "INDIA", pelotao: "2º PEL" }, { id: 126, "nome": "GILMARA", "plantao": "INDIA", "pelotao": "5º PEL" }, { "id": 130, "nome": "PAULO ROBERTO", "plantao": "INDIA", "pelotao": "6º PEL" }, { "id": 132, "nome": "SÉRGIO", "plantao": "INDIA", "pelotao": "1º PEL" }, { "id": 139, "nome": "JULIANA GONDIM", "plantao": "INDIA", "pelotao": "3º PEL" }, { "id": 145, "nome": "HIGOR ALVES", "plantao": "INDIA", "pelotao": "5º PEL" }, { "id": 146, "nome": "PEREIRA MORAIS", "plantao": "INDIA", "pelotao": "6º PEL" }, { "id": 148, "nome": "OLAVO", "plantao": "INDIA", "pelotao": "3º PEL" }, { "id": 150, "nome": "ROBERTA", "plantao": "INDIA", "pelotao": "1º PEL" }, { "id": 157, "nome": "VALADARES", "plantao": "INDIA", "pelotao": "3º PEL" }, { "id": 163, "nome": "NATÁLIA", "plantao": "INDIA", "pelotao": "5º PEL" }, { "id": 169, "nome": "MATHEUS BARROS", "plantao": "INDIA", "pelotao": "6º PEL" }, { "id": 173, "nome": "IURY", "plantao": "INDIA", "pelotao": "3º PEL" }, { "id": 176, "nome": "RHAYSA", "plantao": "INDIA", "pelotao": "1º PEL" }, { "id": 178, "nome": "HIAGO", "plantao": "INDIA", "pelotao": "4º PEL" }, { "id": 186, "nome": "SOUTO", "plantao": "INDIA", "pelotao": "3º PEL" }, { "id": 188, "nome": "ΜΑΧEMBERG", "plantao": "INDIA", "pelotao": "3º PEL" }, { "id": 194, "nome": "KLEVER", "plantao": "INDIA", "pelotao": "5º PEL" }, { "id": 195, "nome": "PETTERSON", "plantao": "INDIA", "pelotao": "2º PEL" }];
+            const DB_KEYS = { alunos: 'sga_alunosDB_v2.3', permutas: 'sga_permutasDB_v2.3', calendario: 'sga_calendarioDB_v2.3' };
+            
+            // --- FUNÇÕES GLOBAIS ---
+            const getDB = (key) => JSON.parse(localStorage.getItem(key) || '[]');
+            const saveDB = (key, data) => localStorage.setItem(key, JSON.stringify(data));
+            
+            function popularDadosIniciais() {
+                let alunos = DADOS_INICIAIS_ALUNOS.map(a => ({ ...a, nomeCompleto: `AL CFO PM ${String(a.id).padStart(2, '0')} ${a.nome}`, punicoes: [] }));
+                saveDB(DB_KEYS.alunos, alunos);
+            }
+
+            function adicionarPunicao(alunoId, data, modalidade, tipo, motivo, sei) {
+                const alunos = getDB(DB_KEYS.alunos);
+                const aluno = alunos.find(a => a.id == alunoId);
+                if (!aluno) return false;
+                aluno.punicoes.push({ 
+                    id: crypto.randomUUID(), 
+                    dataOcorrencia: data, 
+                    modalidade, tipo, motivo, 
+                    sei: sei || '', 
+                    status: 'pendente',
+                    dataAgendamento: null,
+                    turnoAgendamento: null
+                });
+                saveDB(DB_KEYS.alunos, alunos);
+                return true;
+            }
+            
+            function registrarPermuta(idA, dataA, idB, dataB) {
+                let permutas = getDB(DB_KEYS.permutas);
+                permutas.push({ id: Date.now(), idAlunoA: idA, dataA, idAlunoB: idB, dataB });
+                saveDB(DB_KEYS.permutas, permutas);
+                alert('Permuta registrada com sucesso!');
+            }
+
+            function getPlantaoDoDia(aluno, dia, permutas, todosAlunos) {
+                const permuta = permutas.find(p => (p.idAlunoA == aluno.id && p.dataA === dia) || (p.idAlunoB == aluno.id && p.dataB === dia));
+                if (!permuta) return aluno.plantao;
+                const parceiro = todosAlunos.find(a => a.id == (permuta.idAlunoA == aluno.id ? permuta.idAlunoB : permuta.idAlunoA));
+                return parceiro ? parceiro.plantao : aluno.plantao;
+            }
+            
+            function gerarTabelaPunicaoFDS(titulo, punidos, tableId) {
+                if (punidos.length === 0) return `<div class="output-container"><h3>${titulo}</h3><p>Nenhum aluno escalado.</p></div>`;
+                let rows = punidos.sort((a, b) => a.aluno.id - b.aluno.id).map(({aluno, punicao}) => `<tr><td>${String(aluno.id).padStart(2, '0')}</td><td>${aluno.nomeCompleto}</td><td>${aluno.pelotao || ''}</td><td>${punicao.motivo}</td><td></td></tr>`).join('');
+                return `<div class="output-container"><h3>${titulo}</h3><div class="table-wrapper"><table class="sei-table" id="${tableId}"><thead><tr><th>Nº</th><th>NOME COMPLETO</th><th>PELOTÃO/CIA</th><th>TAREFA</th><th>ASSINATURA</th></tr></thead><tbody>${rows}</tbody></table></div><button class="btn-copy" onclick="copyHtmlToClipboard('${tableId}')">Copiar Tabela</button></div>`;
+            }
+
+            window.copyHtmlToClipboard = (elementId) => {
+                const element = document.getElementById(elementId);
+                navigator.clipboard.writeText(element.outerHTML).then(() => alert('Conteúdo copiado com sucesso!'), () => alert('Falha ao copiar.'));
+            }
+
+            function gerarEscalaFimDeSemana() {
+                const dataSabado = document.getElementById('data-sabado-escala').value;
+                const dataDomingo = document.getElementById('data-domingo-escala').value;
+                if (!dataSabado || !dataDomingo) { alert('Por favor, preencha as datas do Sábado e Domingo.'); return; }
+
+                const todosAlunos = getDB(DB_KEYS.alunos), permutas = getDB(DB_KEYS.permutas), calendario = getDB(DB_KEYS.calendario);
+                const plantaoServicoSabado = calendario.find(e => e.date === dataSabado)?.plantao;
+                const plantaoServicoDomingo = calendario.find(e => e.date === dataDomingo)?.plantao;
+
+                if (!plantaoServicoSabado || !plantaoServicoDomingo) { alert('Plantões para Sábado ou Domingo não encontrados. Por favor, cadastre-os na aba "Calendário".'); return; }
+
+                const punidosComExtraclasse = todosAlunos.map(aluno => ({aluno, punicoes: aluno.punicoes.filter(p => p.modalidade === 'extraclasse' && p.status === 'pendente')})).filter(item => item.punicoes.length > 0);
+                if (punidosComExtraclasse.length === 0) { document.getElementById('output-escala-fds').innerHTML = '<p>Nenhuma punição extraclasse pendente para escalar.</p>'; return; }
+
+                const escala = { sabadoManha: [], sabadoTarde: [], domingoManha: [], domingoTarde: [] };
+                const punicoesParaAgendar = [];
+
+                punidosComExtraclasse.forEach(({ aluno, punicoes }) => {
+                    const impedidoSabado = getPlantaoDoDia(aluno, dataSabado, permutas, todosAlunos) === plantaoServicoSabado;
+                    const impedidoDomingo = getPlantaoDoDia(aluno, dataDomingo, permutas, todosAlunos) === plantaoServicoDomingo;
+                    
+                    let slotsDisponiveis = [];
+                    if (!impedidoSabado) { slotsDisponiveis.push('sabadoManha', 'sabadoTarde'); }
+                    if (!impedidoDomingo) {
+                        if (impedidoSabado) { slotsDisponiveis.push('domingoTarde'); } 
+                        else { slotsDisponiveis.push('domingoManha', 'domingoTarde'); }
+                    }
+
+                    punicoes.forEach(punicao => {
+                        if (slotsDisponiveis.length > 0) {
+                            const slot = slotsDisponiveis.shift();
+                            escala[slot].push({ aluno, punicao });
+                            const dataAgendamento = slot.includes('sabado') ? dataSabado : dataDomingo;
+                            punicoesParaAgendar.push({ punicaoId: punicao.id, dataAgendamento, turnoAgendamento: slot });
+                        }
+                    });
+                });
+                
+                document.getElementById('output-escala-fds').innerHTML = `${gerarTabelaPunicaoFDS('SÁBADO - MANHÃ (07:00 - 12:00)', escala.sabadoManha, 'escala-sab-manha')} ${gerarTabelaPunicaoFDS('SÁBADO - TARDE (13:00 - 17:00)', escala.sabadoTarde, 'escala-sab-tarde')} ${gerarTabelaPunicaoFDS('DOMINGO - MANHÃ (07:00 - 12:00)', escala.domingoManha, 'escala-dom-manha')} ${gerarTabelaPunicaoFDS('DOMINGO - TARDE (13:00 - 17:00)', escala.domingoTarde, 'escala-dom-tarde')}`;
+
+                if (punicoesParaAgendar.length > 0 && confirm(`Escala gerada para ${punicoesParaAgendar.length} punições. Deseja marcar estas punições como 'AGENDADAS'?`)) {
+                    todosAlunos.forEach(aluno => {
+                        aluno.punicoes.forEach(p => {
+                            const agendamento = punicoesParaAgendar.find(item => item.punicaoId === p.id);
+                            if (agendamento) {
+                                p.status = 'agendada';
+                                p.dataAgendamento = agendamento.dataAgendamento;
+                                p.turnoAgendamento = agendamento.turnoAgendamento;
+                            }
+                        });
+                    });
+                    saveDB(DB_KEYS.alunos, todosAlunos);
+                    alert('Punições foram marcadas como agendadas.');
+                    renderizarUI();
+                }
+            }
+            
+            // --- CORREÇÃO: LÓGICA DE CÁLCULO PREDITIVO E VISÃO GERAL (v2.3) ---
+            function calcularPrevisaoSequencial(aluno, punicoesPendentes) {
+                const todosAlunos = getDB(DB_KEYS.alunos);
+                const permutas = getDB(DB_KEYS.permutas);
+                const calendario = getDB(DB_KEYS.calendario).sort((a, b) => new Date(a.date) - new Date(b.date));
+
+                let previsoes = [];
+                let punicoesParaAgendar = [...punicoesPendentes].sort((a, b) => new Date(a.dataOcorrencia) - new Date(b.dataOcorrencia));
+                let proximaDataDisponivel = new Date(punicoesParaAgendar[0].dataOcorrencia + 'T03:00:00');
+
+                for (const punicao of punicoesParaAgendar) {
+                    let slotEncontrado = false;
+                    let dataDeBusca = new Date(proximaDataDisponivel);
+
+                    for (let i = 0; i < 52 && !slotEncontrado; i++) {
+                        while (dataDeBusca.getDay() !== 6) {
+                            dataDeBusca.setDate(dataDeBusca.getDate() + 1);
+                        }
+
+                        const dataSabadoStr = dataDeBusca.toISOString().split('T')[0];
+                        const dataDomingo = new Date(dataDeBusca);
+                        dataDomingo.setDate(dataDomingo.getDate() + 1);
+                        const dataDomingoStr = dataDomingo.toISOString().split('T')[0];
+                        
+                        const plantaoServicoSabado = calendario.find(e => e.date === dataSabadoStr)?.plantao;
+                        const plantaoServicoDomingo = calendario.find(e => e.date === dataDomingoStr)?.plantao;
+
+                        if (plantaoServicoSabado && plantaoServicoDomingo) {
+                            const impedidoSabado = getPlantaoDoDia(aluno, dataSabadoStr, permutas, todosAlunos) === plantaoServicoSabado;
+                            const impedidoDomingo = getPlantaoDoDia(aluno, dataDomingoStr, permutas, todosAlunos) === plantaoServicoDomingo;
+
+                            const slotsFDS = [];
+                            if (!impedidoSabado) {
+                                slotsFDS.push({ data: dataSabadoStr, turno: 'Manhã' });
+                                slotsFDS.push({ data: dataSabadoStr, turno: 'Tarde' });
+                            }
+                            if (!impedidoDomingo) {
+                                if (impedidoSabado) {
+                                    slotsFDS.push({ data: dataDomingoStr, turno: 'Tarde' });
+                                } else {
+                                    slotsFDS.push({ data: dataDomingoStr, turno: 'Manhã' });
+                                    slotsFDS.push({ data: dataDomingoStr, turno: 'Tarde' });
+                                }
+                            }
+                            
+                            const slotsValidos = slotsFDS.filter(slot => {
+                                const horaTurno = (slot.turno === 'Manhã') ? 7 : 13;
+                                const dataTurno = new Date(`${slot.data}T${String(horaTurno).padStart(2, '0')}:00:00`);
+                                return dataTurno >= proximaDataDisponivel;
+                            });
+
+                            if (slotsValidos.length > 0) {
+                                const slotAlocado = slotsValidos[0];
+                                previsoes.push({ punicao, previsao: slotAlocado });
+                                slotEncontrado = true;
+                                
+                                let dataDoSlot = new Date(slotAlocado.data + 'T03:00:00');
+                                if (slotAlocado.turno === 'Manhã') {
+                                    proximaDataDisponivel = new Date(`${slotAlocado.data}T13:00:00`);
+                                } else {
+                                    dataDoSlot.setDate(dataDoSlot.getDate() + 1);
+                                    proximaDataDisponivel = new Date(`${dataDoSlot.toISOString().split('T')[0]}T07:00:00`);
+                                }
+                            }
+                        }
+                        if (!slotEncontrado) {
+                            dataDeBusca.setDate(dataDeBusca.getDate() + 7);
+                        }
+                    }
+                    if (!slotEncontrado) {
+                        previsoes.push({ punicao, previsao: { data: 'Pendente', turno: 'Verificar Calendário' } });
+                    }
+                }
+                return previsoes;
+            }
+
+            function gerarVisaoGeral() {
+                const mes = document.getElementById('select-mes-visao').value;
+                const ano = document.getElementById('select-ano-visao').value;
+                if(!mes || !ano) { alert("Por favor, selecione o Mês e o Ano."); return; }
+
+                const todosAlunos = getDB(DB_KEYS.alunos);
+                const outputDiv = document.getElementById('output-visao-geral');
+                let visaoGeralLista = [];
+
+                todosAlunos.forEach(aluno => {
+                    const punicoesDoMes = aluno.punicoes.filter(p => {
+                        const dataOcorrencia = new Date(p.dataOcorrencia + 'T03:00:00');
+                        return p.modalidade === 'extraclasse' && dataOcorrencia.getFullYear() == ano && dataOcorrencia.getMonth() == mes;
+                    });
+
+                    if (punicoesDoMes.length > 0) {
+                        const punicoesPendentes = punicoesDoMes.filter(p => p.status === 'pendente');
+                        const punicoesNaoPendentes = punicoesDoMes.filter(p => p.status !== 'pendente');
+
+                        if(punicoesPendentes.length > 0) {
+                            const previsoes = calcularPrevisaoSequencial(aluno, punicoesPendentes);
+                            previsoes.forEach(({ punicao, previsao }) => {
+                                visaoGeralLista.push({alunoId: aluno.id, punicaoId: punicao.id, alunoNome: aluno.nomeCompleto, motivo: punicao.motivo, dataOcorrencia: punicao.dataOcorrencia, dataCumprimento: previsao.data, turno: previsao.turno, status: 'pendente' });
+                            });
+                        }
+                        
+                        punicoesNaoPendentes.forEach(punicao => {
+                            visaoGeralLista.push({alunoId: aluno.id, punicaoId: punicao.id, alunoNome: aluno.nomeCompleto, motivo: punicao.motivo, dataOcorrencia: punicao.dataOcorrencia, dataCumprimento: punicao.dataAgendamento, turno: punicao.turnoAgendamento, status: punicao.status });
+                        });
+                    }
+                });
+                
+                if (visaoGeralLista.length === 0) { outputDiv.innerHTML = '<p>Nenhuma punição extraclasse registrada para este mês.</p>'; return; }
+
+                visaoGeralLista.sort((a,b) => a.alunoNome.localeCompare(b.alunoNome) || new Date(a.dataOcorrencia) - new Date(b.dataOcorrencia));
+
+                let rows = visaoGeralLista.map(item => {
+                    const isPendente = item.status === 'pendente';
+                    const dataValida = item.dataCumprimento && item.dataCumprimento !== 'Pendente';
+
+                    return `
+                    <tr class="visao-geral-row" data-aluno-nome="${item.alunoNome.toLowerCase()}">
+                        <td>${item.alunoNome}</td>
+                        <td>${new Date(item.dataOcorrencia + 'T03:00:00').toLocaleDateString('pt-BR')}</td>
+                        <td>${item.motivo}</td>
+                        <td><input type="date" id="visao-data-${item.punicaoId}" value="${dataValida ? item.dataCumprimento : ''}" ${!isPendente ? 'disabled' : ''}></td>
+                        <td>
+                            <select id="visao-turno-${item.punicaoId}" ${!isPendente ? 'disabled' : ''}>
+                                <option value="Manhã" ${item.turno === 'Manhã' ? 'selected' : ''}>Manhã</option>
+                                <option value="Tarde" ${item.turno === 'Tarde' ? 'selected' : ''}>Tarde</option>
+                            </select>
+                        </td>
+                        <td><span class="status-badge status-${item.status}">${item.status.toUpperCase()}</span></td>
+                        <td>
+                            ${isPendente ? `<button class="btn-small" onclick="salvarPrevisaoEditada(${item.alunoId}, '${item.punicaoId}')">Salvar</button>` : ''}
+                            <button class="btn-small btn-secondary" onclick="abrirModalAluno(${item.alunoId})">Gerenciar</button>
+                        </td>
+                    </tr>`;
+                }).join('');
+                
+                outputDiv.innerHTML = `<div class="form-grupo"><label for="filtro-visao-geral">Filtrar por Aluno:</label><input type="search" id="filtro-visao-geral" onkeyup="filtrarVisaoGeral()"></div><div class="table-wrapper"><table class="sei-table" id="tabela-visao-geral"><thead><tr><th>Aluno</th><th>Ocorrência</th><th>Motivo</th><th>Previsão de Cumprimento</th><th>Turno</th><th>Status</th><th>Ações</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+            }
+
+            window.salvarPrevisaoEditada = (alunoId, punicaoId) => {
+                const novaData = document.getElementById(`visao-data-${punicaoId}`).value;
+                const novoTurno = document.getElementById(`visao-turno-${punicaoId}`).value;
+
+                if(!novaData) { alert("Por favor, selecione uma data para salvar."); return; }
+                
+                const alunos = getDB(DB_KEYS.alunos);
+                const aluno = alunos.find(a => a.id == alunoId);
+                const punicao = aluno.punicoes.find(p => p.id === punicaoId);
+
+                if(punicao){
+                    punicao.dataAgendamento = novaData;
+                    punicao.turnoAgendamento = novoTurno;
+                    punicao.status = 'agendada';
+                    saveDB(DB_KEYS.alunos, alunos);
+                    alert("Agendamento manual salvo com sucesso!");
+                    gerarVisaoGeral(); 
+                }
+            }
+
+            window.filtrarVisaoGeral = () => {
+                const filtro = document.getElementById('filtro-visao-geral').value.toLowerCase();
+                const linhas = document.querySelectorAll('#tabela-visao-geral tbody tr');
+                linhas.forEach(linha => {
+                    const nomeAluno = linha.dataset.alunoNome;
+                    if(nomeAluno.includes(filtro)){
+                        linha.style.display = '';
+                    } else {
+                        linha.style.display = 'none';
+                    }
+                });
+            }
+
+            window.mostrarTab = (tabId) => {
+                document.querySelectorAll('.tab-content, .tab-button').forEach(el => el.classList.remove('active'));
+                document.getElementById(tabId).classList.add('active');
+                document.querySelector(`.tab-button[onclick="mostrarTab('${tabId}')"]`).classList.add('active');
+            }
+            
+            function renderizarUI(searchTerm = '') {
+                const alunos = getDB(DB_KEYS.alunos);
+                const listaAlunosDiv = document.getElementById('lista-alunos');
+                
+                if(listaAlunosDiv) {
+                    listaAlunosDiv.innerHTML = '';
+                    const termoBusca = searchTerm.toLowerCase();
+                    const alunosFiltrados = alunos.filter(a => a.nomeCompleto.toLowerCase().includes(termoBusca));
+                    alunosFiltrados.sort((a,b) => a.id - b.id).forEach(aluno => {
+                        const pendentes = aluno.punicoes.filter(p => p.status === 'pendente' || p.status === 'agendada').length;
+                        const card = document.createElement('div');
+                        card.className = 'aluno-card';
+                        card.innerHTML = `<div class="aluno-card-header"><div class="aluno-nome">${aluno.nomeCompleto}</div><button class="btn-small btn-secondary" onclick="event.stopPropagation(); abrirModalParaAdicionarPunicao(${aluno.id})">Adicionar Punição</button></div><small>Plantão: ${aluno.plantao} | Pelotão: ${aluno.pelotao} | Punições Ativas: <strong>${pendentes}</strong></small>`;
+                        card.addEventListener('click', () => abrirModalAluno(aluno.id));
+                        listaAlunosDiv.appendChild(card);
+                    });
+                }
+                renderizarCalendario();
+            }
+
+            function setupSearch(inputId, resultsId, hiddenInputId) {
+                const input = document.getElementById(inputId), resultsDiv = document.getElementById(resultsId), hiddenInput = document.getElementById(hiddenInputId);
+                if (!input) return;
+                input.addEventListener('input', () => {
+                    const term = input.value.toLowerCase(); hiddenInput.value = '';
+                    if (term.length < 1) { resultsDiv.innerHTML = ''; return; }
+                    const filtered = getDB(DB_KEYS.alunos).filter(a => a.nomeCompleto.toLowerCase().includes(term));
+                    resultsDiv.innerHTML = filtered.slice(0, 5).map(aluno => `<div class="result-item" data-id="${aluno.id}">${aluno.nomeCompleto}</div>`).join('');
+                });
+                resultsDiv.addEventListener('click', e => {
+                    if(e.target.classList.contains('result-item')) {
+                        hiddenInput.value = e.target.dataset.id;
+                        input.value = e.target.textContent;
+                        resultsDiv.innerHTML = '';
+                    }
+                });
+            }
+            
+            window.abrirModalAluno = (alunoId) => {
+                const aluno = getDB(DB_KEYS.alunos).find(a => a.id == alunoId); if (!aluno) return;
+                document.getElementById('modal-aluno-nome').textContent = aluno.nomeCompleto;
+                document.getElementById('edit-aluno-id').value = aluno.id;
+                document.getElementById('edit-aluno-plantao').value = aluno.plantao;
+                document.getElementById('edit-aluno-pelotao').value = aluno.pelotao;
+                renderizarPunicoesModal(alunoId);
+                document.getElementById('add-punicao-modal-form').classList.add('hidden');
+                document.getElementById('modal-punicao-data').value = new Date().toISOString().split('T')[0];
+                document.getElementById('modal-punicao-motivo').value = '';
+                document.getElementById('modal-punicao-sei').value = '';
+                document.getElementById('modal-aluno').classList.add('active');
+            }
+            window.fecharModalAluno = () => document.getElementById('modal-aluno').classList.remove('active');
+            
+            window.abrirModalParaAdicionarPunicao = (alunoId) => {
+                abrirModalAluno(alunoId);
+                const form = document.getElementById('add-punicao-modal-form');
+                if (form) form.classList.remove('hidden');
+            };
+
+            window.marcarPunicaoCumprida = (alunoId, punicaoId) => {
+                const alunos = getDB(DB_KEYS.alunos);
+                const aluno = alunos.find(a => a.id == alunoId);
+                const punicao = aluno.punicoes.find(p => p.id === punicaoId);
+                if (punicao) {
+                    if(!punicao.dataAgendamento) {
+                        punicao.dataAgendamento = new Date().toISOString().split('T')[0];
+                    }
+                    punicao.status = 'cumprida';
+                    saveDB(DB_KEYS.alunos, alunos);
+                    renderizarPunicoesModal(alunoId);
+                    renderizarUI(document.getElementById('search-alunos-tab').value);
+                }
+            }
+
+            window.reverterPunicaoParaPendente = (alunoId, punicaoId) => {
+                if (!confirm("Tem certeza que deseja reverter esta punição para 'pendente'?")) return;
+                const alunos = getDB(DB_KEYS.alunos);
+                const aluno = alunos.find(a => a.id == alunoId);
+                const punicao = aluno.punicoes.find(p => p.id === punicaoId);
+                if (punicao) {
+                    punicao.status = 'pendente';
+                    punicao.dataAgendamento = null;
+                    punicao.turnoAgendamento = null;
+                    saveDB(DB_KEYS.alunos, alunos);
+                    renderizarPunicoesModal(alunoId);
+                    renderizarUI(document.getElementById('search-alunos-tab').value);
+                }
+            }
+
+            function renderizarPunicoesModal(alunoId) {
+                const aluno = getDB(DB_KEYS.alunos).find(a => a.id == alunoId); if (!aluno) return;
+                const punicoesList = document.getElementById('modal-punicoes-list');
+                const punicoesOrdenadas = aluno.punicoes.sort((a, b) => {
+                    const order = { 'pendente': 1, 'agendada': 2, 'cumprida': 3 };
+                    return order[a.status] - order[b.status] || new Date(b.dataOcorrencia) - new Date(a.dataOcorrencia);
+                });
+                
+                if (punicoesOrdenadas.length === 0) { punicoesList.innerHTML = '<p>Nenhuma punição registrada.</p>'; return; }
+
+                punicoesList.innerHTML = punicoesOrdenadas.map(p => {
+                    let agendamentoInfo = '';
+                    if (p.status === 'agendada' && p.dataAgendamento) {
+                        agendamentoInfo = `<br><small>Agendada para: ${new Date(p.dataAgendamento + 'T03:00:00').toLocaleDateString('pt-BR')} (${p.turnoAgendamento})</small>`;
+                    } else if (p.status === 'cumprida' && p.dataAgendamento) {
+                        agendamentoInfo = `<br><small>Cumprida em: ${new Date(p.dataAgendamento + 'T03:00:00').toLocaleDateString('pt-BR')}</small>`;
+                    }
+                    let actionButtons = '';
+                    if (p.status !== 'cumprida') actionButtons += `<button type="button" class="btn-small" style="background-color: var(--success-color);" onclick="marcarPunicaoCumprida('${aluno.id}', '${p.id}')">Cumprida</button>`;
+                    if (p.status !== 'pendente') actionButtons += `<button type="button" class="btn-small btn-secondary" onclick="reverterPunicaoParaPendente('${aluno.id}', '${p.id}')">Pendente</button>`;
+                    actionButtons += `<button type="button" class="btn-small btn-danger" onclick="removerPunicao('${aluno.id}', '${p.id}')">Remover</button>`;
+
+                    return `<div class="punicao-list-item"><div class="punicao-info"><div><span>${p.motivo} <strong>(${p.modalidade})</strong> - Ocorrência: ${new Date(p.dataOcorrencia + 'T03:00:00').toLocaleDateString('pt-BR')}</span>${agendamentoInfo}</div><span class="status-badge status-${p.status}">${p.status.toUpperCase()}</span></div><div style="text-align: right; margin-top: 10px;">${actionButtons}</div></div>`;
+                }).join('');
+            }
+
+            window.removerPunicao = (alunoId, punicaoId) => {
+                if (!confirm("Tem certeza que deseja remover esta punição permanentemente?")) return;
+                const alunos = getDB(DB_KEYS.alunos);
+                const aluno = alunos.find(a => a.id == alunoId);
+                aluno.punicoes = aluno.punicoes.filter(p => p.id != punicaoId);
+                saveDB(DB_KEYS.alunos, alunos);
+                renderizarPunicoesModal(alunoId);
+                renderizarUI(document.getElementById('search-alunos-tab').value);
+            }
+
+            function renderizarCalendario() {
+                const calendario = getDB(DB_KEYS.calendario).sort((a,b) => new Date(a.date) - new Date(b.date));
+                const listaDiv = document.getElementById('calendario-lista');
+                if(!listaDiv) return;
+                const diasSemana = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+                listaDiv.innerHTML = calendario.length > 0 ? '' : '<p>Nenhum plantão cadastrado.</p>';
+                calendario.forEach(evento => {
+                    const data = new Date(evento.date + 'T03:00:00');
+                    listaDiv.innerHTML += `<div class="calendario-item"><span><strong>${data.toLocaleDateString('pt-BR')}</strong> (${diasSemana[data.getDay()]}) - Plantão <strong>${evento.plantao}</strong></span><button class="btn-small btn-danger" onclick="removerEventoCalendario('${evento.date}')">Remover</button></div>`;
+                });
+            }
+
+            function adicionarEventoCalendario(date, plantao, showNotification = true) {
+                if (!date || !plantao) { if(showNotification) alert('Data ou plantão inválidos.'); return false; }
+                let calendario = getDB(DB_KEYS.calendario);
+                const existingEntryIndex = calendario.findIndex(e => e.date === date);
+
+                if (existingEntryIndex > -1) { calendario[existingEntryIndex].plantao = plantao; } 
+                else { calendario.push({ date, plantao }); }
+                saveDB(DB_KEYS.calendario, calendario);
+                if (showNotification) alert('Plantão adicionado/atualizado!');
+                return true;
+            }
+            
+            window.removerEventoCalendario = (date) => {
+                if (!confirm('Deseja remover este plantão do calendário?')) return;
+                let calendario = getDB(DB_KEYS.calendario).filter(e => e.date !== date);
+                saveDB(DB_KEYS.calendario, calendario);
+                renderizarCalendario();
+            }
+
+            function handleCalendarioImport(event) {
+                const file = event.target.files[0]; if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+                    const json = XLSX.utils.sheet_to_json(worksheet, { raw: false });
+
+                    let importados = 0, erros = 0;
+                    let calendario = getDB(DB_KEYS.calendario);
+
+                    json.forEach(row => {
+                        const dataCrua = row.DATA;
+                        const plantao = row.PLANTÃO ? String(row.PLANTÃO).toUpperCase() : null;
+
+                        if (dataCrua && plantao) {
+                            try {
+                                const partes = dataCrua.split('/');
+                                if (partes.length === 3) {
+                                    const dia = partes[0].padStart(2, '0');
+                                    const mes = partes[1].padStart(2, '0');
+                                    const ano = partes[2];
+                                    const dataFormatada = `${ano}-${mes}-${dia}`;
+                                    
+                                    const existingEntryIndex = calendario.findIndex(ev => ev.date === dataFormatada);
+                                    if(existingEntryIndex > -1){ calendario[existingEntryIndex].plantao = plantao; } 
+                                    else { calendario.push({ date: dataFormatada, plantao }); }
+                                    importados++;
+                                } else { erros++; }
+                            } catch (error) { erros++; }
+                        } else { erros++; }
+                    });
+                    
+                    saveDB(DB_KEYS.calendario, calendario);
+                    renderizarCalendario();
+                    alert(`${importados} plantões importados/atualizados com sucesso! ${erros > 0 ? `\n${erros} linhas com erro.` : ''}`);
+                    document.getElementById('import-calendario-file').value = '';
+                };
+                reader.readAsArrayBuffer(file);
+            }
+
+            // --- INICIALIZAÇÃO E MONTAGEM DA UI ---
+            document.getElementById('tab-visao-geral').innerHTML = `<h2>Visão Geral Mensal de Punições</h2><div class="instructions"><p>Selecione o mês e o ano para visualizar todas as punições extraclasse que ocorreram nesse período e sua previsão de cumprimento. Você pode editar a previsão de punições pendentes diretamente na tabela.</p></div><div class="grid-2-col"><div class="form-grupo"><label for="select-mes-visao">Mês:</label><select id="select-mes-visao"></select></div><div class="form-grupo"><label for="select-ano-visao">Ano:</label><select id="select-ano-visao"></select></div></div><button type="button" id="btnGerarVisaoGeral">Gerar Relatório</button><div id="output-visao-geral" class="output-container"></div>`;
+            document.getElementById('tab-atas').innerHTML = `<h2>Gerar Atas do Fim de Semana</h2><div class="instructions"><p>Selecione as datas do fim de semana. O sistema usará o calendário de plantões para agendar as punições extraclasse pendentes e gerar as 4 atas separadas.</p></div><div class="grid-2-col"><div class="form-grupo"><label for="data-sabado-escala">Data do Sábado:</label><input type="date" id="data-sabado-escala" required></div><div class="form-grupo"><label for="data-domingo-escala">Data do Domingo:</label><input type="date" id="data-domingo-escala" required></div></div><button type="button" id="btnGerarEscalaFDS">Gerar Atas</button><div id="output-escala-fds"></div>`;
+            document.getElementById('tab-calendario').innerHTML = `<h2>Calendário de Plantões</h2><div class="instructions" style="background-color: #e6f7ff; border-color: #91d5ff;"><p>Importe a escala mensal. Crie um arquivo .xlsx ou .csv com as colunas <strong>DATA</strong> (formato DD/MM/AAAA) e <strong>PLANTÃO</strong>.</p></div><div class="form-grupo"><label for="import-calendario-file">Importar Escala Mensal (.xlsx, .csv):</label><input type="file" id="import-calendario-file" accept=".xlsx, .xls, .csv"></div><hr style="margin: 20px 0;"><h3 style="margin-bottom: 10px;">Adicionar Manualmente</h3><form id="form-calendario"><div class="grid-2-col"><div class="form-grupo"><label for="calendario-data">Data:</label><input type="date" id="calendario-data" required></div><div class="form-grupo"><label for="calendario-plantao">Plantão de Serviço:</label><select id="calendario-plantao"></select></div></div><button type="submit">Adicionar Plantão</button></form><h3 style="margin-top:20px;">Plantões Cadastrados:</h3><div id="calendario-lista"></div>`;
+            document.getElementById('tab-punicao-massa').innerHTML = `<h2>Registrar Punição em Massa</h2><form id="form-punicao-massa"><div class="form-grupo"><label for="selecao-massa-tipo">Selecionar Alunos por:</label><select id="selecao-massa-tipo"><option value="manual">Digitar Nomes/Números</option><option value="plantao">Plantão</option><option value="pelotao">Pelotão</option></select></div><div class="form-grupo hidden" id="grupo-plantao-wrapper"><label for="selecao-massa-plantao">Plantão:</label><select id="selecao-massa-plantao"></select></div><div class="form-grupo hidden" id="grupo-pelotao-wrapper"><label for="selecao-massa-pelotao">Pelotão:</label><select id="selecao-massa-pelotao"></select></div><div class="form-grupo" id="grupo-manual-wrapper"><label for="input-alunos-massa">Nomes ou Números (um por linha):</label><textarea id="input-alunos-massa"></textarea></div><button type="button" class="btn-secondary" id="btn-verificar-massa">Verificar Alunos</button><div class="verification-area hidden" id="verification-area-massa"></div><hr style="margin: 20px 0;"><p><strong>Detalhes da Punição:</strong></p><div class="grid-2-col"><div class="form-grupo"><label for="modalidade-punicao-massa">Modalidade:</label><select id="modalidade-punicao-massa" required><option value="medida">Medida Educativa</option><option value="extraclasse">Extraclasse</option></select></div><div class="form-grupo" id="classificacao-wrapper-massa"><label for="select-tipo-punicao-massa">Classificação:</label><select id="select-tipo-punicao-massa"><option value="" disabled selected>-- Selecione --</option><option value="LEVE">Leve</option><option value="MEDIA">Média</option><option value="GRAVE">Grave</option></select></div></div><div class="form-grupo"><label for="data-punicao-massa">Data da Ocorrência:</label><input type="date" id="data-punicao-massa" required></div><div class="form-grupo"><label for="input-sei-massa">Nº SEI (Opcional):</label><input type="text" id="input-sei-massa"></div><div class="form-grupo"><label for="input-motivo-massa">Motivo da Punição:</label><input type="text" id="input-motivo-massa" required></div><button type="submit" id="btn-aplicar-massa" disabled>Aplicar em Massa</button></form>`;
+            document.getElementById('tab-importar').innerHTML = `<h2>Importar Punições de Planilha</h2><div class="instructions"><p>Envie um arquivo (.xlsx, .xls, .csv) com as colunas: <strong>NumAluno</strong>, <strong>Data</strong> (AAAA-MM-DD), <strong>Modalidade</strong> ('medida' ou 'extraclasse'), <strong>Tipo</strong> ('LEVE', 'MEDIA', 'GRAVE'), <strong>Motivo</strong>, <strong>SEI</strong>.</p></div><div class="form-grupo"><label for="import-file">Selecione o arquivo:</label><input type="file" id="import-file" accept=".xlsx, .xls, .csv"></div><div id="import-preview" class="verification-area hidden"></div><button id="btn-confirm-import" class="hidden">Confirmar Importação</button>`;
+            document.getElementById('tab-permuta').innerHTML = `<h2>Registrar Permuta</h2><form id="form-permuta"><div class="grid-2-col"><div class="form-grupo"><label for="search-aluno-a">Aluno A (sai do serviço):</label><div class="search-container"><input type="text" id="search-aluno-a" required><div class="search-results" id="results-a"></div><input type="hidden" id="selected-aluno-a"></div><label for="data-permuta-a" style="margin-top:10px;">Data do Serviço de A:</label><input type="date" id="data-permuta-a" required></div><div class="form-grupo"><label for="search-aluno-b">Aluno B (entra no serviço):</label><div class="search-container"><input type="text" id="search-aluno-b" required><div class="search-results" id="results-b"></div><input type="hidden" id="selected-aluno-b"></div><label for="data-permuta-b" style="margin-top:10px;">Data do Serviço de B:</label><input type="date" id="data-permuta-b" required></div></div><button type="submit">Confirmar Permuta</button></form><h3 style="margin-top:30px;">Permutas Ativas</h3><div id="lista-permutas"></div>`;
 
             if (getDB(DB_KEYS.alunos).length === 0) { popularDadosIniciais(); alert('Bem-vindo! A lista de alunos foi carregada pela primeira vez.'); }
-            const today = new Date().toISOString().split('T')[0];
-            ['data-punicao', 'data-punicao-massa', 'data-servico'].forEach(id => document.getElementById(id).value = today);
+            const today = new Date();
+            const todayStr = today.toISOString().split('T')[0];
+            ['data-punicao', 'data-punicao-massa', 'calendario-data'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).value = todayStr; });
+
+            const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+            document.getElementById('select-mes-visao').innerHTML = meses.map((mes, index) => `<option value="${index}">${mes}</option>`).join('');
+            document.getElementById('select-mes-visao').value = today.getMonth();
+            const anoAtual = today.getFullYear();
+            let anosOptions = '';
+            for(let i = anoAtual - 2; i <= anoAtual + 2; i++) { anosOptions += `<option value="${i}">${i}</option>`; }
+            document.getElementById('select-ano-visao').innerHTML = anosOptions;
+            document.getElementById('select-ano-visao').value = anoAtual;
+
+            const plantoes = [...new Set(DADOS_INICIAIS_ALUNOS.map(a => a.plantao))].sort();
+            const pelotoes = [...new Set(DADOS_INICIAIS_ALUNOS.map(a => a.pelotao))].sort();
+            ['selecao-massa-plantao', 'edit-aluno-plantao', 'calendario-plantao'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).innerHTML = plantoes.map(p => `<option value="${p}">${p}</option>`).join(''); });
+            ['selecao-massa-pelotao', 'edit-aluno-pelotao'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).innerHTML = pelotoes.map(p => `<option value="${p}">${p}</option>`).join(''); });
 
             renderizarUI();
             setupSearch('search-aluno-punicao', 'results-punicao', 'selected-aluno-punicao');
             setupSearch('search-aluno-a', 'results-a', 'selected-aluno-a');
             setupSearch('search-aluno-b', 'results-b', 'selected-aluno-b');
             
-            const plantoes = [...new Set(DADOS_INICIAIS_ALUNOS.map(a => a.plantao))];
-            const pelotoes = [...new Set(DADOS_INICIAIS_ALUNOS.map(a => a.pelotao))];
-            ['selecao-massa-plantao', 'edit-aluno-plantao'].forEach(id => document.getElementById(id).innerHTML = plantoes.map(p => `<option value="${p}">${p}</option>`).join(''));
-            ['selecao-massa-pelotao', 'edit-aluno-pelotao'].forEach(id => document.getElementById(id).innerHTML = pelotoes.sort().map(p => `<option value="${p}">${p}</option>`).join(''));
-
             // --- LISTENERS ---
-            document.getElementById('btnGerarRelatorio').addEventListener('click', gerarRelatorio);
-            document.getElementById('btnGerarAtas').addEventListener('click', () => {
-                if (getDB(DB_KEYS.alunos).flatMap(a => a.punicoes).filter(p=>p.status==='pendente').length === 0) { alert("Não há punições pendentes para gerar atas."); return; }
-                gerarAtas();
-            });
+            document.getElementById('btnGerarVisaoGeral').addEventListener('click', gerarVisaoGeral);
+            document.getElementById('import-calendario-file').addEventListener('change', handleCalendarioImport);
+            document.getElementById('btnGerarEscalaFDS').addEventListener('click', gerarEscalaFimDeSemana);
+            document.getElementById('form-calendario').addEventListener('submit', (e) => { e.preventDefault(); adicionarEventoCalendario(document.getElementById('calendario-data').value, document.getElementById('calendario-plantao').value); renderizarCalendario(); });
             document.getElementById('search-alunos-tab').addEventListener('input', (e) => renderizarUI(e.target.value));
-            document.getElementById('form-edit-aluno').addEventListener('submit', (e) => {
-                e.preventDefault();
-                const alunoId = document.getElementById('edit-aluno-id').value;
-                const novoPlantao = document.getElementById('edit-aluno-plantao').value;
-                const novoPelotao = document.getElementById('edit-aluno-pelotao').value;
-                const alunos = getDB(DB_KEYS.alunos);
-                const alunoIndex = alunos.findIndex(a => a.id == alunoId);
-                if (alunoIndex > -1) {
-                    alunos[alunoIndex].plantao = novoPlantao;
-                    alunos[alunoIndex].pelotao = novoPelotao;
-                    saveDB(DB_KEYS.alunos, alunos);
-                    alert('Aluno atualizado com sucesso!');
-                    fecharModalAluno();
-                    renderizarUI(document.getElementById('search-alunos-tab').value);
-                }
-            });
+            document.getElementById('form-edit-aluno').addEventListener('submit', (e) => { e.preventDefault(); const alunoId = document.getElementById('edit-aluno-id').value; const alunos = getDB(DB_KEYS.alunos); const alunoIndex = alunos.findIndex(a => a.id == alunoId); if (alunoIndex > -1) { alunos[alunoIndex].plantao = document.getElementById('edit-aluno-plantao').value; alunos[alunoIndex].pelotao = document.getElementById('edit-aluno-pelotao').value; saveDB(DB_KEYS.alunos, alunos); alert('Aluno atualizado!'); fecharModalAluno(); renderizarUI(document.getElementById('search-alunos-tab').value); } });
             document.getElementById('modal-aluno').addEventListener('click', (e) => { if(e.target === e.currentTarget) fecharModalAluno(); });
-            document.getElementById('form-punicao').addEventListener('submit', e => { e.preventDefault(); const modalidade = document.getElementById('modalidade-punicao').value; const alunoId = document.getElementById('selected-aluno-punicao').value; const data = document.getElementById('data-punicao').value; const tipo = (modalidade === 'medida') ? document.getElementById('select-tipo-punicao').value : null; const motivo = document.getElementById('input-motivo-custom').value.trim() || document.getElementById('select-motivo-punicao').value; const sei = document.getElementById('input-sei').value; if (!alunoId || !data || !modalidade || !motivo || (modalidade === 'medida' && !tipo)) { alert('Preencha todos os campos obrigatórios.'); return; } adicionarPunicao(alunoId, data, modalidade, tipo, motivo, sei); e.target.reset(); document.getElementById('selected-aluno-punicao').value = ''; document.getElementById('data-punicao').value = new Date().toISOString().split('T')[0]; renderizarUI(); });
-            document.getElementById('btn-verificar-massa').addEventListener('click', () => { const tipoSelecao = document.getElementById('selecao-massa-tipo').value; const todosAlunos = getDB(DB_KEYS.alunos); let selecionados = new Set(); let naoEncontrados = []; if (tipoSelecao === 'manual') { const entradas = document.getElementById('input-alunos-massa').value.split('\n').filter(Boolean); entradas.forEach(entrada => { const termo = entrada.trim().toLowerCase(); const encontrado = todosAlunos.find(a => String(a.id) === termo || a.nome.toLowerCase().includes(termo) || a.nomeCompleto.toLowerCase().includes(termo)); if (encontrado) selecionados.add(encontrado); else naoEncontrados.push(entrada); }); } else { const valorGrupo = document.getElementById(`selecao-massa-${tipoSelecao}`).value; todosAlunos.forEach(a => { if (tipoSelecao === 'companhia' || a[tipoSelecao] === valorGrupo) selecionados.add(a); }); } const verificationArea = document.getElementById('verification-area-massa'); alunosVerificadosMassa = [...selecionados].map(a => a.id); verificationArea.classList.remove('hidden'); verificationArea.innerHTML = `<strong>${alunosVerificadosMassa.length} alunos verificados:</strong><br><small>${[...selecionados].map(a=>a.nomeCompleto).join(', ')}</small>`; if (naoEncontrados.length > 0) verificationArea.innerHTML += `<br><strong style="color:red;">Não encontrados:</strong><br><small>${naoEncontrados.join(', ')}</small>`; document.getElementById('btn-aplicar-massa').disabled = alunosVerificadosMassa.length === 0; });
-            document.getElementById('form-punicao-massa').addEventListener('submit', e => { e.preventDefault(); const modalidade = document.getElementById('modalidade-punicao-massa').value; const data = document.getElementById('data-punicao-massa').value; const tipo = (modalidade === 'medida') ? document.getElementById('select-tipo-punicao-massa').value : null; const motivo = document.getElementById('input-motivo-massa').value; const sei = document.getElementById('input-sei-massa').value; if (alunosVerificadosMassa.length === 0 || !data || !modalidade || !motivo || (modalidade === 'medida' && !tipo)) { alert('Verifique os alunos e preencha todos os detalhes da punição.'); return; } let count = alunosVerificadosMassa.reduce((acc, id) => acc + (adicionarPunicao(id, data, modalidade, tipo, motivo, sei) ? 1 : 0), 0); alert(`${count} punições em massa adicionadas com sucesso!`); e.target.reset(); document.getElementById('verification-area-massa').classList.add('hidden'); document.getElementById('btn-aplicar-massa').disabled = true; alunosVerificadosMassa = []; renderizarUI(); });
+            document.getElementById('form-punicao-massa').addEventListener('submit', e => { e.preventDefault(); const modalidade = document.getElementById('modalidade-punicao-massa').value; const data = document.getElementById('data-punicao-massa').value; const tipo = (modalidade === 'medida') ? document.getElementById('select-tipo-punicao-massa').value : null; const motivo = document.getElementById('input-motivo-massa').value; const sei = document.getElementById('input-sei-massa').value; if (alunosVerificadosMassa.length === 0 || !data || !motivo || (modalidade === 'medida' && !tipo)) { alert('Verifique os alunos e preencha todos os detalhes.'); return; } let count = alunosVerificadosMassa.reduce((acc, id) => acc + (adicionarPunicao(id, data, modalidade, tipo, motivo, sei) ? 1 : 0), 0); alert(`${count} punições adicionadas!`); e.target.reset(); document.getElementById('verification-area-massa').classList.add('hidden'); document.getElementById('btn-aplicar-massa').disabled = true; alunosVerificadosMassa = []; renderizarUI(document.getElementById('search-alunos-tab').value); });
             document.getElementById('form-permuta').addEventListener('submit', e => { e.preventDefault(); const idA = document.getElementById('selected-aluno-a').value, dataA = document.getElementById('data-permuta-a').value; const idB = document.getElementById('selected-aluno-b').value, dataB = document.getElementById('data-permuta-b').value; if (!idA || !idB || !dataA || !dataB || idA === idB) { alert("Selecione dois alunos e datas diferentes."); return; } registrarPermuta(idA, dataA, idB, dataB); e.target.reset(); renderizarUI(); });
-            ['modalidade-punicao', 'modalidade-punicao-massa'].forEach(id => { document.getElementById(id).addEventListener('change', e => { const isMassa = id.includes('massa'); document.getElementById(isMassa ? 'classificacao-wrapper-massa' : 'classificacao-wrapper').classList.toggle('hidden', e.target.value === 'extraclasse'); if (!isMassa) { const selectMotivo = document.getElementById('select-motivo-punicao'); selectMotivo.innerHTML = (e.target.value === 'extraclasse') ? '<option value="Motivo extraclasse">Motivo extraclasse</option>' : '<option value="">-- Selecione o tipo --</option>'; } }); });
-            document.getElementById('select-tipo-punicao').addEventListener('change', e => { const selectMotivo = document.getElementById('select-motivo-punicao'); const tipo = e.target.value; if(document.getElementById('modalidade-punicao').value === 'medida' && TRANSGRESSOES[tipo]) { selectMotivo.innerHTML = TRANSGRESSOES[tipo].map(m => `<option value="${m}">${m}</option>`).join(''); } });
-            document.getElementById('selecao-massa-tipo').addEventListener('change', e => { document.getElementById('grupo-manual-wrapper').classList.toggle('hidden', e.target.value !== 'manual'); document.getElementById('grupo-plantao-wrapper').classList.toggle('hidden', e.target.value !== 'plantao'); document.getElementById('grupo-pelotao-wrapper').classList.toggle('hidden', e.target.value !== 'pelotao'); });
-            document.getElementById('import-file').addEventListener('change', (e) => { const file = e.target.files[0]; const reader = new FileReader(); reader.onload = (event) => { const data = new Uint8Array(event.target.result); const workbook = XLSX.read(data, {type: 'array'}); const sheetName = workbook.SheetNames[0]; const worksheet = workbook.Sheets[sheetName]; const json = XLSX.utils.sheet_to_json(worksheet); const previewDiv = document.getElementById('import-preview'); const confirmBtn = document.getElementById('btn-confirm-import'); const todosAlunos = getDB(DB_KEYS.alunos); punicoesImportadas = []; let previewHtml = '<h4>Punições a serem importadas:</h4><ul>'; let erros = 0; json.forEach(row => { const aluno = todosAlunos.find(a => a.id == row.NumAluno); if(aluno) { punicoesImportadas.push({alunoId: aluno.id, data: row.Data, modalidade: row.Modalidade, tipo: row.Tipo, motivo: row.Motivo, sei: row.SEI}); previewHtml += `<li><strong>${aluno.nomeCompleto}:</strong> ${row.Motivo} (${row.Modalidade})</li>`; } else { erros++; previewHtml += `<li style="color:red;"><strong>Aluno com Nº ${row.NumAluno} não encontrado.</strong></li>`; } }); previewHtml += '</ul>'; if (erros > 0) previewHtml += `<p style="color:red;"><strong>${erros} linhas não puderam ser processadas.</strong></p>`; previewDiv.innerHTML = previewHtml; previewDiv.classList.remove('hidden'); if (punicoesImportadas.length > 0) confirmBtn.classList.remove('hidden'); }; reader.readAsArrayBuffer(file); });
-            document.getElementById('btn-confirm-import').addEventListener('click', () => { if(punicoesImportadas.length === 0) { alert("Nenhuma punição válida para importar."); return; } let count = 0; punicoesImportadas.forEach(p => { if (adicionarPunicao(p.alunoId, p.data, p.modalidade, p.tipo, p.motivo, p.sei)) count++; }); alert(`${count} punições importadas com sucesso!`); document.getElementById('import-preview').classList.add('hidden'); document.getElementById('btn-confirm-import').classList.add('hidden'); document.getElementById('import-file').value = ''; punicoesImportadas = []; renderizarUI(); });
-            document.getElementById('btnLimparDB').addEventListener('click', () => { if (confirm('TEM CERTEZA? Isso vai apagar TODAS as punições e permutas, e recarregar a lista original.')) { Object.values(DB_KEYS).forEach(key => localStorage.removeItem(key)); popularDadosIniciais(); alert('Dados limpos e recarregados.'); renderizarUI(); } });
-            document.addEventListener('click', e => { if (!e.target.closest('.search-container')) { document.querySelectorAll('.search-results').forEach(div => div.innerHTML = ''); } });
+            ['modalidade-punicao', 'modalidade-punicao-massa'].forEach(id => { document.getElementById(id).addEventListener('change', e => { const isMassa = id.includes('massa'); document.getElementById(isMassa ? 'classificacao-wrapper-massa' : 'classificacao-wrapper').classList.toggle('hidden', e.target.value === 'extraclasse'); }); });
             document.getElementById('btn-toggle-add-punicao-modal').addEventListener('click', () => { document.getElementById('add-punicao-modal-form').classList.toggle('hidden'); });
             document.getElementById('modal-punicao-modalidade').addEventListener('change', (e) => { document.getElementById('modal-punicao-classificacao-wrapper').classList.toggle('hidden', e.target.value === 'extraclasse'); });
-            document.getElementById('btn-salvar-punicao-modal').addEventListener('click', () => { const alunoId = document.getElementById('edit-aluno-id').value; const modalidade = document.getElementById('modal-punicao-modalidade').value; const tipo = (modalidade === 'medida') ? document.getElementById('modal-punicao-tipo').value : null; const data = document.getElementById('modal-punicao-data').value; const motivo = document.getElementById('modal-punicao-motivo').value; const sei = document.getElementById('modal-punicao-sei').value; if (!motivo || !data) { alert('Preencha a data e o motivo da punição.'); return; } if (adicionarPunicao(alunoId, data, modalidade, tipo, motivo, sei)) { alert('Punição adicionada com sucesso!'); document.getElementById('add-punicao-modal-form').classList.add('hidden'); document.getElementById('modal-punicao-motivo').value = ''; document.getElementById('modal-punicao-sei').value = ''; document.getElementById('modal-punicao-data').value = new Date().toISOString().split('T')[0]; renderizarPunicoesModal(alunoId); renderizarUI(document.getElementById('search-alunos-tab').value); } });
+            document.getElementById('btn-salvar-punicao-modal').addEventListener('click', () => { const alunoId = document.getElementById('edit-aluno-id').value; const modalidade = document.getElementById('modal-punicao-modalidade').value; const tipo = (modalidade === 'medida') ? document.getElementById('modal-punicao-tipo').value : null; const data = document.getElementById('modal-punicao-data').value; const motivo = document.getElementById('modal-punicao-motivo').value; const sei = document.getElementById('modal-punicao-sei').value; if (!motivo || !data) { alert('Preencha data e motivo.'); return; } if (adicionarPunicao(alunoId, data, modalidade, tipo, motivo, sei)) { alert('Punição adicionada!'); document.getElementById('add-punicao-modal-form').classList.add('hidden'); document.getElementById('modal-punicao-motivo').value = ''; renderizarPunicoesModal(alunoId); renderizarUI(document.getElementById('search-alunos-tab').value); } });
+            document.getElementById('btnLimparDB').addEventListener('click', () => { if (confirm('TEM CERTEZA? Isso vai apagar TUDO e recarregar a lista original.')) { Object.values(DB_KEYS).forEach(key => localStorage.removeItem(key)); popularDadosIniciais(); alert('Dados limpos e recarregados.'); renderizarUI(); } });
+            document.addEventListener('click', e => { if (!e.target.closest('.search-container')) { document.querySelectorAll('.search-results').forEach(div => div.innerHTML = ''); } });
         });
     </script>
 </body>
