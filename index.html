@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Ata de Punição</title>
+    <title>Agendador de Punições (Versão Offline Definitiva)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -28,20 +28,19 @@
             width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);
             box-sizing: border-box; background-color: var(--bg-secondary); color: var(--text-primary);
             font-family: 'Poppins', sans-serif; font-size: 16px; transition: border-color 0.2s, box-shadow 0.2s;
-            resize: none; /* <-- CORREÇÃO: Impede redimensionamento */
+            resize: none; /* <-- CORRIGIDO: Impede redimensionamento */
         }
         input:focus, textarea:focus, select:focus {
             outline: none; border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(0, 74, 145, 0.2);
         }
-        .grid-container-4col { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 20px; }
+        .grid-container-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .button-primary {
-            display: inline-block; padding: 12px 24px; background-color: var(--accent-blue);
-            color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;
-            margin-top: 20px; transition: background-color 0.2s, transform 0.2s;
+            display: block; width: 100%; padding: 16px; background-color: var(--accent-blue);
+            color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: 600; cursor: pointer;
+            margin-top: 25px; transition: background-color 0.2s, transform 0.2s;
         }
         .button-primary:hover { background-color: var(--accent-blue-light); transform: translateY(-2px); }
         
-        /* Tabela de Saída */
         #output-container h3 { font-size: 1.5rem; color: var(--accent-blue); margin-top: 30px; margin-bottom: 15px; }
         .punishment-table {
             width: 100%; border-collapse: collapse; font-size: 0.9em; background-color: var(--bg-primary);
@@ -61,53 +60,48 @@
 
         #status { text-align: center; font-weight: 500; font-size: 1.1rem; padding: 10px; }
         
-        @media (max-width: 900px) { .grid-container-4col { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 900px) { .grid-container-2col { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
 <div class="page-container">
-    <h1>Gerador de Ata de Punição</h1>
+    <h1>Agendador de Punições (Versão Offline)</h1>
 
     <div class="card">
-        <h2>1. Informações da Ata</h2>
-        <div class="grid-container-4col">
-            <div>
-                <label for="ata_data">Data da Atividade:</label>
-                <input type="text" id="ata_data" value="25 de OUTUBRO de 2025">
-            </div>
-            <div>
-                <label for="ata_turno">Turno da Atividade:</label>
-                <input type="text" id="ata_turno" value="SÁBADO - TARDE">
-            </div>
-        </div>
+        <h2>1. Selecione o Fim de Semana</h2>
+        <label for="data_sabado">Selecione o Sábado da Punição:</label>
+        <select id="data_sabado">
+            <option value="2025-11-08">Sábado, 08 de Novembro de 2025</option>
+            <option value="2025-11-15">Sábado, 15 de Novembro de 2025</option>
+            <option value="2025-11-22">Sábado, 22 de Novembro de 2025</option>
+            <option value="2025-11-29">Sábado, 29 de Novembro de 2025</option>
+        </select>
+        <p style="color: var(--text-secondary); margin-top: 15px; font-size: 0.9em;">
+            O sistema buscará automaticamente quem está de Plantão, Adjunto e Sobreaviso.
+        </p>
     </div>
     
     <div class="card">
-        <h2>2. Adicionar Punido</h2>
-        <div class="grid-container-4col">
+        <h2>2. Listas Variáveis</h2>
+        <div class="grid-container-2col">
             <div>
-                <label for="p_numero">Nº do Aluno:</label>
-                <input type="number" id="p_numero" placeholder="Ex: 11">
+                <label for="lista_permutas">Alunos em Permuta (Um por linha)</label>
+                <textarea id="lista_permutas" rows="10" placeholder="AL CFO PM 01 NOME A..."></textarea>
             </div>
             <div>
-                <label for="p_data_relatorio">Data do Relatório:</label>
-                <input type="text" id="p_data_relatorio" placeholder="Ex: 28/08/2025">
-            </div>
-            <div>
-                <label for="p_sei">Nº SEI:</label>
-                <input type="text" id="p_sei" placeholder="Ex: 75107489">
-            </div>
-            <div>
-                <label for="p_resumo">Resumo:</label>
-                <input type="text" id="p_resumo" placeholder="Ex: FAIXA AMASSADA">
+                <label for="lista_punidos_tsv">Lista de Punição (Copie da planilha)</label>
+                <textarea id="lista_punidos_tsv" rows="10" placeholder="Ex: 34 28/08/2025 83201291 faixa amassada..."></textarea>
+                <small style="color: var(--text-secondary);">Cole os dados no formato: Nº (espaço) Data (espaço) SEI (espaço) Resumo</small>
             </div>
         </div>
-        <button class="button-primary" onclick="adicionarPunido()">Adicionar Aluno</button>
     </div>
 
+    <button class="button-primary" onclick="agendar()">Agendar Punições</button>
+    <div id="status"></div>
+
     <div class="card">
-        <h2>3. Ata Pronta (Copiar e Colar no SEI)</h2>
+        <h2>3. Resultado Final (Agenda)</h2>
         <div id="output-container">
             </div>
     </div>
@@ -304,71 +298,301 @@
         197: {"nome": "ISRAEL OLIVEIRA", "plantao": "HOTEL", "pelotao": "4º PEL/2ª CIA"},
     };
 
+    function formatarNomeAluno(num, nome) {
+        return `AL CFO PM ${String(num).padStart(2, '0')} ${nome.trim().toUpperCase()}`;
+    }
+
+    // Preenche as listas de plantão a partir do DB Mestre
+    const LISTAS_PLANTOES = { "NENHUM": new Set() };
+    for (const [num, info] of Object.entries(MASTER_ALUNO_DB)) {
+        const plantao = info.plantao;
+        const full_name = formatarNomeAluno(num, info.nome);
+        info.full_name = full_name; // Adiciona o nome formatado ao DB
+        if (!LISTAS_PLANTOES[plantao]) LISTAS_PLANTOES[plantao] = new Set();
+        LISTAS_PLANTOES[plantao].add(full_name);
+    }
+
     // =========================================================================
-    // LÓGICA DO GERADOR E DO AGENDADOR (v30 - Atualizada)
+    // CALENDÁRIO DE SERVIÇO DE FIM DE SEMANA (COMPLETO)
     // =========================================================================
+    const CALENDARIO_SERVICO = {
+        "2025-11-07": { // SEXTA
+            "plantao": LISTAS_PLANTOES.INDIA,
+            "adjunto": new Set([formatarNomeAluno(42, "CARLA ARAÚJO"), formatarNomeAluno(140, "VICTOR COSTA")]),
+            "sobreaviso": new Set([
+                formatarNomeAluno(141, "JULIANE CORDEIRO"), formatarNomeAluno(128, "ALEXANDRO GOMES"), formatarNomeAluno(122, "BATISTA"), formatarNomeAluno(118, "DURVAL"),
+                formatarNomeAluno(114, "BARBALHO"), formatarNomeAluno(110, "CÉSAR MEDEIROS"), formatarNomeAluno(102, "ALLAN MARIANO")
+            ])
+        },
+        "2025-11-08": { // SÁBADO
+            "plantao": LISTAS_PLANTOES.GOLF,
+            "adjunto": new Set([formatarNomeAluno(45, "WALYSON"), formatarNomeAluno(133, "ISRAEL")]),
+            "sobreaviso": new Set([
+                formatarNomeAluno(67, "LAYANNE"), formatarNomeAluno(63, "PAULO"), formatarNomeAluno(38, "W. SILVA"), formatarNomeAluno(37, "VALDECI"),
+                formatarNomeAluno(58, "WESLEY"), formatarNomeAluno(53, "G. SILVA"), formatarNomeAluno(49, "JEFFERSON SILVA")
+            ])
+        },
+        "2025-11-09": { // DOMINGO
+            "plantao": LISTAS_PLANTOES.HOTEL,
+            "adjunto": new Set([formatarNomeAluno(48, "ELVIS"), formatarNomeAluno(146, "PEREIRA MORAIS")]),
+            "sobreaviso": new Set([
+                formatarNomeAluno(132, "SERGIO"), formatarNomeAluno(120, "EGITO"), formatarNomeAluno(100, "RENAN"), formatarNomeAluno(26, "MARCOLINO"),
+                formatarNomeAluno(12, "ISABELLA"), formatarNomeAluno(11, "ORLANDO"), formatarNomeAluno(4, "ROBERTO FREITAS")
+            ])
+        },
+        "2025-11-14": { // SEXTA
+            "plantao": LISTAS_PLANTOES.HOTEL,
+            "adjunto": new Set([formatarNomeAluno(74, "GABRIEL"), formatarNomeAluno(99, "G. GOMES")]),
+            "sobreaviso": new Set([
+                formatarNomeAluno(156, "MONALIZA"), formatarNomeAluno(152, "MOURA"), formatarNomeAluno(143, "SAMARA MELO"), formatarNomeAluno(15, "JUNIOR"),
+                formatarNomeAluno(14, "AMANDA COELHO"), formatarNomeAluno(9, "R. FERREIRA"), formatarNomeAluno(2, "RENATO")
+            ])
+        },
+        "2025-11-15": { // SÁBADO
+            "plantao": LISTAS_PLANTOES.INDIA,
+            "adjunto": new Set([formatarNomeAluno(78, "GISELE FERREIRA"), formatarNomeAluno(84, "SIDNEI ARAÚJO")]),
+            "sobreaviso": new Set([
+                formatarNomeAluno(68, "KAROLINNE MOREIRA"), formatarNomeAluno(61, "FIRMINO"), formatarNomeAluno(48, "ELVIS"), formatarNomeAluno(44, "PRISCILA CORREIA"),
+                formatarNomeAluno(41, "MALAQUIAS"), formatarNomeAluno(29, "MACIEL"), formatarNomeAluno(27, "FATIMA AGUIAR")
+            ])
+        },
+        "2025-11-16": { // DOMINGO
+            "plantao": LISTAS_PLANTOES.FOXTROT,
+            "adjunto": new Set([formatarNomeAluno(75, "PEDRO"), formatarNomeAluno(138, "ICARO")]),
+            "sobreaviso": new Set([
+                formatarNomeAluno(77, "EDUARDA"), formatarNomeAluno(66, "JONATAS SANTOS"), formatarNomeAluno(47, "MACEDO"), formatarNomeAluno(43, "CINTIA SOUZA"),
+                formatarNomeAluno(40, "MARINHO"), formatarNomeAluno(31, "ALLATAS SOUSA"), formatarNomeAluno(28, "LEMOS")
+            ])
+        },
+        "2025-11-21": { // SEXTA
+            "plantao": LISTAS_PLANTOES.FOXTROT,
+            "adjunto": new Set([formatarNomeAluno(61, "FIRMINO"), formatarNomeAluno(139, "JULIANA GONDIM")]),
+            "sobreaviso": new Set([
+                formatarNomeAluno(169, "MATHEUS BARROS"), formatarNomeAluno(148, "OLAVO"), formatarNomeAluno(130, "PAULO ROBERTO"), formatarNomeAluno(126, "GILMARA"),
+                formatarNomeAluno(121, "JOÃO NASCIMENTO"), formatarNomeAluno(116, "SANTIAGO"), formatarNomeAluno(97, "ITALO")
+            ])
+        },
+        "2025-11-22": { // SÁBADO
+            "plantao": LISTAS_PLANTOES.HOTEL,
+            "adjunto": new Set([formatarNomeAluno(60, "S.GOMES"), formatarNomeAluno(196, "CARDOSO")]),
+            "sobreaviso": new Set([
+                formatarNomeAluno(192, "JEFFERSON GOMES"), formatarNomeAluno(181, "THAYNARA"), formatarNomeAluno(172, "FRANCISCO"),
+                formatarNomeAluno(168, "LEONAM"), formatarNomeAluno(105, "JOSÉ NETO")
+            ])
+        },
+        "2025-11-23": { // DOMINGO
+            "plantao": LISTAS_PLANTOES.INDIA,
+            "adjunto": new Set([formatarNomeAluno(58, "WESLEY"), formatarNomeAluno(118, "DURVAL")]),
+            "sobreaviso": new Set([
+                formatarNomeAluno(24, "MATHEUS MESQUITA"), formatarNomeAluno(20, "LUAN PEREIRA"), formatarNomeAluno(69, "FALCÃO"), formatarNomeAluno(45, "WALYSON"),
+                formatarNomeAluno(42, "CARLA ARAUJO"), formatarNomeAluno(16, "EMILY"),
+                formatarNomeAluno(7, "ARCOVERDE"), formatarNomeAluno(5, "SILVANA"),
+                formatarNomeAluno(1, "MÁRCIO SOUZA")
+            ])
+        },
+        "2025-11-28": { // SEXTA
+            "plantao": LISTAS_PLANTOES.HOTEL,
+            "adjunto": new Set([formatarNomeAluno(67, "LAYANNE"), formatarNomeAluno(110, "CÉSAR MEDEIROS")]),
+            "sobreaviso": new Set([
+                formatarNomeAluno(191, "SELTON"), formatarNomeAluno(182, "JOSINALDO"), formatarNomeAluno(170, "ANTONIO REIS"), formatarNomeAluno(166, "FELIPE FELIX"),
+                formatarNomeAluno(164, "CIBELE"), formatarNomeAluno(158, "HEYVERSON"), formatarNomeAluno(154, "DAYANE")
+            ])
+        },
+        "2025-11-29": { // SÁBADO
+            "plantao": LISTAS_PLANTOES.GOLF,
+            "adjunto": new Set([formatarNomeAluno(82, "MARCOS NASCIMENTO"), formatarNomeAluno(120, "EGITO")]),
+            "sobreaviso": new Set([
+                formatarNomeAluno(95, "BRUNO"), formatarNomeAluno(97, "ITALO"), formatarNomeAluno(52, "RUBSLEY"), formatarNomeAluno(62, "LUCAS MAGALHÃES"),
+                formatarNomeAluno(72, "NONATO"), formatarNomeAluno(112, "MARQUES"), formatarNomeAluno(121, "JOÃO NASCIMENTO")
+            ])
+        },
+        "2025-11-30": { // DOMINGO
+            "plantao": LISTAS_PLANTOES.FOXTROT,
+            "adjunto": new Set([formatarNomeAluno(92, "ALINE"), formatarNomeAluno(116, "SANTIAGO")]),
+            "sobreaviso": new Set([
+                formatarNomeAluno(195, "PETTERSON"), formatarNomeAluno(194, "KLEVER"), formatarNomeAluno(188, "MAXEMBERG"), formatarNomeAluno(186, "SOUTO"),
+                formatarNomeAluno(178, "HIAGO"), formatarNomeAluno(176, "RHAYSA"), formatarNomeAluno(173, "IURY")
+            ])
+        },
+    };
+
+    // =========================================================================
+    // LÓGICA DO AGENDADOR
+    // =========================================================================
+    const statusGeral = document.getElementById('status-geral');
     const outputContainer = document.getElementById('output-container');
-    let listaDePunicoes = [];
 
-    // --- Lógica do Gerador de Ata ---
-    function adicionarPunido() {
-        try {
-            const num = parseInt(document.getElementById('p_numero').value);
-            const dataRelatorio = document.getElementById('p_data_relatorio').value;
-            const sei = document.getElementById('p_sei').value;
-            const resumo = document.getElementById('p_resumo').value;
+    // --- Função Auxiliar: Formatar Data (JS) ---
+    function formatarDataJS(data) { // Formato YYYY-MM-DD
+        const [ano, mes, dia] = data.split('-');
+        const dataObj = new Date(ano, mes - 1, dia);
+        return {
+            sex: new Date(dataObj.setDate(dataObj.getDate() - 1)).toISOString().split('T')[0],
+            sab: data,
+            dom: new Date(dataObj.setDate(dataObj.getDate() + 2)).toISOString().split('T')[0]
+        };
+    }
 
-            if (!num || isNaN(num)) {
-                alert('Número do aluno é inválido.');
-                return;
+    // --- Função Auxiliar: Parsear Lista TSV ---
+    function extrairPunidosDoTSV(tsv_string) {
+        let punicoes = [];
+        const linhas = tsv_string.trim().split('\n');
+        const padrao_flexivel = /^\s*(\d{1,3})\s+([\d/]{8,10})\s+(\d{8,})\s+(.+)$/;
+        
+        for (const linha of linhas) {
+            if (!linha.trim()) continue;
+            
+            const match = linha.trim().match(padrao_flexivel);
+            if (!match) {
+                console.warn("Linha TSV não reconhecida, pulando:", linha);
+                continue;
             }
-
-            const alunoInfo = MASTER_ALUNO_DB[num];
+            
+            const [, num_str, data_rel, sei, resumo] = match;
+            const numero = parseInt(num_str, 10);
+            const alunoInfo = MASTER_ALUNO_DB[numero];
+            
             if (!alunoInfo) {
-                alert(`Aluno com Nº ${num} não encontrado no Banco de Dados. Verifique o número.`);
-                return;
+                console.warn(`Aluno com Nº ${numero} não encontrado no DB Mestre.`);
+                continue;
             }
-
-            const punicao = {
-                n: String(num).padStart(2, '0'),
+            
+            punicoes.push({
+                n: String(numero).padStart(2, '0'),
                 aluno: alunoInfo.nome,
                 plantao: alunoInfo.plantao,
                 pelotao: alunoInfo.pelotao,
-                data_relatorio: dataRelatorio || "N/A",
-                sei: sei || "N/A",
-                resumo: resumo || "N/A"
-            };
+                data_relatorio: data_rel.trim(),
+                sei: sei.trim(),
+                resumo: resumo.trim(),
+                full_name: alunoInfo.full_name
+            });
+        }
+        return punicoes;
+    }
 
-            listaDePunicoes.push(punicao);
-            gerarAtaFinal(); // Atualiza a tabela em tempo real
+    // --- Função Principal de Agendamento ---
+    function agendar() {
+        statusGeral.textContent = 'Agendando...';
+        statusGeral.style.color = 'var(--accent-blue-light)';
+        outputContainer.innerHTML = '';
+
+        try {
+            const data_sabado_str = document.getElementById('data_sabado').value;
+            const lista_permutas_bruta = document.getElementById('lista_permutas').value;
+            const lista_punidos_tsv = document.getElementById('lista_punidos_tsv').value;
+
+            if (!lista_punidos_tsv.trim()) {
+                throw new Error("A lista de punição está vazia. Cole os dados da planilha.");
+            }
+
+            const punicoes = extrairPunidosDoTSV(lista_punidos_tsv);
+            if (punicoes.length === 0) {
+                 throw new Error("Nenhuma punição válida foi extraída. Verifique o formato: Nº DATA SEI RESUMO");
+            }
             
-            // Limpa os campos
-            document.getElementById('p_numero').value = '';
-            document.getElementById('p_data_relatorio').value = '';
-            document.getElementById('p_sei').value = '';
-            document.getElementById('p_resumo').value = '';
-            document.getElementById('p_numero').focus();
+            const lista_permutas = new Set(lista_permutas_bruta.trim().split('\n').filter(Boolean).map(n => n.trim()));
+            
+            const datas = formatarDataJS(data_sabado_str);
+            
+            const servico_sex = CALENDARIO_SERVICO[datas.sex] || {};
+            const servico_sab = CALENDARIO_SERVICO[datas.sab] || {};
+            const servico_dom = CALENDARIO_SERVICO[datas.dom] || {};
 
-        } catch (e) {
-            alert('Erro ao adicionar aluno: ' + e.message);
+            if (!servico_sex.plantao || !servico_sab.plantao || !servico_dom.plantao) {
+                throw new Error(`Calendário de serviço não encontrado para a data base ${datas.sab}. Verifique o Banco de Dados.`);
+            }
+
+            const excecoes_sex = new Set([...servico_sex.plantao, ...servico_sex.adjunto, ...servico_sex.sobreaviso]);
+            const excecoes_sab = new Set([...servico_sab.plantao, ...servico_sab.adjunto, ...servico_sab.sobreaviso]);
+            const excecoes_dom = new Set([...servico_dom.plantao, ...servico_dom.adjunto, ...servico_dom.sobreaviso]);
+
+            const horarios = ["Sábado (Manhã)", "Sábado (Tarde)", "Domingo (Manhã)", "Domingo (Tarde)"];
+            let agenda_final = {
+                "Sábado (Manhã)": [],
+                "Sábado (Tarde)": [],
+                "Domingo (Manhã)": [],
+                "Domingo (Tarde)": [],
+                "Próximo Fim de Semana": []
+            };
+            let removidos = {"PERMUTA": []};
+            
+            let horario_index = 0;
+            let punicoes_agendadas_neste_fds = 0;
+            
+            punicoes.sort((a, b) => parseInt(a.n) - parseInt(b.n)); // Ordena por antiguidade
+            
+            for (const punicao of punicoes) {
+                const aluno_full_name = punicao.full_name;
+
+                if (lista_permutas.has(aluno_full_name)) {
+                    removidos["PERMUTA"].push(aluno_full_name);
+                    continue;
+                }
+                
+                let horarios_disponiveis_aluno = [...horarios];
+                
+                if (excecoes_sex.has(aluno_full_name)) {
+                    horarios_disponiveis_aluno = horarios_disponiveis_aluno.filter(h => h !== "Sábado (Manhã)");
+                }
+                if (excecoes_sab.has(aluno_full_name)) {
+                    horarios_disponiveis_aluno = horarios_disponiveis_aluno.filter(h => h !== "Sábado (Manhã)" && h !== "Sábado (Tarde)" && h !== "Domingo (Manhã)");
+                }
+                if (excecoes_dom.has(aluno_full_name)) {
+                    horarios_disponiveis_aluno = horarios_disponiveis_aluno.filter(h => h !== "Domingo (Manhã)" && h !== "Domingo (Tarde)");
+                }
+
+                if (horarios_disponiveis_aluno.length === 0) {
+                    agenda_final["Próximo Fim de Semana"].push(punicao);
+                    continue;
+                }
+                
+                if (punicoes_agendadas_neste_fds >= horarios.length) {
+                    agenda_final["Próximo Fim de Semana"].push(punicao);
+                    continue;
+                }
+
+                let horario_agendado = null;
+                for (let i = horario_index; i < horarios.length; i++) {
+                    const slot_geral = horarios[i];
+                    if (horarios_disponiveis_aluno.includes(slot_geral)) {
+                        horario_agendado = slot_geral;
+                        horario_index = i + 1;
+                        break;
+                    }
+                }
+                
+                if (!horario_agendado) {
+                    horario_agendado = horarios_disponiveis_aluno[0];
+                }
+                
+                agenda_final[horario_agendado].push(punicao);
+                punicoes_agendadas_neste_fds++;
+            }
+
+            // Renderiza as tabelas
+            statusGeral.textContent = 'Agendamento concluído com sucesso!';
+            statusGeral.style.color = '#38A169';
+            
+            for (const [titulo, punicoes_agendadas] of Object.entries(agenda_final)) {
+                if (punicoes_agendadas.length > 0) {
+                    outputContainer.innerHTML += buildTableHTML(titulo, punicoes_agendadas);
+                }
+            }
+            if (removidos["PERMUTA"].length > 0) {
+                outputContainer.innerHTML += buildRemovidosHTML(removidos["PERMUTA"]);
+            }
+
+        } catch (error) {
+            console.error('Erro:', error);
+            statusGeral.textContent = `Falha no agendamento: ${error.message}`;
+            statusGeral.style.color = '#E53E3E';
         }
     }
 
-    function gerarAtaFinal() {
-        const ataData = document.getElementById('ata_data').value;
-        const ataTurno = document.getElementById('ata_turno').value;
-        const outputContainer = document.getElementById('output-container');
-
-        if (listaDePunicoes.length === 0) {
-            outputContainer.innerHTML = '<p style="color: var(--text-secondary);">A tabela da ata aparecerá aqui assim que você adicionar o primeiro aluno.</p>';
-            return;
-        }
-
-        // Ordena pela antiguidade (número)
-        listaDePunicoes.sort((a, b) => parseInt(a.n) - parseInt(b.n));
-
+    function buildTableHTML(titulo, punicoes) {
         let tableHTML = `
-            <p style="text-align: center; margin-bottom: 20px; font-weight: 600;">EXTRACLASSE - ${ataTurno.toUpperCase()}</p>
+            <h3>${titulo}</h3>
             <table class="punishment-table">
                 <thead>
                     <tr>
@@ -385,7 +609,7 @@
                 <tbody>
         `;
         
-        listaDePunicoes.forEach(p => {
+        punicoes.forEach(p => {
             tableHTML += `
                 <tr>
                     <td>${p.data_relatorio}</td>
@@ -395,58 +619,21 @@
                     <td>${p.pelotao}</td>
                     <td>${p.sei}</td>
                     <td>${p.resumo}</td>
-                    <td></td> </tr>
+                    <td></td>
+                </tr>
             `;
         });
 
         tableHTML += `</tbody></table>`;
-        outputContainer.innerHTML = tableHTML;
+        return tableHTML;
     }
 
-    // --- Lógica do Agendador (Workflow Gemini) ---
-    // Esta função prepara os dados para você copiar e colar para o Gemini
-    function prepararParaGemini() {
-        const dataSabado = document.getElementById('agenda_data_sabado').value;
-        const listaPermutas = document.getElementById('agenda_permutas').value;
-        const listaPunidos = document.getElementById('agenda_punidos').value;
-        const output = document.getElementById('agenda_output');
-
-        if (!dataSabado || !listaPunidos) {
-            alert("Preencha a Data do Sábado e a Lista de Punições.");
-            return;
-        }
-
-        let prompt = `
-Olá, Gemini. Por favor, agende as seguintes punições para mim.
-
-**Contexto:**
-Preciso agendar a lista de punidos abaixo para o fim de semana que começa no sábado, ${dataSabado}.
-As regras de exceção são:
-1.  **Punição emenda com serviço:**
-    * Serviço na Sexta-feira: Não pode punir no Sábado de Manhã.
-    * Serviço no Sábado: Não pode punir no Sábado (manhã/tarde) nem no Domingo de Manhã.
-    * Serviço no Domingo: Não pode punir no Domingo (manhã/tarde).
-2.  **Ordem de Agendamento:** A fila de punição segue a ordem: Sábado (Manhã), Sábado (Tarde), Domingo (Manhã), Domingo (Tarde).
-3.  **Limite:** Máximo de 4 punições por fim de semana. A 5ª punição em diante deve ser agendada para "Próximo Fim de Semana".
-4.  **Exceções:** O serviço que proíbe a punição inclui Plantão, Adjunto ou Sobreaviso.
-
-**Listas de Exceção (Copie e cole no seu sistema):**
-(Aqui eu colaria o banco de dados completo de plantões, adjuntos e sobreaviso, mas é muito grande. Vou apenas referenciar o fim de semana relevante.)
-
-**Fim de Semana Solicitado (Começando em ${dataSabado}):**
-* **Lista de Permutas (Ignorar):**
-${listaPermutas || "Nenhuma"}
-
-**Lista de Punição (Agendar esta lista):**
-${listaPunidos}
-
-**Sua Tarefa:**
-Gere as 5 listas de saída (Sábado Manhã, Sábado Tarde, Domingo Manhã, Domingo Tarde, Próximo Fim de Semana) com os nomes dos alunos agendados corretamente, aplicando as regras de exceção e a regra do limite de 4 por fim de semana.
+    function buildRemovidosHTML(removidos) {
+        let html = `
+            <h3 style="color: #E53E3E;">Alunos Removidos (Permuta)</h3>
+            <textarea readonly rows="${removidos.length + 1}">${removidos.join('\n')}</textarea>
         `;
-
-        output.value = prompt.trim();
-        alert("Prompt copiado para a área de transferência!");
-        navigator.clipboard.writeText(output.value);
+        return html;
     }
 </script>
 
