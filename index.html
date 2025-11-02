@@ -9,25 +9,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-primary: #FFFFFF;
-            --bg-secondary: #F4F7FA;
-            --card-bg: #FFFFFF;
-            --accent-blue: #004a91; /* Cor do cabeçalho PMPE */
-            --accent-blue-light: #005cb3;
-            --text-primary: #2D3748;
-            --text-secondary: #5A657D;
-            --border-color: #E2E8F0;
+            --bg-primary: #FFFFFF; --bg-secondary: #F4F7FA; --card-bg: #FFFFFF;
+            --accent-blue: #004a91; --accent-blue-light: #005cb3; --text-primary: #2D3748;
+            --text-secondary: #5A657D; --border-color: #E2E8F0;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Poppins', sans-serif; background-color: var(--bg-secondary); color: var(--text-primary); }
         .page-container { max-width: 1200px; margin: 40px auto; padding: 20px; }
         h1 { font-size: 2.25rem; margin-bottom: 24px; color: var(--accent-blue); border-bottom: 2px solid var(--accent-blue); padding-bottom: 16px; }
         .card { 
-            background-color: var(--card-bg); 
-            border-radius: 12px; 
-            padding: 24px; 
-            margin-bottom: 24px; 
-            border: 1px solid var(--border-color);
+            background-color: var(--card-bg); border-radius: 12px; padding: 24px; 
+            margin-bottom: 24px; border: 1px solid var(--border-color);
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         }
         .card h2 { color: var(--accent-blue); font-size: 1.25rem; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
@@ -36,7 +28,7 @@
             width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);
             box-sizing: border-box; background-color: var(--bg-secondary); color: var(--text-primary);
             font-family: 'Poppins', sans-serif; font-size: 16px; transition: border-color 0.2s, box-shadow 0.2s;
-            resize: none; /* Desativa o redimensionamento do textarea */
+            resize: none;
         }
         input:focus, textarea:focus, select:focus {
             outline: none; border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(0, 74, 145, 0.2);
@@ -49,47 +41,47 @@
         }
         .button-primary:hover { background-color: var(--accent-blue-light); transform: translateY(-2px); }
         
-        /* Área de Upload de PDF */
-        .file-upload-section {
-            background-color: var(--bg-secondary);
-            border: 2px dashed var(--accent-blue);
-            padding: 40px 20px;
-            border-radius: 12px;
-            text-align: center;
-            transition: background-color 0.2s;
+        /* Abas de Método de Entrada */
+        .tab-buttons {
+            display: flex;
+            border-bottom: 2px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+        .tab-button {
+            padding: 10px 20px;
             cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+        }
+        .tab-button.active {
+            color: var(--accent-blue);
+            border-bottom-color: var(--accent-blue);
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        .file-upload-section {
+            background-color: var(--bg-secondary); border: 2px dashed var(--accent-blue);
+            padding: 40px 20px; border-radius: 12px; text-align: center;
+            transition: background-color 0.2s; cursor: pointer;
         }
         .file-upload-section.drag-over { background-color: #e0e8f0; }
         .file-upload-section label { font-size: 1.2em; color: var(--accent-blue-light); cursor: pointer; font-weight: 600; }
         .file-upload-section input[type="file"] { display: none; }
 
-        /* Estilos da Tabela de Saída */
-        #output-container h3 {
-            font-size: 1.5rem;
-            color: var(--accent-blue);
-            margin-top: 30px;
-            margin-bottom: 15px;
-        }
+        /* Tabela de Saída */
+        #output-container h3 { font-size: 1.5rem; color: var(--accent-blue); margin-top: 30px; margin-bottom: 15px; }
         .punishment-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.9em;
-            background-color: var(--bg-primary);
-            border-radius: 8px;
-            overflow: hidden;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            width: 100%; border-collapse: collapse; font-size: 0.9em; background-color: var(--bg-primary);
+            border-radius: 8px; overflow: hidden; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
-        .punishment-table th, .punishment-table td {
-            padding: 12px 15px;
-            border-bottom: 1px solid var(--border-color);
-            text-align: left;
-        }
-        .punishment-table th {
-            background-color: var(--bg-secondary);
-            color: var(--text-secondary);
-            font-weight: 600;
-        }
+        .punishment-table th, .punishment-table td { padding: 12px 15px; border-bottom: 1px solid var(--border-color); text-align: left; }
+        .punishment-table th { background-color: var(--bg-secondary); color: var(--text-secondary); font-weight: 600; }
         .punishment-table tr:last-child td { border-bottom: none; }
         .punishment-table td:nth-child(1) { width: 10%; } /* Data */
         .punishment-table td:nth-child(2) { width: 5%; } /* Nº */
@@ -119,9 +111,6 @@
             <option value="2025-11-22">Sábado, 22 de Novembro de 2025</option>
             <option value="2025-11-29">Sábado, 29 de Novembro de 2025</option>
         </select>
-        <p style="color: var(--text-secondary); margin-top: 15px; font-size: 0.9em;">
-            O sistema buscará automaticamente quem está de Plantão, Adjunto e Sobreaviso.
-        </p>
     </div>
     
     <div class="card">
@@ -131,12 +120,25 @@
                 <label for="lista_permutas">Alunos em Permuta (Um por linha)</label>
                 <textarea id="lista_permutas" rows="10" placeholder="AL CFO PM 01 NOME A..."></textarea>
             </div>
+            
             <div>
-                <label>Lista de Punição (PDF do Relatório)</label>
-                <div class="file-upload-section" id="dropZone">
-                    <label for="pdfFile">Arraste e solte o PDF do Relatório aqui</label>
-                    <input type="file" id="pdfFile" accept="application/pdf">
-                    <div id="status">Nenhum PDF selecionado</div>
+                <label>Lista de Punição</label>
+                <div class="tab-buttons">
+                    <button class="tab-button active" onclick="switchTab(event, 'pdf')">Upload de PDF do Relatório</button>
+                    <button class="tab-button" onclick="switchTab(event, 'tsv')">Colar da Planilha</button>
+                </div>
+
+                <div id="pdf" class="tab-content active">
+                    <div class="file-upload-section" id="dropZone">
+                        <label for="pdfFile">Arraste e solte o PDF do Relatório aqui</label>
+                        <input type="file" id="pdfFile" accept="application/pdf">
+                        <div id="status">Nenhum PDF selecionado</div>
+                    </div>
+                </div>
+
+                <div id="tsv" class="tab-content">
+                    <label for="lista_punidos_tsv">Cole os dados da planilha (Nº, Data, SEI, Resumo):</label>
+                    <textarea id="lista_punidos_tsv" rows="10" placeholder="11 (TAB) 28/08/2025 (TAB) 75107489 (TAB) FAIXA AMASSADA..."></textarea>
                 </div>
             </div>
         </div>
@@ -157,9 +159,32 @@
     const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('pdfFile');
     const outputContainer = document.getElementById('output-container');
-    let pdfFile = null; // Variável para armazenar o arquivo
+    let pdfFile = null;
+    let activeInputMethod = 'pdf'; // Controla qual aba está ativa
 
-    // Lógica de arrastar e soltar
+    // --- Lógica das Abas ---
+    function switchTab(event, tabName) {
+        activeInputMethod = tabName;
+        
+        let tabContents = document.getElementsByClassName("tab-content");
+        for (let i = 0; i < tabContents.length; i++) {
+            tabContents[i].style.display = "none";
+        }
+        
+        let tabButtons = document.getElementsByClassName("tab-button");
+        for (let i = 0; i < tabButtons.length; i++) {
+            tabButtons[i].className = tabButtons[i].className.replace(" active", "");
+        }
+        
+        document.getElementById(tabName).style.display = "block";
+        event.currentTarget.className += " active";
+    }
+    // Inicia a primeira aba
+    document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById('pdf').style.display = 'block';
+    });
+
+    // --- Lógica de Upload ---
     dropZone.addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', (e) => setFile(e.target.files[0]));
     dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
@@ -182,33 +207,44 @@
         }
     }
 
+    // --- Lógica de Agendamento ---
     async function agendar() {
-        if (!pdfFile) {
-            alert("Por favor, selecione um PDF com a lista de punições.");
-            return;
-        }
-
         statusDiv.textContent = 'Agendando...';
         statusDiv.style.color = 'var(--accent-blue-light)';
-        outputContainer.innerHTML = ''; // Limpa resultados anteriores
+        outputContainer.innerHTML = '';
 
-        // Usamos FormData para enviar o arquivo e os dados do formulário
         const formData = new FormData();
         formData.append('data_sabado', document.getElementById('data_sabado').value);
         formData.append('lista_permutas', document.getElementById('lista_permutas').value);
-        formData.append('pdf_punicao', pdfFile);
+
+        // Verifica qual método de entrada está ativo
+        if (activeInputMethod === 'pdf') {
+            if (!pdfFile) {
+                alert("Por favor, selecione um PDF com a lista de punições.");
+                statusDiv.textContent = 'Erro: Nenhum PDF selecionado.';
+                statusDiv.style.color = '#E53E3E';
+                return;
+            }
+            formData.append('pdf_punicao', pdfFile);
+        } else {
+            const tsvData = document.getElementById('lista_punidos_tsv').value;
+            if (!tsvData.trim()) {
+                alert("Por favor, cole os dados da planilha na caixa de texto.");
+                statusDiv.textContent = 'Erro: Nenhuma lista de punição colada.';
+                statusDiv.style.color = '#E53E3E';
+                return;
+            }
+            formData.append('lista_punidos_tsv', tsvData);
+        }
 
         try {
             const response = await fetch(SERVER_URL, {
                 method: 'POST',
-                body: formData // Não definimos Content-Type, o navegador faz isso
+                body: formData
             });
 
             const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.erro || 'Erro desconhecido no servidor');
-            }
+            if (!response.ok) { throw new Error(data.erro || 'Erro desconhecido'); }
             
             statusDiv.textContent = 'Agendamento concluído com sucesso!';
             statusDiv.style.color = '#38A169';
