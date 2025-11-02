@@ -414,20 +414,23 @@
     };
 
     // =========================================================================
-    // LÓGICA DO AGENDADOR (v30 - LÓGICA CORRIGIDA)
+    // LÓGICA DO AGENDADOR (v32 - Lógica Corrigida)
     // =========================================================================
     const statusGeral = document.getElementById('status-geral');
     const outputContainer = document.getElementById('output-container');
 
     function formatarDataJS(data) {
-        const dataObj = new Date(data + 'T12:00:00');
+        const dataObj = new Date(data + 'T12:00:00Z'); // Usa Z (UTC) para travar a data
+
         const sex = new Date(dataObj.getTime());
-        sex.setDate(sex.getDate() - 1);
-        const sab = new Date(dataObj.setDate(dataObj.getDate() + 1));
-        const dom = new Date(dataObj.setDate(dataObj.getDate() + 1));
+        sex.setUTCDate(sex.getUTCDate() - 1);
+        
+        const dom = new Date(dataObj.getTime());
+        dom.setUTCDate(dom.getUTCDate() + 1);
+
         return {
             sex: sex.toISOString().split('T')[0],
-            sab: sab.toISOString().split('T')[0],
+            sab: data, // O 'data' original já é o sábado
             dom: dom.toISOString().split('T')[0]
         };
     }
@@ -439,6 +442,7 @@
         
         for (const linha of linhas) {
             if (!linha.trim()) continue;
+            
             const match = linha.trim().match(padrao_flexivel);
             if (!match) {
                 console.warn("Linha TSV não reconhecida, pulando:", linha);
@@ -478,7 +482,7 @@
         return punicoes;
     }
 
-    // --- LÓGICA DE AGENDAMENTO v30 (CORRIGIDA) ---
+    // --- LÓGICA DE AGENDAMENTO v32 (CORRIGIDA) ---
     function agendar() {
         statusGeral.textContent = 'Agendando...';
         statusGeral.style.color = 'var(--accent-blue-light)';
@@ -526,7 +530,8 @@
             // Objeto para rastrear os slots já ocupados POR ALUNO
             let aluno_slots_ocupados = {};
             
-            punicoes.sort((a, b) => parseInt(a.n) - parseInt(b.n)); // Ordena por antiguidade
+            // A lista de punições NÃO é ordenada por antiguidade, mas sim processada na ordem em que foi colada.
+            // A antiguidade (ordem numérica) é aplicada DEPOIS, dentro de cada slot.
             
             for (const punicao of punicoes) {
                 const aluno_full_name = punicao.full_name;
@@ -536,7 +541,6 @@
                     continue;
                 }
                 
-                // Inicializa o rastreador para o aluno, se for a primeira punição dele
                 if (!aluno_slots_ocupados[aluno_full_name]) {
                     aluno_slots_ocupados[aluno_full_name] = new Set();
                 }
