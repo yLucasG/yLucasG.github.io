@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agendador de Punições</title>
+    <title>Gerador de Ata de Punição</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -33,47 +33,14 @@
         input:focus, textarea:focus, select:focus {
             outline: none; border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(0, 74, 145, 0.2);
         }
-        .grid-container-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .grid-container-4col { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 20px; }
         .button-primary {
-            display: block; width: 100%; padding: 16px; background-color: var(--accent-blue);
-            color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: 600; cursor: pointer;
-            margin-top: 25px; transition: background-color 0.2s, transform 0.2s;
+            display: inline-block; padding: 12px 24px; background-color: var(--accent-blue);
+            color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;
+            margin-top: 20px; transition: background-color 0.2s, transform 0.2s;
         }
         .button-primary:hover { background-color: var(--accent-blue-light); transform: translateY(-2px); }
         
-        /* Abas de Método de Entrada */
-        .tab-buttons {
-            display: flex;
-            border-bottom: 2px solid var(--border-color);
-            margin-bottom: 20px;
-        }
-        .tab-button {
-            padding: 10px 20px;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 500;
-            color: var(--text-secondary);
-            background: none;
-            border: none;
-            border-bottom: 3px solid transparent;
-            margin-bottom: -2px;
-        }
-        .tab-button.active {
-            color: var(--accent-blue);
-            border-bottom-color: var(--accent-blue);
-        }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        
-        .file-upload-section {
-            background-color: var(--bg-secondary); border: 2px dashed var(--accent-blue);
-            padding: 40px 20px; border-radius: 12px; text-align: center;
-            transition: background-color 0.2s; cursor: pointer;
-        }
-        .file-upload-section.drag-over { background-color: #e0e8f0; }
-        .file-upload-section label { font-size: 1.2em; color: var(--accent-blue-light); cursor: pointer; font-weight: 600; }
-        .file-upload-section input[type="file"] { display: none; }
-
         /* Tabela de Saída */
         #output-container h3 { font-size: 1.5rem; color: var(--accent-blue); margin-top: 30px; margin-bottom: 15px; }
         .punishment-table {
@@ -94,191 +61,314 @@
 
         #status { text-align: center; font-weight: 500; font-size: 1.1rem; padding: 10px; }
         
-        @media (max-width: 900px) { .grid-container-2col { grid-template-columns: 1fr; } }
+        @media (max-width: 900px) { .grid-container-4col { grid-template-columns: 1fr 1fr; } }
     </style>
 </head>
 <body>
 
 <div class="page-container">
-    <h1>Agendador de Punições</h1>
+    <h1>Gerador de Ata de Punição</h1>
 
     <div class="card">
-        <h2>1. Selecione o Fim de Semana</h2>
-        <label for="data_sabado">Selecione o Sábado da Punição:</label>
-        <select id="data_sabado">
-            <option value="2025-11-08">Sábado, 08 de Novembro de 2025</option>
-            <option value="2025-11-15">Sábado, 15 de Novembro de 2025</option>
-            <option value="2025-11-22">Sábado, 22 de Novembro de 2025</option>
-            <option value="2025-11-29">Sábado, 29 de Novembro de 2025</option>
-        </select>
-    </div>
-    
-    <div class="card">
-        <h2>2. Listas Variáveis</h2>
-        <div class="grid-container-2col">
+        <h2>1. Informações da Ata</h2>
+        <div class="grid-container-4col">
             <div>
-                <label for="lista_permutas">Alunos em Permuta (Um por linha)</label>
-                <textarea id="lista_permutas" rows="10" placeholder="AL CFO PM 01 NOME A..."></textarea>
+                <label for="ata_data">Data da Atividade:</label>
+                <input type="text" id="ata_data" value="25 de OUTUBRO de 2025">
             </div>
-            
             <div>
-                <label>Lista de Punição</label>
-                <div class="tab-buttons">
-                    <button class="tab-button active" onclick="switchTab(event, 'pdf')">Upload de PDF do Relatório</button>
-                    <button class="tab-button" onclick="switchTab(event, 'tsv')">Colar da Planilha</button>
-                </div>
-
-                <div id="pdf" class="tab-content active">
-                    <div class="file-upload-section" id="dropZone">
-                        <label for="pdfFile">Arraste e solte o PDF do Relatório aqui</label>
-                        <input type="file" id="pdfFile" accept="application/pdf">
-                        <div id="status-pdf">Nenhum PDF selecionado</div>
-                    </div>
-                </div>
-
-                <div id="tsv" class="tab-content">
-                    <label for="lista_punidos_tsv">Cole os dados (Nº [espaço] Data [espaço] SEI [espaço] Resumo):</label>
-                    <textarea id="lista_punidos_tsv" rows="10" placeholder="34 28/08/2025 83201291 faixa amassada..."></textarea>
-                </div>
+                <label for="ata_turno">Turno da Atividade:</label>
+                <input type="text" id="ata_turno" value="SÁBADO - TARDE">
             </div>
         </div>
     </div>
-
-    <button class="button-primary" onclick="agendar()">Agendar Punições</button>
-    <div id="status-geral"></div>
+    
+    <div class="card">
+        <h2>2. Adicionar Punido</h2>
+        <div class="grid-container-4col">
+            <div>
+                <label for="p_numero">Nº do Aluno:</label>
+                <input type="number" id="p_numero" placeholder="Ex: 11">
+            </div>
+            <div>
+                <label for="p_data_relatorio">Data do Relatório:</label>
+                <input type="text" id="p_data_relatorio" placeholder="Ex: 28/08/2025">
+            </div>
+            <div>
+                <label for="p_sei">Nº SEI:</label>
+                <input type="text" id="p_sei" placeholder="Ex: 75107489">
+            </div>
+            <div>
+                <label for="p_resumo">Resumo:</label>
+                <input type="text" id="p_resumo" placeholder="Ex: FAIXA AMASSADA">
+            </div>
+        </div>
+        <button class="button-primary" onclick="adicionarPunido()">Adicionar Aluno</button>
+    </div>
 
     <div class="card">
-        <h2>3. Resultado Final (Agenda)</h2>
+        <h2>3. Ata Pronta (Copiar e Colar no SEI)</h2>
         <div id="output-container">
             </div>
     </div>
 </div>
 
 <script>
-    const SERVER_URL = 'https://meucfo2025.pythonanywhere.com/agendar-punicoes';
-    const statusGeral = document.getElementById('status-geral');
-    const statusPdf = document.getElementById('status-pdf');
-    const dropZone = document.getElementById('dropZone');
-    const fileInput = document.getElementById('pdfFile');
+    // =========================================================================
+    // BANCO DE DADOS MESTRE DE ALUNOS (Embutido no JS)
+    // =========================================================================
+    const MASTER_ALUNO_DB = {
+        1: {"nome": "MÁRCIO SOUZA", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
+        2: {"nome": "RENATO", "plantao": "GOLF", "pelotao": "2º PEL/2ª CIA"},
+        3: {"nome": "FERNANDO", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
+        4: {"nome": "ROBERTO FREITAS", "plantao": "INDIA", "pelotao": "4º PEL/2ª CIA"},
+        5: {"nome": "SILVANA", "plantao": "FOXTROT", "pelotao": "5º PEL/2ª CIA"},
+        6: {"nome": "DANIELLE PRADO", "plantao": "GOLF", "pelotao": "6º PEL/2ª CIA"},
+        7: {"nome": "ARCOVERDE", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
+        8: {"nome": "AUREA", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
+        9: {"nome": "R. FERREIRA", "plantao": "GOLF", "pelotao": "1º PEL/2ª CIA"},
+        10: {"nome": "VICTOR FERREIRA", "plantao": "HOTEL", "pelotao": "2º PEL/2ª CIA"},
+        11: {"nome": "ORLANDO", "plantao": "INDIA", "pelotao": "2º PEL/2ª CIA"},
+        12: {"nome": "ISABELLA", "plantao": "INDIA", "pelotao": "2º PEL/2ª CIA"},
+        13: {"nome": "BRENDA", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
+        14: {"nome": "AMANDA COELHO", "plantao": "GOLF", "pelotao": "4º PEL/2ª CIA"},
+        15: {"nome": "JUNIOR", "plantao": "GOLF", "pelotao": "3º PEL/2ª CIA"},
+        16: {"nome": "EMILY", "plantao": "FOXTROT", "pelotao": "1º PEL/1ª CIA"},
+        17: {"nome": "MURILO", "plantao": "HOTEL", "pelotao": "5º PEL/2ª CIA"},
+        18: {"nome": "ARYANA", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
+        19: {"nome": "ALENCAR", "plantao": "INDIA", "pelotao": "3º PEL/2ª CIA"},
+        20: {"nome": "LUAN PEREIRA", "plantao": "GOLF", "pelotao": "4º PEL/2ª CIA"},
+        21: {"nome": "MANOEL", "plantao": "FOXTROT", "pelotao": "2º PEL/2ª CIA"},
+        24: {"nome": "MATHEUS MESQUITA", "plantao": "GOLF", "pelotao": "2º PEL/2ª CIA"},
+        25: {"nome": "DAVI OLIVEIRA", "plantao": "FOXTROT", "pelotao": "3º PEL/2ª CIA"},
+        26: {"nome": "MARCOLINO", "plantao": "INDIA", "pelotao": "4º PEL/2ª CIA"},
+        27: {"nome": "FATIMA AGUIAR", "plantao": "INDIA", "pelotao": "6º PEL/2ª CIA"},
+        28: {"nome": "LEMOS", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
+        29: {"nome": "MACIEL", "plantao": "INDIA", "pelotao": "6º PEL/2ª CIA"},
+        30: {"nome": "M ALBUQUERQUE", "plantao": "GOLF", "pelotao": "2º PEL/2ª CIA"},
+        31: {"nome": "ALLATAS SOUSA", "plantao": "HOTEL", "pelotao": "3º PEL/2ª CIA"},
+        32: {"nome": "KAYO GABRIEL", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
+        33: {"nome": "KAROLINE ABREU", "plantao": "GOLF", "pelotao": "1º PEL/2ª CIA"},
+        34: {"nome": "GIOVANNI", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
+        35: {"nome": "PAULINO", "plantao": "GOLF", "pelotao": "6º PEL/2ª CIA"},
+        36: {"nome": "M. FEITOSA", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
+        37: {"nome": "VALDECI", "plantao": "FOXTROT", "pelotao": "6º PEL/2ª CIA"},
+        38: {"nome": "W. SILVA", "plantao": "FOXTROT", "pelotao": "3º PEL/2ª CIA"},
+        39: {"nome": "ELLIO", "plantao": "GOLF", "pelotao": "2º PEL/2ª CIA"},
+        40: {"nome": "MARINHO", "plantao": "HOTEL", "pelotao": "3º PEL/2ª CIA"},
+        41: {"nome": "MALAQUIAS", "plantao": "INDIA", "pelotao": "4º PEL/2ª CIA"},
+        42: {"nome": "CARLA ARAUJO", "plantao": "FOXTROT", "pelotao": "2º PEL/2ª CIA"},
+        43: {"nome": "CINTIA SOUZA", "plantao": "HOTEL", "pelotao": "3º PEL/2ª CIA"},
+        44: {"nome": "PRISCILA CORREIA", "plantao": "INDIA", "pelotao": "4º PEL/2ª CIA"},
+        45: {"nome": "WALYSON", "plantao": "FOXTROT", "pelotao": "5º PEL/2ª CIA"},
+        46: {"nome": "GRANGEIRO", "plantao": "GOLF", "pelotao": "3º PEL/2ª CIA"},
+        47: {"nome": "MACEDO", "plantao": "HOTEL", "pelotao": "4º PEL/2ª CIA"},
+        48: {"nome": "ELVIS", "plantao": "INDIA", "pelotao": "5º PEL/2ª CIA"},
+        49: {"nome": "JEFFERSON SILVA", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
+        50: {"nome": "QUEIROZ", "plantao": "GOLF", "pelotao": "6º PEL/2ª CIA"},
+        52: {"nome": "RUBSLEY", "plantao": "INDIA", "pelotao": "2º PEL/2ª CIA"},
+        53: {"nome": "G. SILVA", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
+        54: {"nome": "FRANÇA", "plantao": "GOLF", "pelotao": "1º PEL/2ª CIA"},
+        57: {"nome": "SANTANA", "plantao": "INDIA", "pelotao": "2º PEL/2ª CIA"},
+        58: {"nome": "WESLEY", "plantao": "FOXTROT", "pelotao": "5º PEL/2ª CIA"},
+        59: {"nome": "RAYANNE", "plantao": "GOLF", "pelotao": "6º PEL/2ª CIA"},
+        60: {"nome": "S.GOMES", "plantao": "GOLF", "pelotao": "6º PEL/2ª CIA"},
+        61: {"nome": "FIRMINO", "plantao": "INDIA", "pelotao": "4º PEL/2ª CIA"},
+        62: {"nome": "LUCAS MAGALHÃES", "plantao": "INDIA", "pelotao": "5º PEL/2ª CIA"},
+        63: {"nome": "PAULO", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
+        64: {"nome": "BONFIM", "plantao": "GOLF", "pelotao": "6º PEL/2ª CIA"},
+        66: {"nome": "JONATAS SANTOS", "plantao": "HOTEL", "pelotao": "2º PEL/2ª CIA"},
+        67: {"nome": "LAYANNE", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
+        68: {"nome": "KAROLINNE MOREIRA", "plantao": "INDIA", "pelotao": "2º PEL/2ª CIA"},
+        69: {"nome": "FALCÃO", "plantao": "FOXTROT", "pelotao": "3º PEL/2ª CIA"},
+        70: {"nome": "MEIRA", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
+        71: {"nome": "SERAFIM", "plantao": "GOLF", "pelotao": "4º PEL/2ª CIA"},
+        72: {"nome": "NONATO", "plantao": "INDIA", "pelotao": "5º PEL/2ª CIA"},
+        73: {"nome": "PEREIRA", "plantao": "FOXTROT", "pelotao": "2º PEL/2ª CIA"},
+        74: {"nome": "GABRIEL", "plantao": "GOLF", "pelotao": "6º PEL/2ª CIA"},
+        75: {"nome": "PEDRO", "plantao": "HOTEL", "pelotao": "3º PEL/2ª CIA"},
+        76: {"nome": "FERREIRA", "plantao": "INDIA", "pelotao": "4º PEL/2ª CIA"},
+        77: {"nome": "EDUARDA", "plantao": "HOTEL", "pelotao": "3º PEL/2ª CIA"},
+        78: {"nome": "GISELE FERREIRA", "plantao": "GOLF", "pelotao": "4º PEL/2ª CIA"},
+        79: {"nome": "DIOGENES", "plantao": "FOXTROT", "pelotao": "4º PEL/2ª CIA"},
+        80: {"nome": "JOSE", "plantao": "GOLF", "pelotao": "5º PEL/2ª CIA"},
+        81: {"nome": "COSTA", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
+        82: {"nome": "MARCOS NASCIMENTO", "plantao": "INDIA", "pelotao": "1º PEL/2ª CIA"},
+        83: {"nome": "P. SOUZA", "plantao": "FOXTROT", "pelotao": "2º PEL/2ª CIA"},
+        84: {"nome": "SIDNEI ARAÚJO", "plantao": "GOLF", "pelotao": "3º PEL/2ª CIA"},
+        85: {"nome": "ANDERSON", "plantao": "HOTEL", "pelotao": "4º PEL/2ª CIA"},
+        86: {"nome": "FERNANDO CRUZ", "plantao": "INDIA", "pelotao": "5º PEL/2ª CIA"},
+        87: {"nome": "ARYCLAYTON", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
+        88: {"nome": "S. NETO", "plantao": "GOLF", "pelotao": "1º PEL/2ª CIA"},
+        89: {"nome": "SILVA", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
+        90: {"nome": "RAFAEL BEZERRA", "plantao": "INDIA", "pelotao": "3º PEL/2ª CIA"},
+        91: {"nome": "GESSICA", "plantao": "FOXTROT", "pelotao": "5º PEL/2ª CIA"},
+        92: {"nome": "ALINE", "plantao": "INDIA", "pelotao": "6º PEL/2ª CIA"},
+        93: {"nome": "REVERTHON", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
+        94: {"nome": "FERNANDA SOARES", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
+        95: {"nome": "BRUNO", "plantao": "INDIA", "pelotao": "5º PEL/2ª CIA"},
+        96: {"nome": "ERIVELTON", "plantao": "HOTEL", "pelotao": "2º PEL/2ª CIA"},
+        97: {"nome": "ITALO", "plantao": "INDIA", "pelotao": "3º PEL/2ª CIA"},
+        98: {"nome": "EMANNUEL", "plantao": "FOXTROT", "pelotao": "4º PEL/2ª CIA"},
+        99: {"nome": "G. GOMES", "plantao": "GOLF", "pelotao": "4º PEL/2ª CIA"},
+        100: {"nome": "RENAN", "plantao": "INDIA", "pelotao": "6º PEL/2ª CIA"},
+        101: {"nome": "SELTON", "plantao": "FOXTROT", "pelotao": "1D PEL/2ª CIA"},
+        102: {"nome": "ALLAN MARIANO", "plantao": "FOXTROT", "pelotao": "5º PEL/2ª CIA"},
+        103: {"nome": "RAISSA SOARES", "plantao": "FOXTROT", "pelotao": "2º PEL/2ª CIA"},
+        105: {"nome": "JOSÉ NETO", "plantao": "GOLF", "pelotao": "5º PEL/2ª CIA"},
+        106: {"nome": "LUCAS RANIELLE", "plantao": "HOTEL", "pelotao": "3º PEL/2ª CIA"},
+        107: {"nome": "LUCIANO", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
+        108: {"nome": "HENRIQUE", "plantao": "GOLF", "pelotao": "1º PEL/2ª CIA"},
+        109: {"nome": "ERIKA DUARTE", "plantao": "HOTEL", "pelotao": "4º PEL/2ª CIA"},
+        110: {"nome": "CÉSAR MEDEIROS", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
+        111: {"nome": "FELIPE MORAIS", "plantao": "HOTEL", "pelotao": "2º PEL/2ª CIA"},
+        112: {"nome": "MARQUES", "plantao": "INDIA", "pelotao": "3º PEL/2ª CIA"},
+        113: {"nome": "AURÉLIO", "plantao": "GOLF", "pelotao": "4º PEL/2ª CIA"},
+        114: {"nome": "BARBALHO", "plantao": "FOXTROT", "pelotao": "5º PEL/2ª CIA"},
+        115: {"nome": "VINICIUS OLIVEIRA", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
+        116: {"nome": "SANTIAGO", "plantao": "INDIA", "pelotao": "6º PEL/2ª CIA"},
+        118: {"nome": "DURVAL", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
+        119: {"nome": "VINÍCIUS SOUZA", "plantao": "GOLF", "pelotao": "2º PEL/2ª CIA"},
+        120: {"nome": "EGITO", "plantao": "INDIA", "pelotao": "3º PEL/2ª CIA"},
+        121: {"nome": "JOÃO NASCIMENTO", "plantao": "INDIA", "pelotao": "2º PEL/2ª CIA"},
+        122: {"nome": "BATISTA", "plantao": "FOXTROT", "pelotao": "4º PEL/2ª CIA"},
+        123: {"nome": "GONZAGA", "plantao": "GOLF", "pelotao": "5º PEL/2ª CIA"},
+        125: {"nome": "MEDEIROS", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
+        126: {"nome": "GILMARA", "plantao": "INDIA", "pelotao": "5º PEL/2ª CIA"},
+        127: {"nome": "CAIO GUIMARAES", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
+        128: {"nome": "ALEXANDRO GOMES", "plantao": "FOXTROT", "pelotao": "4º PEL/2ª CIA"},
+        129: {"nome": "LUIZ NUNES", "plantao": "GOLF", "pelotao": "5º PEL/2ª CIA"},
+        130: {"nome": "PAULO ROBERTO", "plantao": "INDIA", "pelotao": "6º PEL/2ª CIA"},
+        131: {"nome": "RENATA", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
+        132: {"nome": "SERGIO", "plantao": "INDIA", "pelotao": "1º PEL/2ª CIA"},
+        133: {"nome": "ISRAEL", "plantao": "FOXTROT", "pelotao": "2º PEL/2ª CIA"},
+        134: {"nome": "SAMEA FERRAZ", "plantao": "GOLF", "pelotao": "2º PEL/2ª CIA"},
+        135: {"nome": "JOÃO HENRIQUE", "plantao": "GOLF", "pelotao": "3º PEL/2ª CIA"},
+        136: {"nome": "PATRICIA", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
+        137: {"nome": "RAFAEL PEREIRA", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
+        138: {"nome": "ICARO", "plantao": "HOTEL", "pelotao": "5º PEL/2ª CIA"},
+        139: {"nome": "JULIANA GONDIM", "plantao": "INDIA", "pelotao": "3º PEL/2ª CIA"},
+        140: {"nome": "VICTOR COSTA", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
+        141: {"nome": "JULIANE CORDEIRO", "plantao": "FOXTROT", "pelotao": "4º PEL/2ª CIA"},
+        142: {"nome": "JABNER", "plantao": "GOLF", "pelotao": "2º PEL/2ª CIA"},
+        143: {"nome": "SAMARA MELO", "plantao": "GOLF", "pelotao": "5º PEL/2ª CIA"},
+        144: {"nome": "EDJANE", "plantao": "HOTEL", "pelotao": "1D PEL/2ª CIA"},
+        145: {"nome": "HIGOR ALVES", "plantao": "INDIA", "pelotao": "5º PEL/2ª CIA"},
+        146: {"nome": "PEREIRA MORAIS", "plantao": "INDIA", "pelotao": "6º PEL/2ª CIA"},
+        147: {"nome": "JORGE FILHO", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
+        148: {"nome": "OLAVO", "plantao": "INDIA", "pelotao": "3º PEL/2ª CIA"},
+        149: {"nome": "CAVALCANTI", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
+        150: {"nome": "ROBERTA", "plantao": "INDIA", "pelotao": "1º PEL/2ª CIA"},
+        151: {"nome": "OLIVEIRA JUNIOR", "plantao": "HOTEL", "pelotao": "3º PEL/2ª CIA"},
+        152: {"nome": "MOURA", "plantao": "GOLF", "pelotao": "2º PEL/2ª CIA"},
+        153: {"nome": "AFONSO", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
+        154: {"nome": "DAYANE", "plantao": "FOXTROT", "pelotao": "2º PEL/2ª CIA"},
+        156: {"nome": "MONALIZA", "plantao": "GOLF", "pelotao": "3º PEL/2ª CIA"},
+        157: {"nome": "VALADARES", "plantao": "INDIA", "pelotao": "3º PEL/2ª CIA"},
+        158: {"nome": "HEYVERSON", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
+        161: {"nome": "JOSE ALISSON", "plantao": "GOLF", "pelotao": "6º PEL/2ª CIA"},
+        162: {"nome": "JESUS", "plantao": "HOTEL", "pelotao": "1D PEL/2ª CIA"},
+        163: {"nome": "NATALIA", "plantao": "INDIA", "pelotao": "5º PEL/2ª CIA"},
+        164: {"nome": "CIBELE", "plantao": "FOXTROT", "pelotao": "6º PEL/2ª CIA"},
+        165: {"nome": "GUSTAVO", "plantao": "GOLF", "pelotao": "2º PEL/2ª CIA"},
+        166: {"nome": "FELIPE FELIX", "plantao": "FOXTROT", "pelotao": "5º PEL/2ª CIA"},
+        168: {"nome": "LEONAM", "plantao": "GOLF", "pelotao": "5º PEL/2ª CIA"},
+        169: {"nome": "MATHEUS BARROS", "plantao": "INDIA", "pelotao": "6º PEL/2ª CIA"},
+        170: {"nome": "ANTONIO REIS", "plantao": "FOXTROT", "pelotao": "4º PEL/2ª CIA"},
+        171: {"nome": "JHONEY", "plantao": "HOTEL", "pelotao": "3º PEL/2ª CIA"},
+        172: {"nome": "FRANCISCO", "plantao": "GOLF", "pelotao": "1º PEL/2ª CIA"},
+        173: {"nome": "IURY", "plantao": "INDIA", "pelotao": "3º PEL/2ª CIA"},
+        174: {"nome": "LIMA PAIVA", "plantao": "FOXTROT", "pelotao": "1Multi-select"},
+        175: {"nome": "LUIZ LEAL", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
+        176: {"nome": "RHAYSA", "plantao": "INDIA", "pelotao": "1º PEL/2ª CIA"},
+        177: {"nome": "DIONIZIO", "plantao": "HOTEL", "pelotao": "4º PEL/2ª CIA"},
+        178: {"nome": "HIAGO", "plantao": "INDIA", "pelotao": "4º PEL/2ª CIA"},
+        179: {"nome": "DEBORA GOUVEIA", "plantao": "HOTEL", "pelotao": "2º PEL/2ª CIA"},
+        180: {"nome": "NOBREGA", "plantao": "GOLF", "pelotao": "5º PEL/2ª CIA"},
+        181: {"nome": "THAYNARA", "plantao": "GOLF", "pelotao": "3º PEL/2ª CIA"},
+        182: {"nome": "JOSINALDO", "plantao": "FOXTROT", "pelotao": "4º PEL/2ª CIA"},
+        183: {"nome": "JULIO", "plantao": "HOTEL", "pelotao": "5º PEL/2ª CIA"},
+        184: {"nome": "ABRAÃO", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
+        185: {"nome": "RONILSON", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
+        186: {"nome": "SOUTO", "plantao": "INDIA", "pelotao": "3º PEL/2ª CIA"},
+        187: {"nome": "BELEM", "plantao": "HOTEL", "pelotao": "4º PEL/2ª CIA"},
+        188: {"nome": "MAXEMBERG", "plantao": "INDIA", "pelotao": "3º PEL/2ª CIA"},
+        189: {"nome": "KAMYLA", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
+        190: {"nome": "JÚLIA", "plantao": "GOLF", "pelotao": "5º PEL/2ª CIA"},
+        191: {"nome": "SELTON", "plantao": "FOXTROT", "pelotao": "4º PEL/2ª CIA"},
+        192: {"nome": "JEFFERSON GOMES", "plantao": "GOLF", "pelotao": "1º PEL/2ª CIA"},
+        193: {"nome": "JAILTON", "plantao": "HOTEL", "pelotao": "3º PEL/2ª CIA"},
+        194: {"nome": "KLEVER", "plantao": "INDIA", "pelotao": "5º PEL/2ª CIA"},
+        195: {"nome": "PETTERSON", "plantao": "INDIA", "pelotao": "2º PEL/2ª CIA"},
+        196: {"nome": "CARDOSO", "plantao": "GOLF", "pelotao": "6º PEL/2ª CIA"},
+        197: {"nome": "ISRAEL OLIVEIRA", "plantao": "HOTEL", "pelotao": "4º PEL/2ª CIA"},
+    };
+
+    // =========================================================================
+    // LÓGICA DO GERADOR E DO AGENDADOR (v30 - Atualizada)
+    // =========================================================================
     const outputContainer = document.getElementById('output-container');
-    let pdfFile = null;
-    let activeInputMethod = 'pdf'; // Controla qual aba está ativa
+    let listaDePunicoes = [];
 
-    // --- Lógica das Abas ---
-    function switchTab(event, tabName) {
-        activeInputMethod = tabName;
-        
-        let tabContents = document.getElementsByClassName("tab-content");
-        for (let i = 0; i < tabContents.length; i++) {
-            tabContents[i].style.display = "none";
-        }
-        
-        let tabButtons = document.getElementsByClassName("tab-button");
-        for (let i = 0; i < tabButtons.length; i++) {
-            tabButtons[i].className = tabButtons[i].className.replace(" active", "");
-        }
-        
-        document.getElementById(tabName).style.display = "block";
-        event.currentTarget.className += " active";
-    }
-    // Inicia a primeira aba
-    document.addEventListener("DOMContentLoaded", () => {
-        document.getElementById('pdf').style.display = 'block';
-    });
-
-    // --- Lógica de Upload ---
-    dropZone.addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', (e) => setFile(e.target.files[0]));
-    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
-    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
-    dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropZone.classList.remove('drag-over');
-        setFile(e.dataTransfer.files[0]);
-    });
-
-    function setFile(file) {
-        if (file && file.type === 'application/pdf') {
-            pdfFile = file;
-            statusPdf.textContent = `Arquivo selecionado: ${file.name}`;
-            statusPdf.style.color = '#38A169';
-        } else {
-            pdfFile = null;
-            statusPdf.textContent = 'Arquivo inválido. Por favor, selecione um PDF.';
-            statusPdf.style.color = '#E53E3E';
-        }
-    }
-
-    // --- Lógica de Agendamento ---
-    async function agendar() {
-        statusGeral.textContent = 'Agendando...';
-        statusGeral.style.color = 'var(--accent-blue-light)';
-        outputContainer.innerHTML = '';
-
-        const formData = new FormData();
-        formData.append('data_sabado', document.getElementById('data_sabado').value);
-        formData.append('lista_permutas', document.getElementById('lista_permutas').value);
-
-        if (activeInputMethod === 'pdf') {
-            if (!pdfFile) {
-                alert("Por favor, selecione um PDF com a lista de punições.");
-                statusGeral.textContent = 'Erro: Nenhum PDF selecionado.';
-                statusGeral.style.color = '#E53E3E';
-                return;
-            }
-            formData.append('pdf_punicao', pdfFile);
-        } else {
-            const tsvData = document.getElementById('lista_punidos_tsv').value;
-            if (!tsvData.trim()) {
-                alert("Por favor, cole os dados da planilha na caixa de texto.");
-                statusGeral.textContent = 'Erro: Nenhuma lista de punição colada.';
-                statusGeral.style.color = '#E53E3E';
-                return;
-            }
-            formData.append('lista_punidos_tsv', tsvData);
-        }
-
+    // --- Lógica do Gerador de Ata ---
+    function adicionarPunido() {
         try {
-            const response = await fetch(SERVER_URL, {
-                method: 'POST',
-                body: formData
-            });
+            const num = parseInt(document.getElementById('p_numero').value);
+            const dataRelatorio = document.getElementById('p_data_relatorio').value;
+            const sei = document.getElementById('p_sei').value;
+            const resumo = document.getElementById('p_resumo').value;
 
-            const data = await response.json();
-            if (!response.ok) { throw new Error(data.erro || 'Erro desconhecido'); }
-            
-            statusGeral.textContent = 'Agendamento concluído com sucesso!';
-            statusGeral.style.color = '#38A169';
-            
-            const horarios = {
-                "Sábado (Manhã)": data.agenda["Sábado (Manhã)"],
-                "Sábado (Tarde)": data.agenda["Sábado (Tarde)"],
-                "Domingo (Manhã)": data.agenda["Domingo (Manhã)"],
-                "Domingo (Tarde)": data.agenda["Domingo (Tarde)"],
-                "Próximo Fim de Semana": data.agenda["Próximo Fim de Semana"]
+            if (!num || isNaN(num)) {
+                alert('Número do aluno é inválido.');
+                return;
+            }
+
+            const alunoInfo = MASTER_ALUNO_DB[num];
+            if (!alunoInfo) {
+                alert(`Aluno com Nº ${num} não encontrado no Banco de Dados. Verifique o número.`);
+                return;
+            }
+
+            const punicao = {
+                n: String(num).padStart(2, '0'),
+                aluno: alunoInfo.nome,
+                plantao: alunoInfo.plantao,
+                pelotao: alunoInfo.pelotao,
+                data_relatorio: dataRelatorio || "N/A",
+                sei: sei || "N/A",
+                resumo: resumo || "N/A"
             };
 
-            for (const [titulo, punicoes] of Object.entries(horarios)) {
-                if (punicoes.length > 0) {
-                    outputContainer.innerHTML += buildTableHTML(titulo, punicoes);
-                }
-            }
+            listaDePunicoes.push(punicao);
+            gerarAtaFinal(); // Atualiza a tabela em tempo real
+            
+            // Limpa os campos
+            document.getElementById('p_numero').value = '';
+            document.getElementById('p_data_relatorio').value = '';
+            document.getElementById('p_sei').value = '';
+            document.getElementById('p_resumo').value = '';
+            document.getElementById('p_numero').focus();
 
-            const removidos = data.removidos["PERMUTA"];
-            if (removidos.length > 0) {
-                outputContainer.innerHTML += buildRemovidosHTML(removidos);
-            }
-
-        } catch (error) {
-            console.error('Erro:', error);
-            statusGeral.textContent = `Falha no agendamento: ${error.message}`;
-            statusGeral.style.color = '#E53E3E';
+        } catch (e) {
+            alert('Erro ao adicionar aluno: ' + e.message);
         }
     }
 
-    function buildTableHTML(titulo, punicoes) {
+    function gerarAtaFinal() {
+        const ataData = document.getElementById('ata_data').value;
+        const ataTurno = document.getElementById('ata_turno').value;
+        const outputContainer = document.getElementById('output-container');
+
+        if (listaDePunicoes.length === 0) {
+            outputContainer.innerHTML = '<p style="color: var(--text-secondary);">A tabela da ata aparecerá aqui assim que você adicionar o primeiro aluno.</p>';
+            return;
+        }
+
+        // Ordena pela antiguidade (número)
+        listaDePunicoes.sort((a, b) => parseInt(a.n) - parseInt(b.n));
+
         let tableHTML = `
-            <h3>${titulo}</h3>
+            <p style="text-align: center; margin-bottom: 20px; font-weight: 600;">EXTRACLASSE - ${ataTurno.toUpperCase()}</p>
             <table class="punishment-table">
                 <thead>
                     <tr>
@@ -295,7 +385,7 @@
                 <tbody>
         `;
         
-        punicoes.forEach(p => {
+        listaDePunicoes.forEach(p => {
             tableHTML += `
                 <tr>
                     <td>${p.data_relatorio}</td>
@@ -305,23 +395,59 @@
                     <td>${p.pelotao}</td>
                     <td>${p.sei}</td>
                     <td>${p.resumo}</td>
-                    <td></td>
-                </tr>
+                    <td></td> </tr>
             `;
         });
 
         tableHTML += `</tbody></table>`;
-        return tableHTML;
+        outputContainer.innerHTML = tableHTML;
     }
 
-    function buildRemovidosHTML(removidos) {
-        let html = `
-            <h3 style="color: #E53E3E;">Alunos Removidos (Permuta)</h3>
-            <textarea readonly rows="3">${removidos.join('\n')}</textarea>
+    // --- Lógica do Agendador (Workflow Gemini) ---
+    // Esta função prepara os dados para você copiar e colar para o Gemini
+    function prepararParaGemini() {
+        const dataSabado = document.getElementById('agenda_data_sabado').value;
+        const listaPermutas = document.getElementById('agenda_permutas').value;
+        const listaPunidos = document.getElementById('agenda_punidos').value;
+        const output = document.getElementById('agenda_output');
+
+        if (!dataSabado || !listaPunidos) {
+            alert("Preencha a Data do Sábado e a Lista de Punições.");
+            return;
+        }
+
+        let prompt = `
+Olá, Gemini. Por favor, agende as seguintes punições para mim.
+
+**Contexto:**
+Preciso agendar a lista de punidos abaixo para o fim de semana que começa no sábado, ${dataSabado}.
+As regras de exceção são:
+1.  **Punição emenda com serviço:**
+    * Serviço na Sexta-feira: Não pode punir no Sábado de Manhã.
+    * Serviço no Sábado: Não pode punir no Sábado (manhã/tarde) nem no Domingo de Manhã.
+    * Serviço no Domingo: Não pode punir no Domingo (manhã/tarde).
+2.  **Ordem de Agendamento:** A fila de punição segue a ordem: Sábado (Manhã), Sábado (Tarde), Domingo (Manhã), Domingo (Tarde).
+3.  **Limite:** Máximo de 4 punições por fim de semana. A 5ª punição em diante deve ser agendada para "Próximo Fim de Semana".
+4.  **Exceções:** O serviço que proíbe a punição inclui Plantão, Adjunto ou Sobreaviso.
+
+**Listas de Exceção (Copie e cole no seu sistema):**
+(Aqui eu colaria o banco de dados completo de plantões, adjuntos e sobreaviso, mas é muito grande. Vou apenas referenciar o fim de semana relevante.)
+
+**Fim de Semana Solicitado (Começando em ${dataSabado}):**
+* **Lista de Permutas (Ignorar):**
+${listaPermutas || "Nenhuma"}
+
+**Lista de Punição (Agendar esta lista):**
+${listaPunidos}
+
+**Sua Tarefa:**
+Gere as 5 listas de saída (Sábado Manhã, Sábado Tarde, Domingo Manhã, Domingo Tarde, Próximo Fim de Semana) com os nomes dos alunos agendados corretamente, aplicando as regras de exceção e a regra do limite de 4 por fim de semana.
         `;
-        return html;
-    }
 
+        output.value = prompt.trim();
+        alert("Prompt copiado para a área de transferência!");
+        navigator.clipboard.writeText(output.value);
+    }
 </script>
 
 </body>
