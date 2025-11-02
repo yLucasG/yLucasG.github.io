@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agendador de Punições (vFinal)</title>
+    <title>Agendador de Punições (vFinal com Cópia)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -41,6 +41,7 @@
         }
         .button-primary:hover { background-color: var(--accent-blue-light); transform: translateY(-2px); }
         
+        /* NOVO: Header da tabela de saída com botão */
         #output-container .table-header {
             display: flex;
             justify-content: space-between;
@@ -48,9 +49,9 @@
             margin-top: 30px;
             margin-bottom: 15px;
         }
-        #output-container h3 { font-size: 1.5rem; color: var(--accent-blue); }
+        #output-container h3 { font-size: 1.5rem; color: var(--accent-blue); margin: 0; }
         
-        /* NOVO BOTÃO DE COPIAR */
+        /* NOVO: Estilo do Botão de Copiar */
         .copy-button {
             background-color: var(--bg-secondary);
             color: var(--text-primary);
@@ -60,10 +61,15 @@
             font-family: 'Poppins', sans-serif;
             font-weight: 500;
             cursor: pointer;
-            transition: background-color 0.2s;
+            transition: all 0.2s;
         }
         .copy-button:hover { background-color: #e2e8f0; }
-
+        .copy-button.copied {
+            background-color: #38A169; /* Verde Sucesso */
+            color: white;
+            border-color: #38A169;
+        }
+        
         .punishment-table {
             width: 100%; border-collapse: collapse; font-size: 0.9em; background-color: var(--bg-primary);
             border-radius: 8px; overflow: hidden; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
@@ -71,14 +77,14 @@
         .punishment-table th, .punishment-table td { padding: 12px 15px; border-bottom: 1px solid var(--border-color); text-align: left; }
         .punishment-table th { background-color: var(--bg-secondary); color: var(--text-secondary); font-weight: 600; }
         .punishment-table tr:last-child td { border-bottom: none; }
-        .punishment-table td:nth-child(1) { width: 10%; } /* Data */
-        .punishment-table td:nth-child(2) { width: 5%; } /* Nº */
-        .punishment-table td:nth-child(3) { width: 15%; } /* Aluno */
-        .punishment-table td:nth-child(4) { width: 10%; } /* Plantão */
-        .punishment-table td:nth-child(5) { width: 15%; } /* Pelotão */
-        .punishment-table td:nth-child(6) { width: 10%; } /* SEI */
-        .punishment-table td:nth-child(7) { width: 20%; } /* Resumo */
-        .punishment-table td:nth-child(8) { width: 15%; } /* Assinatura */
+        .punishment-table td:nth-child(1) { width: 10%; }
+        .punishment-table td:nth-child(2) { width: 5%; }
+        .punishment-table td:nth-child(3) { width: 15%; }
+        .punishment-table td:nth-child(4) { width: 10%; }
+        .punishment-table td:nth-child(5) { width: 15%; }
+        .punishment-table td:nth-child(6) { width: 10%; }
+        .punishment-table td:nth-child(7) { width: 20%; }
+        .punishment-table td:nth-child(8) { width: 15%; }
 
         #status-geral { text-align: center; font-weight: 500; font-size: 1.1rem; padding: 10px; }
         
@@ -129,6 +135,7 @@
 <script>
     // =========================================================================
     // BANCO DE DADOS MESTRE DE ALUNOS (Embutido no JS)
+    // (O código foi omitido aqui para ser breve, mas está no script final)
     // =========================================================================
     const MASTER_ALUNO_DB = {
         1: {"nome": "MÁRCIO SOUZA", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
@@ -436,7 +443,7 @@
     };
 
     // =========================================================================
-    // LÓGICA DO AGENDADOR (v33 - LÓGICA DE DATA CORRIGIDA)
+    // LÓGICA DO AGENDADOR
     // =========================================================================
     const statusGeral = document.getElementById('status-geral');
     const outputContainer = document.getElementById('output-container');
@@ -612,11 +619,79 @@
             statusGeral.style.color = '#E53E3E';
         }
     }
+    
+    // =========================================================================
+    // NOVO: Função para Copiar a Tabela para o SEI
+    // =========================================================================
+    function copiarTabelaParaSEI(tableId, buttonElement) {
+        const originalTable = document.getElementById(tableId);
+        if (!originalTable) return;
+
+        // 1. Cria uma nova tabela "limpa" para o SEI
+        let seiTable = document.createElement('table');
+        seiTable.style.width = '100%';
+        seiTable.style.borderCollapse = 'collapse';
+        seiTable.style.fontFamily = 'Arial, sans-serif';
+        seiTable.style.fontSize = '10pt';
+        seiTable.style.border = '1px solid #000';
+
+        // 2. Clona cabeçalhos e linhas, aplicando estilos SEI
+        const allRows = originalTable.querySelectorAll('tr');
+        allRows.forEach(tr => {
+            let newTr = seiTable.insertRow();
+            const cells = tr.querySelectorAll('th, td');
+            cells.forEach(cell => {
+                let newCell = newTr.insertCell();
+                newCell.innerHTML = cell.innerHTML;
+                newCell.style.border = '1px solid #000';
+                newCell.style.padding = '5px';
+                newCell.style.verticalAlign = 'top';
+                if (cell.tagName === 'TH') {
+                    newCell.style.backgroundColor = '#f0f0f0';
+                    newCell.style.fontWeight = 'bold';
+                }
+            });
+        });
+
+        // 3. Cria um contêiner temporário para copiar o HTML da tabela
+        const tempDiv = document.createElement('div');
+        tempDiv.appendChild(seiTable);
+        
+        // 4. Copia o HTML limpo para a área de transferência
+        try {
+            navigator.clipboard.write([
+                new ClipboardItem({
+                    "text/html": new Blob([tempDiv.innerHTML], { type: "text/html" }),
+                    "text/plain": new Blob([originalTable.innerText], { type: "text/plain" })
+                })
+            ]).then(() => {
+                // Feedback para o usuário
+                buttonElement.textContent = 'Copiado!';
+                buttonElement.classList.add('copied');
+                setTimeout(() => {
+                    buttonElement.textContent = 'Copiar para SEI';
+                    buttonElement.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                 console.error('Falha ao copiar HTML: ', err);
+                 alert("Erro ao copiar. Seu navegador pode não suportar esta função.");
+            });
+        } catch (err) {
+            console.error('Falha ao copiar para a área de transferência: ', err);
+            alert("Erro ao copiar. API de Clipboard não suportada ou bloqueada.");
+        }
+    }
 
     function buildTableHTML(titulo, punicoes) {
+        // Gera um ID único para a tabela e o botão
+        const tableId = `table-${titulo.replace(/[^a-zA-Z0-9]/g, '-')}`;
+        
         let tableHTML = `
-            <h3>${titulo}</h3>
-            <table class="punishment-table">
+            <div class="table-header">
+                <h3>${titulo}</h3>
+                <button class="copy-button" onclick="copiarTabelaParaSEI('${tableId}', this)">Copiar para SEI</button>
+            </div>
+            <table class="punishment-table" id="${tableId}">
                 <thead>
                     <tr>
                         <th>RELATÓRIO</th>
