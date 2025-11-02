@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agendador de Punições</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark-primary: #101827; --bg-dark-secondary: #162033; --card-bg: #1F2840;
+            --accent-blue: #3E66FB; --accent-blue-light: #5A7FFF; --text-primary: #E0E7FF;
+            --text-secondary: #A0AEC0; --border-color: #2D3748;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background-color: var(--bg-dark-primary); color: var(--text-primary); }
+        .page-container { max-width: 1200px; margin: 40px auto; padding: 20px; }
+        h1 { font-size: 2.25rem; margin-bottom: 24px; color: white; border-bottom: 2px solid var(--accent-blue); padding-bottom: 16px; }
+        .card { background-color: var(--card-bg); border-radius: 12px; padding: 24px; margin-bottom: 24px; border: 1px solid var(--border-color); }
+        .card h2 { color: var(--text-primary); font-size: 1.25rem; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
+        label { display: block; margin-top: 15px; margin-bottom: 5px; font-weight: 500; color: var(--text-secondary); }
+        input, textarea, select {
+            width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);
+            box-sizing: border-box; background-color: var(--bg-dark-secondary); color: var(--text-primary);
+            font-family: 'Poppins', sans-serif; font-size: 16px; transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        input:focus, textarea:focus, select:focus {
+            outline: none; border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(62, 102, 251, 0.3);
+        }
+        .grid-container-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .button-primary {
+            display: block; width: 100%; padding: 16px; background: linear-gradient(90deg, var(--accent-blue), var(--accent-blue-light));
+            color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: 600; cursor: pointer;
+            margin-top: 25px; transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .button-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(62, 102, 251, 0.4); }
+        
+        /* Estilos da Tabela de Saída */
+        #output-container h3 {
+            font-size: 1.5rem;
+            color: var(--accent-blue-light);
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+        .punishment-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+            background-color: var(--bg-dark-secondary);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        .punishment-table th, .punishment-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border-color);
+            text-align: left;
+        }
+        .punishment-table th {
+            background-color: var(--card-bg);
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+        .punishment-table tr:last-child td {
+            border-bottom: none;
+        }
+        .punishment-table td:nth-child(1) { width: 10%; } /* Data */
+        .punishment-table td:nth-child(2) { width: 5%; } /* Nº */
+        .punishment-table td:nth-child(3) { width: 15%; } /* Aluno */
+        .punishment-table td:nth-child(4) { width: 10%; } /* Plantão */
+        .punishment-table td:nth-child(5) { width: 15%; } /* Pelotão */
+        .punishment-table td:nth-child(6) { width: 10%; } /* SEI */
+        .punishment-table td:nth-child(7) { width: 20%; } /* Resumo */
+        .punishment-table td:nth-child(8) { width: 15%; } /* Assinatura */
+
+        #status { text-align: center; font-weight: 500; font-size: 1.1rem; padding: 10px; }
+        
+        @media (max-width: 900px) { .grid-container-2col { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+<div class="page-container">
+    <h1>Agendador de Punições</h1>
+
+    <div class="card">
+        <h2>1. Selecione o Fim de Semana</h2>
+        <label for="data_sabado">Selecione o Sábado da Punição:</label>
+        <select id="data_sabado">
+            <option value="2025-11-08">Sábado, 08 de Novembro de 2025</option>
+            <option value="2025-11-15">Sábado, 15 de Novembro de 2025</option>
+            <option value="2025-11-22">Sábado, 22 de Novembro de 2025</option>
+            <option value="2025-11-29">Sábado, 29 de Novembro de 2025</option>
+        </select>
+        <p style="color: var(--text-secondary); margin-top: 15px; font-size: 0.9em;">
+            O sistema buscará automaticamente quem está de Plantão, Adjunto e Sobreaviso.
+        </p>
+    </div>
+    
+    <div class="card">
+        <h2>2. Listas Variáveis</h2>
+        <div class="grid-container-2col">
+            <div>
+                <label for="lista_permutas">Alunos em Permuta (Um por linha)</label>
+                <textarea id="lista_permutas" rows="10" placeholder="AL CFO PM 01 NOME A..."></textarea>
+            </div>
+            <div>
+                <label for="lista_punidos">Lista de Punição (Formato TSV)</label>
+                <textarea id="lista_punidos" rows="10" placeholder="Nº (TAB) Data (TAB) SEI (TAB) Resumo..."></textarea>
+                <small style="color: var(--text-secondary);">Copie do Excel e cole aqui. Ex: 11 (TAB) 28/08/2025 (TAB) 75107489 (TAB) FAIXA AMASSADA</small>
+            </div>
+        </div>
+    </div>
+
+    <button class="button-primary" onclick="agendar()">Agendar Punições</button>
+    <div id="status"></div>
+
+    <div class="card">
+        <h2>3. Resultado Final (Agenda)</h2>
+        <div id="output-container">
+            </div>
+    </div>
+</div>
+
+<script>
+    const SERVER_URL = 'https://meucfo2025.pythonanywhere.com/agendar-punicoes';
+    const statusDiv = document.getElementById('status');
+    const outputContainer = document.getElementById('output-container');
+
+    async function agendar() {
+        statusDiv.textContent = 'Agendando...';
+        statusDiv.style.color = '#5A7FFF';
+        outputContainer.innerHTML = ''; // Limpa resultados anteriores
+
+        const payload = {
+            data_sabado: document.getElementById('data_sabado').value,
+            lista_permutas: document.getElementById('lista_permutas').value,
+            lista_punidos: document.getElementById('lista_punidos').value
+        };
+
+        try {
+            const response = await fetch(SERVER_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.erro || 'Erro desconhecido no servidor');
+            }
+            
+            // Sucesso! Agora vamos construir as tabelas
+            statusDiv.textContent = 'Agendamento concluído com sucesso!';
+            statusDiv.style.color = '#38A169';
+            
+            // Lista de horários para criar as tabelas
+            const horarios = {
+                "Sábado (Manhã)": data.agenda["Sábado (Manhã)"],
+                "Sábado (Tarde)": data.agenda["Sábado (Tarde)"],
+                "Domingo (Manhã)": data.agenda["Domingo (Manhã)"],
+                "Domingo (Tarde)": data.agenda["Domingo (Tarde)"],
+                "Próximo Fim de Semana": data.agenda["Próximo Fim de Semana"]
+            };
+
+            for (const [titulo, punicoes] of Object.entries(horarios)) {
+                if (punicoes.length > 0) {
+                    outputContainer.innerHTML += buildTableHTML(titulo, punicoes);
+                }
+            }
+
+            // Tabela de Removidos
+            const removidos = data.removidos["PERMUTA"];
+            if (removidos.length > 0) {
+                outputContainer.innerHTML += buildRemovidosHTML(removidos);
+            }
+
+        } catch (error) {
+            console.error('Erro:', error);
+            statusDiv.textContent = `Falha no agendamento: ${error.message}`;
+            statusDiv.style.color = '#E53E3E';
+        }
+    }
+
+    function buildTableHTML(titulo, punicoes) {
+        let tableHTML = `
+            <h3>${titulo}</h3>
+            <table class="punishment-table">
+                <thead>
+                    <tr>
+                        <th>RELATÓRIO</th>
+                        <th>№</th>
+                        <th>ALUNO</th>
+                        <th>PLANTÃO</th>
+                        <th>PELOTÃO/2° CIA</th>
+                        <th>SEI</th>
+                        <th>RESUMO</th>
+                        <th>ASSINATURA DO ALUNO NO ATO DA CIÊNCIA</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        
+        // Adiciona cada aluno como uma linha da tabela
+        punicoes.forEach(p => {
+            tableHTML += `
+                <tr>
+                    <td>${p.data_relatorio}</td>
+                    <td>${p.n}</td>
+                    <td>${p.aluno}</td>
+                    <td>${p.plantao}</td>
+                    <td>${p.pelotao}</td>
+                    <td>${p.sei}</td>
+                    <td>${p.resumo}</td>
+                    <td></td>
+                </tr>
+            `;
+        });
+
+        tableHTML += `</tbody></table>`;
+        return tableHTML;
+    }
+
+    function buildRemovidosHTML(removidos) {
+        let html = `
+            <h3 style="color: #E53E3E;">Alunos Removidos (Permuta)</h3>
+            <ul style="list-style-type: none; padding-left: 10px;">
+        `;
+        removidos.forEach(nome => {
+            html += `<li style="margin-bottom: 5px;">${nome}</li>`;
+        });
+        html += `</ul>`;
+        return html;
+    }
+
+</script>
+
+</body>
+</html>
