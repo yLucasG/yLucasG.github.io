@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agendador de Punições (v33 - Corrigido)</title>
+    <title>Agendador de Punições (vFinal)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -41,7 +41,29 @@
         }
         .button-primary:hover { background-color: var(--accent-blue-light); transform: translateY(-2px); }
         
-        #output-container h3 { font-size: 1.5rem; color: var(--accent-blue); margin-top: 30px; margin-bottom: 15px; }
+        #output-container .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+        #output-container h3 { font-size: 1.5rem; color: var(--accent-blue); }
+        
+        /* NOVO BOTÃO DE COPIAR */
+        .copy-button {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .copy-button:hover { background-color: #e2e8f0; }
+
         .punishment-table {
             width: 100%; border-collapse: collapse; font-size: 0.9em; background-color: var(--bg-primary);
             border-radius: 8px; overflow: hidden; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
@@ -106,7 +128,7 @@
 
 <script>
     // =========================================================================
-    // BANCO DE DADOS MESTRE DE ALUNOS (Embutido no JS) - v33
+    // BANCO DE DADOS MESTRE DE ALUNOS (Embutido no JS)
     // =========================================================================
     const MASTER_ALUNO_DB = {
         1: {"nome": "MÁRCIO SOUZA", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
