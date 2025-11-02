@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agendador de Punições (vDefinitiva Offline)</title>
+    <title>Agendador de Punições (v33 - Corrigido)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -106,7 +106,7 @@
 
 <script>
     // =========================================================================
-    // BANCO DE DADOS MESTRE DE ALUNOS (Embutido no JS)
+    // BANCO DE DADOS MESTRE DE ALUNOS (Embutido no JS) - v33
     // =========================================================================
     const MASTER_ALUNO_DB = {
         1: {"nome": "MÁRCIO SOUZA", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
@@ -315,7 +315,7 @@
     const CALENDARIO_SERVICO = {
         "2025-11-07": { // SEXTA
             "plantao": LISTAS_PLANTOES.INDIA,
-            "adjunto": new Set([formatarNomeAluno(42, "CARLA ARAÚJO"), formatarNomeAluno(140, "VICTOR COSTA")]),
+            "adjunto": new Set([formatarNomeAluno(42, "CARLA ARAUJO"), formatarNomeAluno(140, "VICTOR COSTA")]),
             "sobreaviso": new Set([
                 formatarNomeAluno(141, "JULIANE CORDEIRO"), formatarNomeAluno(128, "ALEXANDRO GOMES"), formatarNomeAluno(122, "BATISTA"), formatarNomeAluno(118, "DURVAL"),
                 formatarNomeAluno(114, "BARBALHO"), formatarNomeAluno(110, "CÉSAR MEDEIROS"), formatarNomeAluno(102, "ALLAN MARIANO")
@@ -414,14 +414,15 @@
     };
 
     // =========================================================================
-    // LÓGICA DO AGENDADOR (v32 - Lógica Corrigida)
+    // LÓGICA DO AGENDADOR (v33 - LÓGICA DE DATA CORRIGIDA)
     // =========================================================================
     const statusGeral = document.getElementById('status-geral');
     const outputContainer = document.getElementById('output-container');
 
-    function formatarDataJS(data) {
+    // --- Função Auxiliar: Formatar Data (JS) - CORRIGIDA ---
+    function formatarDataJS(data) { // Formato YYYY-MM-DD
         const dataObj = new Date(data + 'T12:00:00Z'); // Usa Z (UTC) para travar a data
-
+        
         const sex = new Date(dataObj.getTime());
         sex.setUTCDate(sex.getUTCDate() - 1);
         
@@ -435,6 +436,7 @@
         };
     }
 
+    // --- Função Auxiliar: Parsear Lista TSV ---
     function extrairPunidosDoTSV(tsv_string) {
         let punicoes = [];
         const linhas = tsv_string.trim().split('\n');
@@ -482,7 +484,7 @@
         return punicoes;
     }
 
-    // --- LÓGICA DE AGENDAMENTO v32 (CORRIGIDA) ---
+    // --- Função Principal de Agendamento ---
     function agendar() {
         statusGeral.textContent = 'Agendando...';
         statusGeral.style.color = 'var(--accent-blue-light)';
@@ -505,11 +507,11 @@
             const lista_permutas = new Set(lista_permutas_bruta.trim().split('\n').filter(Boolean).map(n => n.trim()));
             const datas = formatarDataJS(data_sabado_str);
             
-            const servico_sex = CALENDARIO_SERVICO[datas.sex] || {};
-            const servico_sab = CALENDARIO_SERVICO[datas.sab] || {};
-            const servico_dom = CALENDARIO_SERVICO[datas.dom] || {};
+            const servico_sex = CALENDARIO_SERVICO[datas.sex];
+            const servico_sab = CALENDARIO_SERVICO[datas.sab];
+            const servico_dom = CALENDARIO_SERVICO[datas.dom];
 
-            if (!servico_sex.plantao || !servico_sab.plantao || !servico_dom.plantao) {
+            if (!servico_sex || !servico_sab || !servico_dom) {
                 throw new Error(`Calendário de serviço não encontrado para a data base ${datas.sab}. Verifique o Banco de Dados.`);
             }
 
@@ -527,11 +529,9 @@
             };
             let removidos = {"PERMUTA": []};
             
-            // Objeto para rastrear os slots já ocupados POR ALUNO
             let aluno_slots_ocupados = {};
             
-            // A lista de punições NÃO é ordenada por antiguidade, mas sim processada na ordem em que foi colada.
-            // A antiguidade (ordem numérica) é aplicada DEPOIS, dentro de cada slot.
+            // A lista de punições NÃO é ordenada aqui, ela é processada na ordem em que foi colada.
             
             for (const punicao of punicoes) {
                 const aluno_full_name = punicao.full_name;
@@ -545,10 +545,8 @@
                     aluno_slots_ocupados[aluno_full_name] = new Set();
                 }
 
-                // 1. Define todos os horários possíveis
                 let horarios_disponiveis_aluno = [...horarios];
                 
-                // 2. Remove slots com base em IMPEDIMENTOS DE SERVIÇO
                 if (excecoes_sex.has(aluno_full_name)) {
                     horarios_disponiveis_aluno = horarios_disponiveis_aluno.filter(h => h !== "Sábado (Manhã)");
                 }
@@ -559,20 +557,14 @@
                     horarios_disponiveis_aluno = horarios_disponiveis_aluno.filter(h => h !== "Domingo (Manhã)" && h !== "Domingo (Tarde)");
                 }
 
-                // 3. Remove slots que o ALUNO JÁ OCUPA com punições anteriores
                 const slots_ja_ocupados = aluno_slots_ocupados[aluno_full_name];
                 horarios_disponiveis_aluno = horarios_disponiveis_aluno.filter(h => !slots_ja_ocupados.has(h));
                 
-                // 4. Agenda o aluno
                 if (horarios_disponiveis_aluno.length === 0) {
-                    // Não há mais slots para ESTE ALUNO neste fim de semana
                     agenda_final["Próximo Fim de Semana"].push(punicao);
                 } else {
-                    // Pega o primeiro slot disponível para ele
                     const horario_agendado = horarios_disponiveis_aluno[0];
                     agenda_final[horario_agendado].push(punicao);
-                    
-                    // Marca o slot como ocupado PARA ESTE ALUNO
                     aluno_slots_ocupados[aluno_full_name].add(horario_agendado);
                 }
             }
@@ -583,7 +575,7 @@
             
             for (const [titulo, punicoes_agendadas] of Object.entries(agenda_final)) {
                 if (punicoes_agendadas.length > 0) {
-                    // Reordena a lista final de cada slot por antiguidade
+                    // Ordena a lista final de cada slot por antiguidade
                     punicoes_agendadas.sort((a, b) => parseInt(a.n) - parseInt(b.n));
                     outputContainer.innerHTML += buildTableHTML(titulo, punicoes_agendadas);
                 }
