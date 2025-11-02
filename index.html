@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agendador de Punições (Versão Offline Definitiva)</title>
+    <title>Agendador de Punições (vDefinitiva Offline)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -28,7 +28,7 @@
             width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);
             box-sizing: border-box; background-color: var(--bg-secondary); color: var(--text-primary);
             font-family: 'Poppins', sans-serif; font-size: 16px; transition: border-color 0.2s, box-shadow 0.2s;
-            resize: none; /* <-- CORRIGIDO: Impede redimensionamento */
+            resize: none;
         }
         input:focus, textarea:focus, select:focus {
             outline: none; border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(0, 74, 145, 0.2);
@@ -58,7 +58,7 @@
         .punishment-table td:nth-child(7) { width: 20%; } /* Resumo */
         .punishment-table td:nth-child(8) { width: 15%; } /* Assinatura */
 
-        #status { text-align: center; font-weight: 500; font-size: 1.1rem; padding: 10px; }
+        #status-geral { text-align: center; font-weight: 500; font-size: 1.1rem; padding: 10px; }
         
         @media (max-width: 900px) { .grid-container-2col { grid-template-columns: 1fr; } }
     </style>
@@ -77,9 +77,6 @@
             <option value="2025-11-22">Sábado, 22 de Novembro de 2025</option>
             <option value="2025-11-29">Sábado, 29 de Novembro de 2025</option>
         </select>
-        <p style="color: var(--text-secondary); margin-top: 15px; font-size: 0.9em;">
-            O sistema buscará automaticamente quem está de Plantão, Adjunto e Sobreaviso.
-        </p>
     </div>
     
     <div class="card">
@@ -417,23 +414,24 @@
     };
 
     // =========================================================================
-    // LÓGICA DO AGENDADOR
+    // LÓGICA DO AGENDADOR (v30 - LÓGICA CORRIGIDA)
     // =========================================================================
     const statusGeral = document.getElementById('status-geral');
     const outputContainer = document.getElementById('output-container');
 
-    // --- Função Auxiliar: Formatar Data (JS) ---
-    function formatarDataJS(data) { // Formato YYYY-MM-DD
-        const [ano, mes, dia] = data.split('-');
-        const dataObj = new Date(ano, mes - 1, dia);
+    function formatarDataJS(data) {
+        const dataObj = new Date(data + 'T12:00:00');
+        const sex = new Date(dataObj.getTime());
+        sex.setDate(sex.getDate() - 1);
+        const sab = new Date(dataObj.setDate(dataObj.getDate() + 1));
+        const dom = new Date(dataObj.setDate(dataObj.getDate() + 1));
         return {
-            sex: new Date(dataObj.setDate(dataObj.getDate() - 1)).toISOString().split('T')[0],
-            sab: data,
-            dom: new Date(dataObj.setDate(dataObj.getDate() + 2)).toISOString().split('T')[0]
+            sex: sex.toISOString().split('T')[0],
+            sab: sab.toISOString().split('T')[0],
+            dom: dom.toISOString().split('T')[0]
         };
     }
 
-    // --- Função Auxiliar: Parsear Lista TSV ---
     function extrairPunidosDoTSV(tsv_string) {
         let punicoes = [];
         const linhas = tsv_string.trim().split('\n');
@@ -441,7 +439,6 @@
         
         for (const linha of linhas) {
             if (!linha.trim()) continue;
-            
             const match = linha.trim().match(padrao_flexivel);
             if (!match) {
                 console.warn("Linha TSV não reconhecida, pulando:", linha);
@@ -454,6 +451,16 @@
             
             if (!alunoInfo) {
                 console.warn(`Aluno com Nº ${numero} não encontrado no DB Mestre.`);
+                punicoes.push({
+                    n: String(numero).padStart(2, '0'),
+                    aluno: "NOME NÃO ENCONTRADO",
+                    plantao: "N/A",
+                    pelotao: "N/A",
+                    data_relatorio: data_rel.trim(),
+                    sei: sei.trim(),
+                    resumo: resumo.trim(),
+                    full_name: `AL CFO PM ${String(numero).padStart(2, '0')} NOME NÃO ENCONTRADO`
+                });
                 continue;
             }
             
@@ -471,7 +478,7 @@
         return punicoes;
     }
 
-    // --- Função Principal de Agendamento ---
+    // --- LÓGICA DE AGENDAMENTO v30 (CORRIGIDA) ---
     function agendar() {
         statusGeral.textContent = 'Agendando...';
         statusGeral.style.color = 'var(--accent-blue-light)';
@@ -492,7 +499,6 @@
             }
             
             const lista_permutas = new Set(lista_permutas_bruta.trim().split('\n').filter(Boolean).map(n => n.trim()));
-            
             const datas = formatarDataJS(data_sabado_str);
             
             const servico_sex = CALENDARIO_SERVICO[datas.sex] || {};
@@ -503,9 +509,9 @@
                 throw new Error(`Calendário de serviço não encontrado para a data base ${datas.sab}. Verifique o Banco de Dados.`);
             }
 
-            const excecoes_sex = new Set([...servico_sex.plantao, ...servico_sex.adjunto, ...servico_sex.sobreaviso]);
-            const excecoes_sab = new Set([...servico_sab.plantao, ...servico_sab.adjunto, ...servico_sab.sobreaviso]);
-            const excecoes_dom = new Set([...servico_dom.plantao, ...servico_dom.adjunto, ...servico_dom.sobreaviso]);
+            const excecoes_sex = new Set([...(servico_sex.plantao || []), ...(servico_sex.adjunto || []), ...(servico_sex.sobreaviso || [])]);
+            const excecoes_sab = new Set([...(servico_sab.plantao || []), ...(servico_sab.adjunto || []), ...(servico_sab.sobreaviso || [])]);
+            const excecoes_dom = new Set([...(servico_dom.plantao || []), ...(servico_dom.adjunto || []), ...(servico_dom.sobreaviso || [])]);
 
             const horarios = ["Sábado (Manhã)", "Sábado (Tarde)", "Domingo (Manhã)", "Domingo (Tarde)"];
             let agenda_final = {
@@ -517,8 +523,8 @@
             };
             let removidos = {"PERMUTA": []};
             
-            let horario_index = 0;
-            let punicoes_agendadas_neste_fds = 0;
+            // Objeto para rastrear os slots já ocupados POR ALUNO
+            let aluno_slots_ocupados = {};
             
             punicoes.sort((a, b) => parseInt(a.n) - parseInt(b.n)); // Ordena por antiguidade
             
@@ -530,8 +536,15 @@
                     continue;
                 }
                 
+                // Inicializa o rastreador para o aluno, se for a primeira punição dele
+                if (!aluno_slots_ocupados[aluno_full_name]) {
+                    aluno_slots_ocupados[aluno_full_name] = new Set();
+                }
+
+                // 1. Define todos os horários possíveis
                 let horarios_disponiveis_aluno = [...horarios];
                 
+                // 2. Remove slots com base em IMPEDIMENTOS DE SERVIÇO
                 if (excecoes_sex.has(aluno_full_name)) {
                     horarios_disponiveis_aluno = horarios_disponiveis_aluno.filter(h => h !== "Sábado (Manhã)");
                 }
@@ -542,32 +555,22 @@
                     horarios_disponiveis_aluno = horarios_disponiveis_aluno.filter(h => h !== "Domingo (Manhã)" && h !== "Domingo (Tarde)");
                 }
 
+                // 3. Remove slots que o ALUNO JÁ OCUPA com punições anteriores
+                const slots_ja_ocupados = aluno_slots_ocupados[aluno_full_name];
+                horarios_disponiveis_aluno = horarios_disponiveis_aluno.filter(h => !slots_ja_ocupados.has(h));
+                
+                // 4. Agenda o aluno
                 if (horarios_disponiveis_aluno.length === 0) {
+                    // Não há mais slots para ESTE ALUNO neste fim de semana
                     agenda_final["Próximo Fim de Semana"].push(punicao);
-                    continue;
+                } else {
+                    // Pega o primeiro slot disponível para ele
+                    const horario_agendado = horarios_disponiveis_aluno[0];
+                    agenda_final[horario_agendado].push(punicao);
+                    
+                    // Marca o slot como ocupado PARA ESTE ALUNO
+                    aluno_slots_ocupados[aluno_full_name].add(horario_agendado);
                 }
-                
-                if (punicoes_agendadas_neste_fds >= horarios.length) {
-                    agenda_final["Próximo Fim de Semana"].push(punicao);
-                    continue;
-                }
-
-                let horario_agendado = null;
-                for (let i = horario_index; i < horarios.length; i++) {
-                    const slot_geral = horarios[i];
-                    if (horarios_disponiveis_aluno.includes(slot_geral)) {
-                        horario_agendado = slot_geral;
-                        horario_index = i + 1;
-                        break;
-                    }
-                }
-                
-                if (!horario_agendado) {
-                    horario_agendado = horarios_disponiveis_aluno[0];
-                }
-                
-                agenda_final[horario_agendado].push(punicao);
-                punicoes_agendadas_neste_fds++;
             }
 
             // Renderiza as tabelas
@@ -576,6 +579,8 @@
             
             for (const [titulo, punicoes_agendadas] of Object.entries(agenda_final)) {
                 if (punicoes_agendadas.length > 0) {
+                    // Reordena a lista final de cada slot por antiguidade
+                    punicoes_agendadas.sort((a, b) => parseInt(a.n) - parseInt(b.n));
                     outputContainer.innerHTML += buildTableHTML(titulo, punicoes_agendadas);
                 }
             }
@@ -631,7 +636,7 @@
     function buildRemovidosHTML(removidos) {
         let html = `
             <h3 style="color: #E53E3E;">Alunos Removidos (Permuta)</h3>
-            <textarea readonly rows="${removidos.length + 1}">${removidos.join('\n')}</textarea>
+            <textarea readonly rows="${removidos.length || 1}">${removidos.join('\n')}</textarea>
         `;
         return html;
     }
