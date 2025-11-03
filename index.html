@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agendador de Punições (vFinal com Cópia)</title>
+    <title>Agendador de Punições</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -41,33 +41,49 @@
         }
         .button-primary:hover { background-color: var(--accent-blue-light); transform: translateY(-2px); }
         
-        /* NOVO: Header da tabela de saída com botão */
-        #output-container .table-header {
+        /* Abas */
+        .tab-buttons {
+            display: flex;
+            border-bottom: 2px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+        .tab-button {
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+        }
+        .tab-button.active {
+            color: var(--accent-blue);
+            border-bottom-color: var(--accent-blue);
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Cabeçalho da Tabela de Saída com Botão */
+        .table-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-top: 30px;
             margin-bottom: 15px;
         }
-        #output-container h3 { font-size: 1.5rem; color: var(--accent-blue); margin: 0; }
+        .table-header h3 { font-size: 1.5rem; color: var(--accent-blue); margin: 0; }
+        .table-header h3 span { font-size: 0.8em; color: var(--text-secondary); font-weight: 400; }
         
-        /* NOVO: Estilo do Botão de Copiar */
         .copy-button {
-            background-color: var(--bg-secondary);
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-family: 'Poppins', sans-serif;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
+            background-color: var(--bg-secondary); color: var(--text-primary);
+            border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 6px;
+            font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s;
         }
         .copy-button:hover { background-color: #e2e8f0; }
         .copy-button.copied {
-            background-color: #38A169; /* Verde Sucesso */
-            color: white;
-            border-color: #38A169;
+            background-color: #38A169; color: white; border-color: #38A169;
         }
         
         .punishment-table {
@@ -77,24 +93,30 @@
         .punishment-table th, .punishment-table td { padding: 12px 15px; border-bottom: 1px solid var(--border-color); text-align: left; }
         .punishment-table th { background-color: var(--bg-secondary); color: var(--text-secondary); font-weight: 600; }
         .punishment-table tr:last-child td { border-bottom: none; }
-        .punishment-table td:nth-child(1) { width: 10%; }
-        .punishment-table td:nth-child(2) { width: 5%; }
-        .punishment-table td:nth-child(3) { width: 15%; }
-        .punishment-table td:nth-child(4) { width: 10%; }
-        .punishment-table td:nth-child(5) { width: 15%; }
-        .punishment-table td:nth-child(6) { width: 10%; }
-        .punishment-table td:nth-child(7) { width: 20%; }
-        .punishment-table td:nth-child(8) { width: 15%; }
+        /* ... (Estilos de largura de coluna) ... */
+
+        /* Estilos do Dashboard de Estatísticas */
+        .stats-container { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        .stats-card { background: var(--bg-secondary); border-radius: 8px; padding: 16px; }
+        .stats-card h4 { color: var(--text-primary); margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;}
+        .stats-list { list-style: none; }
+        .stats-list li { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-color); }
+        .stats-list li:last-child { border-bottom: none; }
+        .stats-list li span:first-child { font-weight: 500; }
+        .stats-list li span:last-child { font-weight: 600; color: var(--accent-blue); font-size: 1.1em; }
 
         #status-geral { text-align: center; font-weight: 500; font-size: 1.1rem; padding: 10px; }
         
-        @media (max-width: 900px) { .grid-container-2col { grid-template-columns: 1fr; } }
+        @media (max-width: 900px) { 
+            .grid-container-2col { grid-template-columns: 1fr; } 
+            .stats-container { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
 
 <div class="page-container">
-    <h1>Agendador de Punições (Versão Offline)</h1>
+    <h1>Agendador de Punições</h1>
 
     <div class="card">
         <h2>1. Selecione o Fim de Semana</h2>
@@ -126,16 +148,29 @@
     <div id="status-geral"></div>
 
     <div class="card">
-        <h2>3. Resultado Final (Agenda)</h2>
-        <div id="output-container">
-            </div>
+        <h2>3. Resultado Final</h2>
+        
+        <div class="tab-buttons" id="output-tabs">
+            <button class="tab-button active" onclick="switchOutputTab(event, 'agenda')">Agenda</button>
+            <button class="tab-button" onclick="switchOutputTab(event, 'estatisticas')">Estatísticas</button>
+        </div>
+
+        <div id="agenda" class="tab-content active">
+            <div id="output-container">
+                </div>
+        </div>
+
+        <div id="estatisticas" class="tab-content">
+            <div id="estatisticas-output-container">
+                </div>
+        </div>
+        
     </div>
 </div>
 
 <script>
     // =========================================================================
     // BANCO DE DADOS MESTRE DE ALUNOS (Embutido no JS)
-    // (O código foi omitido aqui para ser breve, mas está no script final)
     // =========================================================================
     const MASTER_ALUNO_DB = {
         1: {"nome": "MÁRCIO SOUZA", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
@@ -443,10 +478,32 @@
     };
 
     // =========================================================================
-    // LÓGICA DO AGENDADOR
+    // LÓGICA DO AGENDADOR (v34)
     // =========================================================================
     const statusGeral = document.getElementById('status-geral');
     const outputContainer = document.getElementById('output-container');
+    const statsContainer = document.getElementById('estatisticas-output-container');
+
+    // --- Lógica das Abas de Saída ---
+    function switchOutputTab(event, tabName) {
+        let tabContents = document.getElementsByClassName("tab-content");
+        for (let i = 0; i < tabContents.length; i++) {
+            tabContents[i].style.display = "none";
+        }
+        
+        let tabButtons = document.querySelectorAll("#output-tabs .tab-button");
+        for (let i = 0; i < tabButtons.length; i++) {
+            tabButtons[i].className = tabButtons[i].className.replace(" active", "");
+        }
+        
+        document.getElementById(tabName).style.display = "block";
+        event.currentTarget.className += " active";
+    }
+    // Inicia a primeira aba de saída
+    document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById('agenda').style.display = 'block';
+    });
+
 
     // --- Função Auxiliar: Formatar Data (JS) - CORRIGIDA ---
     function formatarDataJS(data) { // Formato YYYY-MM-DD
@@ -518,6 +575,7 @@
         statusGeral.textContent = 'Agendando...';
         statusGeral.style.color = 'var(--accent-blue-light)';
         outputContainer.innerHTML = '';
+        statsContainer.innerHTML = ''; // Limpa as estatísticas
 
         try {
             const data_sabado_str = document.getElementById('data_sabado').value;
@@ -559,8 +617,6 @@
             let removidos = {"PERMUTA": []};
             
             let aluno_slots_ocupados = {};
-            
-            // A lista de punições NÃO é ordenada aqui, ela é processada na ordem em que foi colada.
             
             for (const punicao of punicoes) {
                 const aluno_full_name = punicao.full_name;
@@ -604,7 +660,6 @@
             
             for (const [titulo, punicoes_agendadas] of Object.entries(agenda_final)) {
                 if (punicoes_agendadas.length > 0) {
-                    // Ordena a lista final de cada slot por antiguidade
                     punicoes_agendadas.sort((a, b) => parseInt(a.n) - parseInt(b.n));
                     outputContainer.innerHTML += buildTableHTML(titulo, punicoes_agendadas);
                 }
@@ -612,6 +667,9 @@
             if (removidos["PERMUTA"].length > 0) {
                 outputContainer.innerHTML += buildRemovidosHTML(removidos["PERMUTA"]);
             }
+
+            // Renderiza as estatísticas
+            renderizarEstatisticas(agenda_final);
 
         } catch (error) {
             console.error('Erro:', error);
@@ -621,76 +679,19 @@
     }
     
     // =========================================================================
-    // NOVO: Função para Copiar a Tabela para o SEI
+    // FUNÇÕES DE RENDERIZAÇÃO E CÓPIA
     // =========================================================================
-    function copiarTabelaParaSEI(tableId, buttonElement) {
-        const originalTable = document.getElementById(tableId);
-        if (!originalTable) return;
-
-        // 1. Cria uma nova tabela "limpa" para o SEI
-        let seiTable = document.createElement('table');
-        seiTable.style.width = '100%';
-        seiTable.style.borderCollapse = 'collapse';
-        seiTable.style.fontFamily = 'Arial, sans-serif';
-        seiTable.style.fontSize = '10pt';
-        seiTable.style.border = '1px solid #000';
-
-        // 2. Clona cabeçalhos e linhas, aplicando estilos SEI
-        const allRows = originalTable.querySelectorAll('tr');
-        allRows.forEach(tr => {
-            let newTr = seiTable.insertRow();
-            const cells = tr.querySelectorAll('th, td');
-            cells.forEach(cell => {
-                let newCell = newTr.insertCell();
-                newCell.innerHTML = cell.innerHTML;
-                newCell.style.border = '1px solid #000';
-                newCell.style.padding = '5px';
-                newCell.style.verticalAlign = 'top';
-                if (cell.tagName === 'TH') {
-                    newCell.style.backgroundColor = '#f0f0f0';
-                    newCell.style.fontWeight = 'bold';
-                }
-            });
-        });
-
-        // 3. Cria um contêiner temporário para copiar o HTML da tabela
-        const tempDiv = document.createElement('div');
-        tempDiv.appendChild(seiTable);
-        
-        // 4. Copia o HTML limpo para a área de transferência
-        try {
-            navigator.clipboard.write([
-                new ClipboardItem({
-                    "text/html": new Blob([tempDiv.innerHTML], { type: "text/html" }),
-                    "text/plain": new Blob([originalTable.innerText], { type: "text/plain" })
-                })
-            ]).then(() => {
-                // Feedback para o usuário
-                buttonElement.textContent = 'Copiado!';
-                buttonElement.classList.add('copied');
-                setTimeout(() => {
-                    buttonElement.textContent = 'Copiar para SEI';
-                    buttonElement.classList.remove('copied');
-                }, 2000);
-            }).catch(err => {
-                 console.error('Falha ao copiar HTML: ', err);
-                 alert("Erro ao copiar. Seu navegador pode não suportar esta função.");
-            });
-        } catch (err) {
-            console.error('Falha ao copiar para a área de transferência: ', err);
-            alert("Erro ao copiar. API de Clipboard não suportada ou bloqueada.");
-        }
-    }
 
     function buildTableHTML(titulo, punicoes) {
-        // Gera um ID único para a tabela e o botão
         const tableId = `table-${titulo.replace(/[^a-zA-Z0-9]/g, '-')}`;
         
-        let tableHTML = `
+        let headerHTML = `
             <div class="table-header">
-                <h3>${titulo}</h3>
-                <button class="copy-button" onclick="copiarTabelaParaSEI('${tableId}', this)">Copiar para SEI</button>
-            </div>
+                <h3>${titulo} <span style="font-size: 0.8em; color: var(--text-secondary); font-weight: 400;">(${punicoes.length} aluno${punicoes.length > 1 ? 's' : ''})</span></h3>
+                <button class="copy-button" onclick="copiarTabelaParaSEI('${tableId}', '${titulo}')">Copiar para SEI</button>
+            </div>`;
+        
+        let tableHTML = `
             <table class="punishment-table" id="${tableId}">
                 <thead>
                     <tr>
@@ -723,7 +724,7 @@
         });
 
         tableHTML += `</tbody></table>`;
-        return tableHTML;
+        return headerHTML + tableHTML;
     }
 
     function buildRemovidosHTML(removidos) {
@@ -732,6 +733,135 @@
             <textarea readonly rows="${removidos.length || 1}">${removidos.join('\n')}</textarea>
         `;
         return html;
+    }
+
+    function renderizarEstatisticas(agenda_final) {
+        const todasPunicoes = [].concat(...Object.values(agenda_final));
+        
+        if (todasPunicoes.length === 0) {
+            statsContainer.innerHTML = "<p>Nenhuma punição agendada para exibir estatísticas.</p>";
+            return;
+        }
+
+        const porPlantao = {};
+        const porPelotao = {};
+
+        for (const punicao of todasPunicoes) {
+            const plantao = punicao.plantao || "N/A";
+            const pelotao = punicao.pelotao || "N/A";
+
+            porPlantao[plantao] = (porPlantao[plantao] || 0) + 1;
+            porPelotao[pelotao] = (porPelotao[pelotao] || 0) + 1;
+        }
+
+        let plantaoHTML = '<ul class="stats-list">';
+        Object.entries(porPlantao).sort((a,b) => b[1] - a[1]).forEach(([nome, total]) => {
+            plantaoHTML += `<li><span>${nome}</span> <span>${total}</span></li>`;
+        });
+        plantaoHTML += '</ul>';
+
+        let pelotaoHTML = '<ul class="stats-list">';
+        Object.entries(porPelotao).sort((a,b) => b[1] - a[1]).forEach(([nome, total]) => {
+            pelotaoHTML += `<li><span>${nome}</span> <span>${total}</span></li>`;
+        });
+        pelotaoHTML += '</ul>';
+
+        statsContainer.innerHTML = `
+            <div class="stats-container">
+                <div class="stats-card">
+                    <h4>Punições por Plantão</h4>
+                    ${plantaoHTML}
+                </div>
+                <div class="stats-card">
+                    <h4>Punições por Pelotão</h4>
+                    ${pelotaoHTML}
+                </div>
+            </div>
+        `;
+    }
+    
+    function switchOutputTab(event, tabName) {
+        let tabContents = document.querySelectorAll("#output-tabs + .tab-content");
+        for (let i = 0; i < tabContents.length; i++) {
+            tabContents[i].style.display = "none";
+        }
+        
+        let tabButtons = document.querySelectorAll("#output-tabs .tab-button");
+        for (let i = 0; i < tabButtons.length; i++) {
+            tabButtons[i].className = tabButtons[i].className.replace(" active", "");
+        }
+        
+        document.getElementById(tabName).style.display = "block";
+        event.currentTarget.className += " active";
+    }
+    // Inicia a primeira aba de saída
+    document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById('agenda').style.display = 'block';
+    });
+
+    function copiarTabelaParaSEI(tableId, titulo) {
+        const originalTable = document.getElementById(tableId);
+        if (!originalTable) return;
+
+        // 1. Cria a tabela "limpa" para o SEI
+        let seiTable = document.createElement('table');
+        seiTable.setAttribute('style', 'width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 10pt; border: 1px solid #000;');
+
+        // 2. Adiciona a Linha de Título Mesclada
+        let titleRow = seiTable.insertRow();
+        let titleCell = titleRow.insertCell();
+        titleCell.colSpan = 8; // A tabela tem 8 colunas
+        titleCell.innerHTML = `<strong>${titulo.toUpperCase()}</strong>`;
+        titleCell.setAttribute('style', 'border: 1px solid #000; padding: 5px; text-align: center; background-color: #f0f0f0; font-weight: bold;');
+
+        // 3. Clona Cabeçalhos
+        const headerRows = originalTable.querySelectorAll('thead tr');
+        headerRows.forEach(tr => {
+            let newTr = seiTable.insertRow();
+            tr.querySelectorAll('th').forEach(cell => {
+                let newCell = newTr.insertCell();
+                newCell.innerHTML = cell.innerHTML;
+                newCell.setAttribute('style', 'border: 1px solid #000; padding: 5px; background-color: #f0f0f0; font-weight: bold; text-align: left;');
+            });
+        });
+        
+        // 4. Clona Linhas de Dados
+        const dataRows = originalTable.querySelectorAll('tbody tr');
+        dataRows.forEach(tr => {
+            let newTr = seiTable.insertRow();
+            tr.querySelectorAll('td').forEach(cell => {
+                let newCell = newTr.insertCell();
+                newCell.innerHTML = cell.innerHTML;
+                newCell.setAttribute('style', 'border: 1px solid #000; padding: 5px; vertical-align: top;');
+            });
+        });
+
+        // 5. Copia o HTML limpo para a área de transferência
+        const tempDiv = document.createElement('div');
+        tempDiv.appendChild(seiTable);
+        
+        try {
+            navigator.clipboard.write([
+                new ClipboardItem({
+                    "text/html": new Blob([tempDiv.innerHTML], { type: "text/html" }),
+                    "text/plain": new Blob([originalTable.innerText], { type: "text/plain" })
+                })
+            ]).then(() => {
+                const buttonElement = event.target;
+                buttonElement.textContent = 'Copiado!';
+                buttonElement.classList.add('copied');
+                setTimeout(() => {
+                    buttonElement.textContent = 'Copiar para SEI';
+                    buttonElement.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                 console.error('Falha ao copiar HTML: ', err);
+                 alert("Erro ao copiar. Seu navegador pode não suportar esta função.");
+            });
+        } catch (err) {
+            console.error('Falha ao copiar para a área de transferência: ', err);
+            alert("Erro ao copiar. API de Clipboard não suportada ou bloqueada.");
+        }
     }
 </script>
 
