@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agendador de Punições</title>
+    <title>Sistema de Gestão de Punições</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -16,12 +16,57 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Poppins', sans-serif; background-color: var(--bg-secondary); color: var(--text-primary); }
         .page-container { max-width: 1200px; margin: 40px auto; padding: 20px; }
-        h1 { font-size: 2.25rem; margin-bottom: 24px; color: var(--accent-blue); border-bottom: 2px solid var(--accent-blue); padding-bottom: 16px; }
+        
+        nav.main-tabs {
+            display: flex;
+            background-color: var(--card-bg);
+            border-radius: 10px 10px 0 0;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+            border-bottom: none;
+            overflow: hidden;
+        }
+        nav.main-tabs .tab-link {
+            padding: 15px 25px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            background: none;
+            border: none;
+            border-bottom: 4px solid transparent;
+            transition: all 0.2s;
+        }
+        nav.main-tabs .tab-link:hover {
+            background-color: var(--bg-secondary);
+        }
+        nav.main-tabs .tab-link.active {
+            color: var(--accent-blue);
+            border-bottom-color: var(--accent-blue);
+        }
+        .main-tab-pane {
+            display: none;
+        }
+        .main-tab-pane.active {
+            display: block;
+        }
+
         .card { 
-            background-color: var(--card-bg); border-radius: 12px; padding: 24px; 
+            background-color: var(--card-bg); border-radius: 0 0 12px 12px; padding: 24px; 
             margin-bottom: 24px; border: 1px solid var(--border-color);
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border-top: none;
         }
+        .main-tab-pane > .card:first-child {
+            border-top: 1px solid var(--border-color);
+            border-radius: 12px;
+        }
+        .main-tab-pane.card {
+            border-top: none;
+            border-radius: 0 0 12px 12px;
+            margin-top: 0;
+        }
+
         .card h2 { color: var(--accent-blue); font-size: 1.25rem; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
         label { display: block; margin-top: 15px; margin-bottom: 5px; font-weight: 500; color: var(--text-secondary); }
         input, textarea, select {
@@ -34,81 +79,67 @@
             outline: none; border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(0, 74, 145, 0.2);
         }
         .grid-container-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .button-primary {
-            display: block; width: 100%; padding: 16px; background-color: var(--accent-blue);
-            color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: 600; cursor: pointer;
-            margin-top: 25px; transition: background-color 0.2s, transform 0.2s;
+        .grid-container-3col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+        .grid-container-4col { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 20px; }
+        
+        .button-primary, .button-secondary, .button-danger {
+            display: inline-block; padding: 12px 24px; color: white; border: none;
+            border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;
+            margin-top: 20px; transition: all 0.2s;
         }
+        .button-primary { background-color: var(--accent-blue); }
         .button-primary:hover { background-color: var(--accent-blue-light); transform: translateY(-2px); }
-        
-        /* Abas */
-        .tab-buttons {
-            display: flex;
-            border-bottom: 2px solid var(--border-color);
-            margin-bottom: 20px;
-        }
-        .tab-button {
-            padding: 10px 20px;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 500;
-            color: var(--text-secondary);
-            background: none;
-            border: none;
-            border-bottom: 3px solid transparent;
-            margin-bottom: -2px;
-        }
-        .tab-button.active {
-            color: var(--accent-blue);
-            border-bottom-color: var(--accent-blue);
-        }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
+        .button-secondary { background-color: var(--text-secondary); }
+        .button-secondary:hover { background-color: var(--text-primary); color: var(--bg-dark-primary); }
+        .button-danger { background-color: #E53E3E; }
+        .button-danger:hover { background-color: #C53030; }
 
-        /* Cabeçalho da Tabela de Saída com Botão */
-        .table-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 30px;
-            margin-bottom: 15px;
-        }
-        .table-header h3 { font-size: 1.5rem; color: var(--accent-blue); margin: 0; }
-        .table-header h3 span { font-size: 0.8em; color: var(--text-secondary); font-weight: 400; }
-        
-        .copy-button {
-            background-color: var(--bg-secondary); color: var(--text-primary);
-            border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 6px;
-            font-family: 'Poppins', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.2s;
-        }
-        .copy-button:hover { background-color: #e2e8f0; }
-        .copy-button.copied {
-            background-color: #38A169; color: white; border-color: #38A169;
-        }
-        
-        .punishment-table {
+        #output-container h3, #stats-container h3 { font-size: 1.5rem; color: var(--accent-blue); margin-top: 30px; margin-bottom: 15px; }
+        .punishment-table, .aluno-table {
             width: 100%; border-collapse: collapse; font-size: 0.9em; background-color: var(--bg-primary);
             border-radius: 8px; overflow: hidden; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
-        .punishment-table th, .punishment-table td { padding: 12px 15px; border-bottom: 1px solid var(--border-color); text-align: left; }
-        .punishment-table th { background-color: var(--bg-secondary); color: var(--text-secondary); font-weight: 600; }
-        .punishment-table tr:last-child td { border-bottom: none; }
-        /* ... (Estilos de largura de coluna) ... */
+        .punishment-table th, .punishment-table td, .aluno-table th, .aluno-table td { padding: 12px 15px; border-bottom: 1px solid var(--border-color); text-align: left; }
+        .punishment-table th, .aluno-table th { background-color: var(--bg-secondary); color: var(--text-secondary); font-weight: 600; }
+        .punishment-table tr:last-child td, .aluno-table tr:last-child td { border-bottom: none; }
+        .punishment-table td:nth-child(8) { width: 15%; } /* Assinatura */
+        .aluno-table td:last-child { width: 120px; text-align: center; }
 
-        /* Estilos do Dashboard de Estatísticas */
+        #status-geral { text-align: center; font-weight: 500; font-size: 1.1rem; padding: 10px; }
+        #status-alunos, #status-calendario { text-align: left; font-weight: 500; font-size: 1.0rem; padding-top: 15px; }
+        .success-msg { color: #38A169; }
+        .error-msg { color: #E53E3E; }
+        
+        .tab-buttons { display: flex; border-bottom: 2px solid var(--border-color); margin-bottom: 20px; }
+        .tab-button {
+            padding: 10px 20px; cursor: pointer; font-size: 1rem; font-weight: 500;
+            color: var(--text-secondary); background: none; border: none;
+            border-bottom: 3px solid transparent; margin-bottom: -2px;
+        }
+        .tab-button.active { color: var(--accent-blue); border-bottom-color: var(--accent-blue); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .table-header { display: flex; justify-content: space-between; align-items: center; margin-top: 30px; margin-bottom: 15px; }
+        .table-header h3 span { font-size: 0.8em; color: var(--text-secondary); font-weight: 400; }
+        
+        .copy-button {
+            background-color: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color);
+            padding: 8px 12px; border-radius: 6px; font-family: 'Poppins', sans-serif;
+            font-weight: 500; cursor: pointer; transition: all 0.2s;
+        }
+        .copy-button:hover { background-color: #e2e8f0; }
+        .copy-button.copied { background-color: #38A169; color: white; border-color: #38A169; }
+        
         .stats-container { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
         .stats-card { background: var(--bg-secondary); border-radius: 8px; padding: 16px; }
         .stats-card h4 { color: var(--text-primary); margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;}
         .stats-list { list-style: none; }
         .stats-list li { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-color); }
         .stats-list li:last-child { border-bottom: none; }
-        .stats-list li span:first-child { font-weight: 500; }
-        .stats-list li span:last-child { font-weight: 600; color: var(--accent-blue); font-size: 1.1em; }
-
-        #status-geral { text-align: center; font-weight: 500; font-size: 1.1rem; padding: 10px; }
         
         @media (max-width: 900px) { 
-            .grid-container-2col { grid-template-columns: 1fr; } 
+            .grid-container-2col, .grid-container-3col, .grid-container-4col { grid-template-columns: 1fr; } 
             .stats-container { grid-template-columns: 1fr; }
         }
     </style>
@@ -116,66 +147,181 @@
 <body>
 
 <div class="page-container">
-    <h1>Agendador de Punições</h1>
-
-    <div class="card">
-        <h2>1. Selecione o Fim de Semana</h2>
-        <label for="data_sabado">Selecione o Sábado da Punição:</label>
-        <select id="data_sabado">
-            <option value="2025-11-08">Sábado, 08 de Novembro de 2025</option>
-            <option value="2025-11-15">Sábado, 15 de Novembro de 2025</option>
-            <option value="2025-11-22">Sábado, 22 de Novembro de 2025</option>
-            <option value="2025-11-29">Sábado, 29 de Novembro de 2025</option>
-        </select>
-    </div>
     
-    <div class="card">
-        <h2>2. Listas Variáveis</h2>
-        <div class="grid-container-2col">
-            <div>
-                <label for="lista_permutas">Alunos em Permuta (Um por linha)</label>
-                <textarea id="lista_permutas" rows="10" placeholder="AL CFO PM 01 NOME A..."></textarea>
+    <nav class="main-tabs">
+        <button class="tab-link active" onclick="switchMainTab(event, 'tab-agendador')">Agendador de Punições</button>
+        <button class="tab-link" onclick="switchMainTab(event, 'tab-gerenciar-alunos')">Gerenciar Alunos</button>
+        <button class="tab-link" onclick="switchMainTab(event, 'tab-gerenciar-calendario')">Gerenciar Calendário</button>
+    </nav>
+
+    <div id="tab-agendador" class="main-tab-pane active card">
+        <h1>Agendador de Punições</h1>
+
+        <div class="card">
+            <h2>1. Selecione o Fim de Semana</h2>
+            <label for="data_sabado">Selecione o Sábado da Punição:</label>
+            <select id="data_sabado">
+                <option value="2025-11-08">Sábado, 08 de Novembro de 2025</option>
+                <option value="2025-11-15">Sábado, 15 de Novembro de 2025</option>
+                <option value="2025-11-22">Sábado, 22 de Novembro de 2025</option>
+                <option value="2025-11-29">Sábado, 29 de Novembro de 2025</option>
+            </select>
+        </div>
+        
+        <div class="card">
+            <h2>2. Listas Variáveis</h2>
+            <div class="grid-container-2col">
+                <div>
+                    <label for="lista_permutas">Alunos em Permuta (Um por linha)</label>
+                    <textarea id="lista_permutas" rows="10" placeholder="AL CFO PM 01 NOME A..."></textarea>
+                </div>
+                <div>
+                    <label for="lista_punidos_tsv">Lista de Punição (Copie da planilha)</label>
+                    <textarea id="lista_punidos_tsv" rows="10" placeholder="Ex: 34 28/08/2025 83201291 faixa amassada..."></textarea>
+                    <small style="color: var(--text-secondary);">Cole os dados no formato: Nº (espaço) Data (espaço) SEI (espaço) Resumo</small>
+                </div>
             </div>
-            <div>
-                <label for="lista_punidos_tsv">Lista de Punição (Copie da planilha)</label>
-                <textarea id="lista_punidos_tsv" rows="10" placeholder="Ex: 34 28/08/2025 83201291 faixa amassada..."></textarea>
-                <small style="color: var(--text-secondary);">Cole os dados no formato: Nº (espaço) Data (espaço) SEI (espaço) Resumo</small>
+        </div>
+
+        <button class="button-primary" style="width: 100%;" onclick="agendar()">Agendar Punições</button>
+        <div id="status-geral"></div>
+
+        <div class="card">
+            <h2>3. Resultado Final</h2>
+            <div class="tab-buttons" id="output-tabs">
+                <button class="tab-button active" onclick="switchOutputTab(event, 'agenda')">Agenda</button>
+                <button class="tab-button" onclick="switchOutputTab(event, 'estatisticas')">Estatísticas</button>
+            </div>
+            <div id="agenda" class="tab-content active">
+                <div id="output-container"></div>
+            </div>
+            <div id="estatisticas" class="tab-content">
+                <div id="estatisticas-output-container"></div>
             </div>
         </div>
     </div>
 
-    <button class="button-primary" onclick="agendar()">Agendar Punições</button>
-    <div id="status-geral"></div>
-
-    <div class="card">
-        <h2>3. Resultado Final</h2>
+    <div id="tab-gerenciar-alunos" class="main-tab-pane card">
+        <h1>Gerenciar Banco de Dados de Alunos</h1>
         
-        <div class="tab-buttons" id="output-tabs">
-            <button class="tab-button active" onclick="switchOutputTab(event, 'agenda')">Agenda</button>
-            <button class="tab-button" onclick="switchOutputTab(event, 'estatisticas')">Estatísticas</button>
+        <div class="card">
+            <h2>Adicionar / Editar Aluno</h2>
+            <form id="form-aluno" onsubmit="event.preventDefault(); salvarAluno();">
+                <div class="grid-container-4col">
+                    <div>
+                        <label for="aluno-numero">Nº</label>
+                        <input type="number" id="aluno-numero" required>
+                    </div>
+                    <div>
+                        <label for="aluno-nome">Nome</label>
+                        <input type="text" id="aluno-nome" required>
+                    </div>
+                    <div>
+                        <label for="aluno-plantao">Plantão</label>
+                        <select id="aluno-plantao">
+                            <option value="FOXTROT">FOXTROT</option>
+                            <option value="GOLF">GOLF</option>
+                            <option value="HOTEL">HOTEL</option>
+                            <option value="INDIA">INDIA</option>
+                            <option value="OUTRO">OUTRO</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="aluno-pelotao">Pelotão/Cia</label>
+                        <input type="text" id="aluno-pelotao" placeholder="Ex: 1º PEL/2ª CIA" required>
+                    </div>
+                </div>
+                <button type="submit" class="button-primary">Salvar Aluno</button>
+                <button type="button" class="button-secondary" onclick="limparFormularioAluno()">Limpar Formulário</button>
+                <div id="status-alunos" class="success-msg"></div>
+            </form>
         </div>
-
-        <div id="agenda" class="tab-content active">
-            <div id="output-container">
+        
+        <div class="card">
+            <h2>Lista de Alunos Cadastrados</h2>
+            
+            <div class="grid-container-3col">
+                <div>
+                    <label for="filtro-busca">Buscar por Nº ou Nome:</label>
+                    <input type="text" id="filtro-busca" onkeyup="renderizarTabelaAlunos()" placeholder="Digite para buscar...">
+                </div>
+                <div>
+                    <label for="filtro-plantao">Filtrar por Plantão:</label>
+                    <select id="filtro-plantao" onchange="renderizarTabelaAlunos()">
+                        <option value="">Todos</option>
+                        <option value="FOXTROT">FOXTROT</option>
+                        <option value="GOLF">GOLF</option>
+                        <option value="HOTEL">HOTEL</option>
+                        <option value="INDIA">INDIA</option>
+                        <option value="OUTRO">OUTRO</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="filtro-pelotao">Filtrar por Pelotão:</label>
+                    <select id="filtro-pelotao" onchange="renderizarTabelaAlunos()">
+                        <option value="">Todos</option>
+                        </select>
+                </div>
+            </div>
+            
+            <div id="tabela-alunos-container" style="margin-top: 20px;">
                 </div>
         </div>
+    </div>
 
-        <div id="estatisticas" class="tab-content">
-            <div id="estatisticas-output-container">
-                </div>
+    <div id="tab-gerenciar-calendario" class="main-tab-pane card">
+        <h1>Gerenciar Calendário de Serviço</h1>
+
+        <div class="card">
+            <h2>Selecione uma Data para Editar</h2>
+            <label for="calendar-picker">Escolha uma data (Sexta, Sábado ou Domingo)</label>
+            <input type="date" id="calendar-picker" onchange="carregarDiaCalendario()">
         </div>
-        
+
+        <div class="card" id="form-calendario" style="display:none;">
+            <h2 id="form-calendario-titulo">Editar Dia</h2>
+            <form onsubmit="event.preventDefault(); salvarDiaCalendario();">
+                <div>
+                    <label for="dia-plantao">Plantão de Serviço</label>
+                    <select id="dia-plantao">
+                        <option value="NENHUM">NENHUM</option>
+                        <option value="FOXTROT">FOXTROT</option>
+                        <option value="GOLF">GOLF</option>
+                        <option value="HOTEL">HOTEL</option>
+                        <option value="INDIA">INDIA</option>
+                        <option value="OUTRO">OUTRO</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="dia-adjuntos">Adjuntos (Apenas números, um por linha)</label>
+                    <textarea id="dia-adjuntos" rows="3" placeholder="42&#10;140"></textarea>
+                </div>
+                <div>
+                    <label for="dia-sobreaviso">Sobreaviso (Apenas números, um por linha)</label>
+                    <textarea id="dia-sobreaviso" rows="7" placeholder="141&#10;128&#10;122..."></textarea>
+                </div>
+                <button type="submit" class="button-primary">Salvar Dia</button>
+                <div id="status-calendario" class="success-msg"></div>
+            </form>
+        </div>
     </div>
 </div>
 
 <script>
     // =========================================================================
-    // BANCO DE DADOS MESTRE DE ALUNOS (Embutido no JS)
+    // BANCOS DE DADOS GLOBAIS (Carregados do LocalStorage ou Padrão)
     // =========================================================================
-    const MASTER_ALUNO_DB = {
+    let DB_ALUNOS = {};
+    let DB_CALENDARIO = {};
+    let DB_PLANTOES = {};
+
+    // =========================================================================
+    // BANCOS DE DADOS PADRÃO (Corrigidos e Atualizados v35)
+    // =========================================================================
+    const DEFAULT_MASTER_ALUNO_DB = {
         1: {"nome": "MÁRCIO SOUZA", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
         2: {"nome": "RENATO", "plantao": "GOLF", "pelotao": "2º PEL/2ª CIA"},
-        3: {"nome": "FERNANDO", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
+        3: {"nome": "FERNANDO", "plantao": "HOTEL", "pelotao": "3º PEL/2ª CIA"},
         4: {"nome": "ROBERTO FREITAS", "plantao": "INDIA", "pelotao": "4º PEL/2ª CIA"},
         5: {"nome": "SILVANA", "plantao": "FOXTROT", "pelotao": "5º PEL/2ª CIA"},
         6: {"nome": "DANIELLE PRADO", "plantao": "GOLF", "pelotao": "6º PEL/2ª CIA"},
@@ -185,15 +331,15 @@
         10: {"nome": "VICTOR FERREIRA", "plantao": "HOTEL", "pelotao": "2º PEL/2ª CIA"},
         11: {"nome": "ORLANDO", "plantao": "INDIA", "pelotao": "2º PEL/2ª CIA"},
         12: {"nome": "ISABELLA", "plantao": "INDIA", "pelotao": "2º PEL/2ª CIA"},
-        13: {"nome": "BRENDA", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
+        13: {"nome": "BRENDA", "plantao": "FOXTROT", "pelotao": "3º PEL/2ª CIA"},
         14: {"nome": "AMANDA COELHO", "plantao": "GOLF", "pelotao": "4º PEL/2ª CIA"},
         15: {"nome": "JUNIOR", "plantao": "GOLF", "pelotao": "3º PEL/2ª CIA"},
-        16: {"nome": "EMILY", "plantao": "FOXTROT", "pelotao": "1º PEL/1ª CIA"},
+        16: {"nome": "THIAGO TAVARES", "plantao": "FOXTROT", "pelotao": "4º PEL/2ª CIA"},
         17: {"nome": "MURILO", "plantao": "HOTEL", "pelotao": "5º PEL/2ª CIA"},
-        18: {"nome": "ARYANA", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
+        18: {"nome": "ARYANA", "plantao": "HOTEL", "pelotao": "5º PEL/2ª CIA"},
         19: {"nome": "ALENCAR", "plantao": "INDIA", "pelotao": "3º PEL/2ª CIA"},
         20: {"nome": "LUAN PEREIRA", "plantao": "GOLF", "pelotao": "4º PEL/2ª CIA"},
-        21: {"nome": "MANOEL", "plantao": "FOXTROT", "pelotao": "2º PEL/2ª CIA"},
+        21: {"nome": "MANOEL", "plantao": "FOXTROT", "pelotao": "5º PEL/2ª CIA"},
         24: {"nome": "MATHEUS MESQUITA", "plantao": "GOLF", "pelotao": "2º PEL/2ª CIA"},
         25: {"nome": "DAVI OLIVEIRA", "plantao": "FOXTROT", "pelotao": "3º PEL/2ª CIA"},
         26: {"nome": "MARCOLINO", "plantao": "INDIA", "pelotao": "4º PEL/2ª CIA"},
@@ -202,13 +348,13 @@
         29: {"nome": "MACIEL", "plantao": "INDIA", "pelotao": "6º PEL/2ª CIA"},
         30: {"nome": "M ALBUQUERQUE", "plantao": "GOLF", "pelotao": "2º PEL/2ª CIA"},
         31: {"nome": "ALLATAS SOUSA", "plantao": "HOTEL", "pelotao": "3º PEL/2ª CIA"},
-        32: {"nome": "KAYO GABRIEL", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
+        32: {"nome": "KAYO GABRIEL", "plantao": "HOTEL", "pelotao": "5º PEL/2ª CIA"},
         33: {"nome": "KAROLINE ABREU", "plantao": "GOLF", "pelotao": "1º PEL/2ª CIA"},
         34: {"nome": "GIOVANNI", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
         35: {"nome": "PAULINO", "plantao": "GOLF", "pelotao": "6º PEL/2ª CIA"},
         36: {"nome": "M. FEITOSA", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
-        37: {"nome": "VALDECI", "plantao": "FOXTROT", "pelotao": "6º PEL/2ª CIA"},
-        38: {"nome": "W. SILVA", "plantao": "FOXTROT", "pelotao": "3º PEL/2ª CIA"},
+        37: {"nome": "VALDECI", "plantao": "FOXTROT", "pelotao": "2º PEL/2ª CIA"},
+        38: {"nome": "W. SILVA", "plantao": "FOXTROT", "pelotao": "4º PEL/2ª CIA"},
         39: {"nome": "ELLIO", "plantao": "GOLF", "pelotao": "2º PEL/2ª CIA"},
         40: {"nome": "MARINHO", "plantao": "HOTEL", "pelotao": "3º PEL/2ª CIA"},
         41: {"nome": "MALAQUIAS", "plantao": "INDIA", "pelotao": "4º PEL/2ª CIA"},
@@ -216,10 +362,10 @@
         43: {"nome": "CINTIA SOUZA", "plantao": "HOTEL", "pelotao": "3º PEL/2ª CIA"},
         44: {"nome": "PRISCILA CORREIA", "plantao": "INDIA", "pelotao": "4º PEL/2ª CIA"},
         45: {"nome": "WALYSON", "plantao": "FOXTROT", "pelotao": "5º PEL/2ª CIA"},
-        46: {"nome": "GRANGEIRO", "plantao": "GOLF", "pelotao": "3º PEL/2ª CIA"},
+        46: {"nome": "GRANGEIRO", "plantao": "GOLF", "pelotao": "3G PEL/2ª CIA"},
         47: {"nome": "MACEDO", "plantao": "HOTEL", "pelotao": "4º PEL/2ª CIA"},
         48: {"nome": "ELVIS", "plantao": "INDIA", "pelotao": "5º PEL/2ª CIA"},
-        49: {"nome": "JEFFERSON SILVA", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
+        49: {"nome": "JEFFERSON SILVA", "plantao": "FOXTROT", "pelotao": "6º PEL/2ª CIA"},
         50: {"nome": "QUEIROZ", "plantao": "GOLF", "pelotao": "6º PEL/2ª CIA"},
         52: {"nome": "RUBSLEY", "plantao": "INDIA", "pelotao": "2º PEL/2ª CIA"},
         53: {"nome": "G. SILVA", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
@@ -236,7 +382,7 @@
         67: {"nome": "LAYANNE", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
         68: {"nome": "KAROLINNE MOREIRA", "plantao": "INDIA", "pelotao": "2º PEL/2ª CIA"},
         69: {"nome": "FALCÃO", "plantao": "FOXTROT", "pelotao": "3º PEL/2ª CIA"},
-        70: {"nome": "MEIRA", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
+        70: {"nome": "MEIRA", "plantao": "HOTEL", "pelotao": "3º PEL/2ª CIA"},
         71: {"nome": "SERAFIM", "plantao": "GOLF", "pelotao": "4º PEL/2ª CIA"},
         72: {"nome": "NONATO", "plantao": "INDIA", "pelotao": "5º PEL/2ª CIA"},
         73: {"nome": "PEREIRA", "plantao": "FOXTROT", "pelotao": "2º PEL/2ª CIA"},
@@ -247,15 +393,15 @@
         78: {"nome": "GISELE FERREIRA", "plantao": "GOLF", "pelotao": "4º PEL/2ª CIA"},
         79: {"nome": "DIOGENES", "plantao": "FOXTROT", "pelotao": "4º PEL/2ª CIA"},
         80: {"nome": "JOSE", "plantao": "GOLF", "pelotao": "5º PEL/2ª CIA"},
-        81: {"nome": "COSTA", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
+        81: {"nome": "COSTA", "plantao": "HOTEL", "pelotao": "6º PEL/2ª CIA"},
         82: {"nome": "MARCOS NASCIMENTO", "plantao": "INDIA", "pelotao": "1º PEL/2ª CIA"},
         83: {"nome": "P. SOUZA", "plantao": "FOXTROT", "pelotao": "2º PEL/2ª CIA"},
         84: {"nome": "SIDNEI ARAÚJO", "plantao": "GOLF", "pelotao": "3º PEL/2ª CIA"},
         85: {"nome": "ANDERSON", "plantao": "HOTEL", "pelotao": "4º PEL/2ª CIA"},
         86: {"nome": "FERNANDO CRUZ", "plantao": "INDIA", "pelotao": "5º PEL/2ª CIA"},
-        87: {"nome": "ARYCLAYTON", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
+        87: {"nome": "ARYCLAYTON", "plantao": "FOXTROT", "pelotao": "6º PEL/2ª CIA"},
         88: {"nome": "S. NETO", "plantao": "GOLF", "pelotao": "1º PEL/2ª CIA"},
-        89: {"nome": "SILVA", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
+        89: {"nome": "SILVA", "plantao": "HOTEL", "pelotao": "2º PEL/2ª CIA"},
         90: {"nome": "RAFAEL BEZERRA", "plantao": "INDIA", "pelotao": "3º PEL/2ª CIA"},
         91: {"nome": "GESSICA", "plantao": "FOXTROT", "pelotao": "5º PEL/2ª CIA"},
         92: {"nome": "ALINE", "plantao": "INDIA", "pelotao": "6º PEL/2ª CIA"},
@@ -267,12 +413,11 @@
         98: {"nome": "EMANNUEL", "plantao": "FOXTROT", "pelotao": "4º PEL/2ª CIA"},
         99: {"nome": "G. GOMES", "plantao": "GOLF", "pelotao": "4º PEL/2ª CIA"},
         100: {"nome": "RENAN", "plantao": "INDIA", "pelotao": "6º PEL/2ª CIA"},
-        101: {"nome": "SELTON", "plantao": "FOXTROT", "pelotao": "1D PEL/2ª CIA"},
         102: {"nome": "ALLAN MARIANO", "plantao": "FOXTROT", "pelotao": "5º PEL/2ª CIA"},
         103: {"nome": "RAISSA SOARES", "plantao": "FOXTROT", "pelotao": "2º PEL/2ª CIA"},
         105: {"nome": "JOSÉ NETO", "plantao": "GOLF", "pelotao": "5º PEL/2ª CIA"},
-        106: {"nome": "LUCAS RANIELLE", "plantao": "HOTEL", "pelotao": "3º PEL/2ª CIA"},
-        107: {"nome": "LUCIANO", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
+        106: {"nome": "LUCAS RANIELLE", "plantao": "HOTEL", "pelotao": "6º PEL/2ª CIA"},
+        107: {"nome": "LUCIANO", "plantao": "HOTEL", "pelotao": "6º PEL/2ª CIA"},
         108: {"nome": "HENRIQUE", "plantao": "GOLF", "pelotao": "1º PEL/2ª CIA"},
         109: {"nome": "ERIKA DUARTE", "plantao": "HOTEL", "pelotao": "4º PEL/2ª CIA"},
         110: {"nome": "CÉSAR MEDEIROS", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
@@ -280,7 +425,7 @@
         112: {"nome": "MARQUES", "plantao": "INDIA", "pelotao": "3º PEL/2ª CIA"},
         113: {"nome": "AURÉLIO", "plantao": "GOLF", "pelotao": "4º PEL/2ª CIA"},
         114: {"nome": "BARBALHO", "plantao": "FOXTROT", "pelotao": "5º PEL/2ª CIA"},
-        115: {"nome": "VINICIUS OLIVEIRA", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
+        115: {"nome": "VINICIUS OLIVEIRA", "plantao": "HOTEL", "pelotao": "2º PEL/2ª CIA"},
         116: {"nome": "SANTIAGO", "plantao": "INDIA", "pelotao": "6º PEL/2ª CIA"},
         118: {"nome": "DURVAL", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
         119: {"nome": "VINÍCIUS SOUZA", "plantao": "GOLF", "pelotao": "2º PEL/2ª CIA"},
@@ -288,53 +433,53 @@
         121: {"nome": "JOÃO NASCIMENTO", "plantao": "INDIA", "pelotao": "2º PEL/2ª CIA"},
         122: {"nome": "BATISTA", "plantao": "FOXTROT", "pelotao": "4º PEL/2ª CIA"},
         123: {"nome": "GONZAGA", "plantao": "GOLF", "pelotao": "5º PEL/2ª CIA"},
-        125: {"nome": "MEDEIROS", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
+        125: {"nome": "MEDEIROS", "plantao": "HOTEL", "pelotao": "3º PEL/2ª CIA"},
         126: {"nome": "GILMARA", "plantao": "INDIA", "pelotao": "5º PEL/2ª CIA"},
-        127: {"nome": "CAIO GUIMARAES", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
+        127: {"nome": "CAIO GUIMARAES", "plantao": "HOTEL", "pelotao": "6º PEL/2ª CIA"},
         128: {"nome": "ALEXANDRO GOMES", "plantao": "FOXTROT", "pelotao": "4º PEL/2ª CIA"},
         129: {"nome": "LUIZ NUNES", "plantao": "GOLF", "pelotao": "5º PEL/2ª CIA"},
         130: {"nome": "PAULO ROBERTO", "plantao": "INDIA", "pelotao": "6º PEL/2ª CIA"},
-        131: {"nome": "RENATA", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
+        131: {"nome": "RENATA", "plantao": "FOXTROT", "pelotao": "6º PEL/2ª CIA"},
         132: {"nome": "SERGIO", "plantao": "INDIA", "pelotao": "1º PEL/2ª CIA"},
         133: {"nome": "ISRAEL", "plantao": "FOXTROT", "pelotao": "2º PEL/2ª CIA"},
         134: {"nome": "SAMEA FERRAZ", "plantao": "GOLF", "pelotao": "2º PEL/2ª CIA"},
         135: {"nome": "JOÃO HENRIQUE", "plantao": "GOLF", "pelotao": "3º PEL/2ª CIA"},
         136: {"nome": "PATRICIA", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
-        137: {"nome": "RAFAEL PEREIRA", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
+        137: {"nome": "RAFAEL PEREIRA", "plantao": "HOTEL", "pelotao": "6º PEL/2ª CIA"},
         138: {"nome": "ICARO", "plantao": "HOTEL", "pelotao": "5º PEL/2ª CIA"},
         139: {"nome": "JULIANA GONDIM", "plantao": "INDIA", "pelotao": "3º PEL/2ª CIA"},
         140: {"nome": "VICTOR COSTA", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
         141: {"nome": "JULIANE CORDEIRO", "plantao": "FOXTROT", "pelotao": "4º PEL/2ª CIA"},
         142: {"nome": "JABNER", "plantao": "GOLF", "pelotao": "2º PEL/2ª CIA"},
         143: {"nome": "SAMARA MELO", "plantao": "GOLF", "pelotao": "5º PEL/2ª CIA"},
-        144: {"nome": "EDJANE", "plantao": "HOTEL", "pelotao": "1D PEL/2ª CIA"},
+        144: {"nome": "EDJANE", "plantao": "HOTEL", "pelotao": "6º PEL/2ª CIA"},
         145: {"nome": "HIGOR ALVES", "plantao": "INDIA", "pelotao": "5º PEL/2ª CIA"},
         146: {"nome": "PEREIRA MORAIS", "plantao": "INDIA", "pelotao": "6º PEL/2ª CIA"},
         147: {"nome": "JORGE FILHO", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
         148: {"nome": "OLAVO", "plantao": "INDIA", "pelotao": "3º PEL/2ª CIA"},
-        149: {"nome": "CAVALCANTI", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
+        149: {"nome": "CAVALCANTI", "plantao": "HOTEL", "pelotao": "6º PEL/2ª CIA"},
         150: {"nome": "ROBERTA", "plantao": "INDIA", "pelotao": "1º PEL/2ª CIA"},
-        151: {"nome": "OLIVEIRA JUNIOR", "plantao": "HOTEL", "pelotao": "3º PEL/2ª CIA"},
+        151: {"nome": "OLIVEIRA JUNIOR", "plantao": "HOTEL", "pelotao": "5º PEL/2ª CIA"},
         152: {"nome": "MOURA", "plantao": "GOLF", "pelotao": "2º PEL/2ª CIA"},
-        153: {"nome": "AFONSO", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
+        153: {"nome": "AFONSO", "plantao": "FOXTROT", "pelotao": "3º PEL/2ª CIA"},
         154: {"nome": "DAYANE", "plantao": "FOXTROT", "pelotao": "2º PEL/2ª CIA"},
         156: {"nome": "MONALIZA", "plantao": "GOLF", "pelotao": "3º PEL/2ª CIA"},
         157: {"nome": "VALADARES", "plantao": "INDIA", "pelotao": "3º PEL/2ª CIA"},
-        158: {"nome": "HEYVERSON", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
+        158: {"nome": "HEYVERSON", "plantao": "FOXTROT", "pelotao": "5º PEL/2ª CIA"},
         161: {"nome": "JOSE ALISSON", "plantao": "GOLF", "pelotao": "6º PEL/2ª CIA"},
-        162: {"nome": "JESUS", "plantao": "HOTEL", "pelotao": "1D PEL/2ª CIA"},
+        162: {"nome": "JESUS", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
         163: {"nome": "NATALIA", "plantao": "INDIA", "pelotao": "5º PEL/2ª CIA"},
         164: {"nome": "CIBELE", "plantao": "FOXTROT", "pelotao": "6º PEL/2ª CIA"},
         165: {"nome": "GUSTAVO", "plantao": "GOLF", "pelotao": "2º PEL/2ª CIA"},
-        166: {"nome": "FELIPE FELIX", "plantao": "FOXTROT", "pelotao": "5º PEL/2ª CIA"},
+        166: {"nome": "FELIPE FELIX", "plantao": "FOXTROT", "pelotao": "3º PEL/2ª CIA"},
         168: {"nome": "LEONAM", "plantao": "GOLF", "pelotao": "5º PEL/2ª CIA"},
-        169: {"nome": "MATHEUS BARROS", "plantao": "INDIA", "pelotao": "6º PEL/2ª CIA"},
+        169: {"nome": "MATHEUS BARROS", "plantao": "INDIA", "pelotao": "6º PEL/2B CIA"},
         170: {"nome": "ANTONIO REIS", "plantao": "FOXTROT", "pelotao": "4º PEL/2ª CIA"},
-        171: {"nome": "JHONEY", "plantao": "HOTEL", "pelotao": "3º PEL/2ª CIA"},
+        171: {"nome": "JHONEY", "plantao": "HOTEL", "pelotao": "5º PEL/2ª CIA"},
         172: {"nome": "FRANCISCO", "plantao": "GOLF", "pelotao": "1º PEL/2ª CIA"},
         173: {"nome": "IURY", "plantao": "INDIA", "pelotao": "3º PEL/2ª CIA"},
-        174: {"nome": "LIMA PAIVA", "plantao": "FOXTROT", "pelotao": "1Multi-select"},
-        175: {"nome": "LUIZ LEAL", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
+        174: {"nome": "LIMA PAIVA", "plantao": "FOXTROT", "pelotao": "6º PEL/2ª CIA"},
+        175: {"nome": "LUIZ LEAL", "plantao": "HOTEL", "pelotao": "2º PEL/2ª CIA"},
         176: {"nome": "RHAYSA", "plantao": "INDIA", "pelotao": "1º PEL/2ª CIA"},
         177: {"nome": "DIONIZIO", "plantao": "HOTEL", "pelotao": "4º PEL/2ª CIA"},
         178: {"nome": "HIAGO", "plantao": "INDIA", "pelotao": "4º PEL/2ª CIA"},
@@ -343,186 +488,326 @@
         181: {"nome": "THAYNARA", "plantao": "GOLF", "pelotao": "3º PEL/2ª CIA"},
         182: {"nome": "JOSINALDO", "plantao": "FOXTROT", "pelotao": "4º PEL/2ª CIA"},
         183: {"nome": "JULIO", "plantao": "HOTEL", "pelotao": "5º PEL/2ª CIA"},
-        184: {"nome": "ABRAÃO", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
-        185: {"nome": "RONILSON", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
+        184: {"nome": "ABRAÃO", "plantao": "HOTEL", "pelotao": "6º PEL/2ª CIA"},
+        185: {"nome": "RONILSON", "plantao": "HOTEL", "pelotao": "1G PEL/2ª CIA"},
         186: {"nome": "SOUTO", "plantao": "INDIA", "pelotao": "3º PEL/2ª CIA"},
         187: {"nome": "BELEM", "plantao": "HOTEL", "pelotao": "4º PEL/2ª CIA"},
         188: {"nome": "MAXEMBERG", "plantao": "INDIA", "pelotao": "3º PEL/2ª CIA"},
-        189: {"nome": "KAMYLA", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
+        189: {"nome": "KAMYLA", "plantao": "HOTEL", "pelotao": "4º PEL/2ª CIA"},
         190: {"nome": "JÚLIA", "plantao": "GOLF", "pelotao": "5º PEL/2ª CIA"},
         191: {"nome": "SELTON", "plantao": "FOXTROT", "pelotao": "4º PEL/2ª CIA"},
-        192: {"nome": "JEFFERSON GOMES", "plantao": "GOLF", "pelotao": "1º PEL/2ª CIA"},
+        192: {"nome": "JEFFERSON GOMES", "plantao": "GOLF", "pelotao": "1S PEL/2ª CIA"},
         193: {"nome": "JAILTON", "plantao": "HOTEL", "pelotao": "3º PEL/2ª CIA"},
         194: {"nome": "KLEVER", "plantao": "INDIA", "pelotao": "5º PEL/2ª CIA"},
         195: {"nome": "PETTERSON", "plantao": "INDIA", "pelotao": "2º PEL/2ª CIA"},
         196: {"nome": "CARDOSO", "plantao": "GOLF", "pelotao": "6º PEL/2ª CIA"},
-        197: {"nome": "ISRAEL OLIVEIRA", "plantao": "HOTEL", "pelotao": "4º PEL/2ª CIA"},
+        197: {"nome": "ISRAEL OLIVEIRA", "plantao": "HOTEL", "pelotao": "4º PEL/2ª CIA"}
     };
 
     function formatarNomeAluno(num, nome) {
         return `AL CFO PM ${String(num).padStart(2, '0')} ${nome.trim().toUpperCase()}`;
     }
 
-    // Preenche as listas de plantão a partir do DB Mestre
-    const LISTAS_PLANTOES = { "NENHUM": new Set() };
-    for (const [num, info] of Object.entries(MASTER_ALUNO_DB)) {
-        const plantao = info.plantao;
-        const full_name = formatarNomeAluno(num, info.nome);
-        info.full_name = full_name; // Adiciona o nome formatado ao DB
-        if (!LISTAS_PLANTOES[plantao]) LISTAS_PLANTOES[plantao] = new Set();
-        LISTAS_PLANTOES[plantao].add(full_name);
+    function rebuildGlobalData() {
+        LISTAS_PLANTOES = { "NENHUM": new Set() };
+        for (const [num, info] of Object.entries(DB_ALUNOS)) {
+            const plantao = info.plantao;
+            const full_name = formatarNomeAluno(num, info.nome);
+            info.full_name = full_name;
+            if (!LISTAS_PLANTOES[plantao]) LISTAS_PLANTOES[plantao] = new Set();
+            LISTAS_PLANTOES[plantao].add(full_name);
+        }
     }
-
+    
     // =========================================================================
-    // CALENDÁRIO DE SERVIÇO DE FIM DE SEMANA (COMPLETO)
+    // CALENDÁRIO DE SERVIÇO (Carregado do LocalStorage ou Padrão)
     // =========================================================================
-    const CALENDARIO_SERVICO = {
-        "2025-11-07": { // SEXTA
-            "plantao": LISTAS_PLANTOES.INDIA,
-            "adjunto": new Set([formatarNomeAluno(42, "CARLA ARAUJO"), formatarNomeAluno(140, "VICTOR COSTA")]),
-            "sobreaviso": new Set([
-                formatarNomeAluno(141, "JULIANE CORDEIRO"), formatarNomeAluno(128, "ALEXANDRO GOMES"), formatarNomeAluno(122, "BATISTA"), formatarNomeAluno(118, "DURVAL"),
-                formatarNomeAluno(114, "BARBALHO"), formatarNomeAluno(110, "CÉSAR MEDEIROS"), formatarNomeAluno(102, "ALLAN MARIANO")
-            ])
-        },
-        "2025-11-08": { // SÁBADO
-            "plantao": LISTAS_PLANTOES.GOLF,
-            "adjunto": new Set([formatarNomeAluno(45, "WALYSON"), formatarNomeAluno(133, "ISRAEL")]),
-            "sobreaviso": new Set([
-                formatarNomeAluno(67, "LAYANNE"), formatarNomeAluno(63, "PAULO"), formatarNomeAluno(38, "W. SILVA"), formatarNomeAluno(37, "VALDECI"),
-                formatarNomeAluno(58, "WESLEY"), formatarNomeAluno(53, "G. SILVA"), formatarNomeAluno(49, "JEFFERSON SILVA")
-            ])
-        },
-        "2025-11-09": { // DOMINGO
-            "plantao": LISTAS_PLANTOES.HOTEL,
-            "adjunto": new Set([formatarNomeAluno(48, "ELVIS"), formatarNomeAluno(146, "PEREIRA MORAIS")]),
-            "sobreaviso": new Set([
-                formatarNomeAluno(132, "SERGIO"), formatarNomeAluno(120, "EGITO"), formatarNomeAluno(100, "RENAN"), formatarNomeAluno(26, "MARCOLINO"),
-                formatarNomeAluno(12, "ISABELLA"), formatarNomeAluno(11, "ORLANDO"), formatarNomeAluno(4, "ROBERTO FREITAS")
-            ])
-        },
-        "2025-11-14": { // SEXTA
-            "plantao": LISTAS_PLANTOES.HOTEL,
-            "adjunto": new Set([formatarNomeAluno(74, "GABRIEL"), formatarNomeAluno(99, "G. GOMES")]),
-            "sobreaviso": new Set([
-                formatarNomeAluno(156, "MONALIZA"), formatarNomeAluno(152, "MOURA"), formatarNomeAluno(143, "SAMARA MELO"), formatarNomeAluno(15, "JUNIOR"),
-                formatarNomeAluno(14, "AMANDA COELHO"), formatarNomeAluno(9, "R. FERREIRA"), formatarNomeAluno(2, "RENATO")
-            ])
-        },
-        "2025-11-15": { // SÁBADO
-            "plantao": LISTAS_PLANTOES.INDIA,
-            "adjunto": new Set([formatarNomeAluno(78, "GISELE FERREIRA"), formatarNomeAluno(84, "SIDNEI ARAÚJO")]),
-            "sobreaviso": new Set([
-                formatarNomeAluno(68, "KAROLINNE MOREIRA"), formatarNomeAluno(61, "FIRMINO"), formatarNomeAluno(48, "ELVIS"), formatarNomeAluno(44, "PRISCILA CORREIA"),
-                formatarNomeAluno(41, "MALAQUIAS"), formatarNomeAluno(29, "MACIEL"), formatarNomeAluno(27, "FATIMA AGUIAR")
-            ])
-        },
-        "2025-11-16": { // DOMINGO
-            "plantao": LISTAS_PLANTOES.FOXTROT,
-            "adjunto": new Set([formatarNomeAluno(75, "PEDRO"), formatarNomeAluno(138, "ICARO")]),
-            "sobreaviso": new Set([
-                formatarNomeAluno(77, "EDUARDA"), formatarNomeAluno(66, "JONATAS SANTOS"), formatarNomeAluno(47, "MACEDO"), formatarNomeAluno(43, "CINTIA SOUZA"),
-                formatarNomeAluno(40, "MARINHO"), formatarNomeAluno(31, "ALLATAS SOUSA"), formatarNomeAluno(28, "LEMOS")
-            ])
-        },
-        "2025-11-21": { // SEXTA
-            "plantao": LISTAS_PLANTOES.FOXTROT,
-            "adjunto": new Set([formatarNomeAluno(61, "FIRMINO"), formatarNomeAluno(139, "JULIANA GONDIM")]),
-            "sobreaviso": new Set([
-                formatarNomeAluno(169, "MATHEUS BARROS"), formatarNomeAluno(148, "OLAVO"), formatarNomeAluno(130, "PAULO ROBERTO"), formatarNomeAluno(126, "GILMARA"),
-                formatarNomeAluno(121, "JOÃO NASCIMENTO"), formatarNomeAluno(116, "SANTIAGO"), formatarNomeAluno(97, "ITALO")
-            ])
-        },
-        "2025-11-22": { // SÁBADO
-            "plantao": LISTAS_PLANTOES.HOTEL,
-            "adjunto": new Set([formatarNomeAluno(60, "S.GOMES"), formatarNomeAluno(196, "CARDOSO")]),
-            "sobreaviso": new Set([
-                formatarNomeAluno(192, "JEFFERSON GOMES"), formatarNomeAluno(181, "THAYNARA"), formatarNomeAluno(172, "FRANCISCO"),
-                formatarNomeAluno(168, "LEONAM"), formatarNomeAluno(105, "JOSÉ NETO")
-            ])
-        },
-        "2025-11-23": { // DOMINGO
-            "plantao": LISTAS_PLANTOES.INDIA,
-            "adjunto": new Set([formatarNomeAluno(58, "WESLEY"), formatarNomeAluno(118, "DURVAL")]),
-            "sobreaviso": new Set([
-                formatarNomeAluno(24, "MATHEUS MESQUITA"), formatarNomeAluno(20, "LUAN PEREIRA"), formatarNomeAluno(69, "FALCÃO"), formatarNomeAluno(45, "WALYSON"),
-                formatarNomeAluno(42, "CARLA ARAUJO"), formatarNomeAluno(16, "EMILY"),
-                formatarNomeAluno(7, "ARCOVERDE"), formatarNomeAluno(5, "SILVANA"),
-                formatarNomeAluno(1, "MÁRCIO SOUZA")
-            ])
-        },
-        "2025-11-28": { // SEXTA
-            "plantao": LISTAS_PLANTOES.HOTEL,
-            "adjunto": new Set([formatarNomeAluno(67, "LAYANNE"), formatarNomeAluno(110, "CÉSAR MEDEIROS")]),
-            "sobreaviso": new Set([
-                formatarNomeAluno(191, "SELTON"), formatarNomeAluno(182, "JOSINALDO"), formatarNomeAluno(170, "ANTONIO REIS"), formatarNomeAluno(166, "FELIPE FELIX"),
-                formatarNomeAluno(164, "CIBELE"), formatarNomeAluno(158, "HEYVERSON"), formatarNomeAluno(154, "DAYANE")
-            ])
-        },
-        "2025-11-29": { // SÁBADO
-            "plantao": LISTAS_PLANTOES.GOLF,
-            "adjunto": new Set([formatarNomeAluno(82, "MARCOS NASCIMENTO"), formatarNomeAluno(120, "EGITO")]),
-            "sobreaviso": new Set([
-                formatarNomeAluno(95, "BRUNO"), formatarNomeAluno(97, "ITALO"), formatarNomeAluno(52, "RUBSLEY"), formatarNomeAluno(62, "LUCAS MAGALHÃES"),
-                formatarNomeAluno(72, "NONATO"), formatarNomeAluno(112, "MARQUES"), formatarNomeAluno(121, "JOÃO NASCIMENTO")
-            ])
-        },
-        "2025-11-30": { // DOMINGO
-            "plantao": LISTAS_PLANTOES.FOXTROT,
-            "adjunto": new Set([formatarNomeAluno(92, "ALINE"), formatarNomeAluno(116, "SANTIAGO")]),
-            "sobreaviso": new Set([
-                formatarNomeAluno(195, "PETTERSON"), formatarNomeAluno(194, "KLEVER"), formatarNomeAluno(188, "MAXEMBERG"), formatarNomeAluno(186, "SOUTO"),
-                formatarNomeAluno(178, "HIAGO"), formatarNomeAluno(176, "RHAYSA"), formatarNomeAluno(173, "IURY")
-            ])
-        },
+    const DEFAULT_CALENDARIO_SERVICO = {
+        "2025-11-07": {"plantao": "INDIA", "adjunto": [42, 140], "sobreaviso": [141, 128, 122, 118, 114, 110, 102]},
+        "2025-11-08": {"plantao": "GOLF", "adjunto": [45, 133], "sobreaviso": [67, 63, 38, 37, 58, 53, 49]},
+        "2025-11-09": {"plantao": "HOTEL", "adjunto": [48, 146], "sobreaviso": [132, 120, 100, 26, 12, 11, 4]},
+        "2025-11-14": {"plantao": "HOTEL", "adjunto": [74, 99], "sobreaviso": [156, 152, 143, 15, 14, 9, 2]},
+        "2025-11-15": {"plantao": "INDIA", "adjunto": [78, 84], "sobreaviso": [68, 61, 48, 44, 41, 29, 27]},
+        "2025-11-16": {"plantao": "FOXTROT", "adjunto": [75, 138], "sobreaviso": [77, 66, 47, 43, 40, 31, 28]},
+        "2025-11-21": {"plantao": "FOXTROT", "adjunto": [61, 139], "sobreaviso": [169, 148, 130, 126, 121, 116, 97]},
+        "2025-11-22": {"plantao": "HOTEL", "adjunto": [60, 196], "sobreaviso": [192, 181, 172, 168, 105]},
+        "2025-11-23": {"plantao": "INDIA", "adjunto": [58, 118], "sobreaviso": [24, 20, 69, 45, 42, 16, 7, 5, 1]},
+        "2025-11-28": {"plantao": "HOTEL", "adjunto": [67, 110], "sobreaviso": [191, 182, 170, 166, 164, 158, 154]},
+        "2025-11-29": {"plantao": "GOLF", "adjunto": [82, 120], "sobreaviso": [95, 97, 52, 62, 72, 112, 121]},
+        "2025-11-30": {"plantao": "FOXTROT", "adjunto": [92, 116], "sobreaviso": [195, 194, 188, 186, 178, 176, 173]}
     };
 
     // =========================================================================
-    // LÓGICA DO AGENDADOR (v34)
+    // INICIALIZAÇÃO DA PÁGINA E LÓGICA DE LOCALSTORAGE
+    // =========================================================================
+    document.addEventListener('DOMContentLoaded', () => {
+        // Carrega os bancos de dados
+        DB_ALUNOS = JSON.parse(localStorage.getItem('MASTER_ALUNO_DB')) || DEFAULT_MASTER_ALUNO_DB;
+        DB_CALENDARIO = JSON.parse(localStorage.getItem('CALENDARIO_SERVICO')) || DEFAULT_CALENDARIO_SERVICO;
+        rebuildGlobalData(); // Recria as listas de plantão a partir do DB_ALUNOS
+        
+        // Inicia as abas
+        switchMainTab(null, 'tab-agendador');
+        switchOutputTab(null, 'agenda');
+
+        // Renderiza a tabela de alunos e os filtros na aba "Gerenciar Alunos"
+        populateFilters();
+        renderizarTabelaAlunos();
+    });
+
+    function salvarAlunosDB() {
+        localStorage.setItem('MASTER_ALUNO_DB', JSON.stringify(DB_ALUNOS));
+        rebuildGlobalData(); // Atualiza a variável global de plantões
+        populateFilters(); // Atualiza os filtros
+    }
+
+    function salvarCalendarioDB() {
+        localStorage.setItem('CALENDARIO_SERVICO', JSON.stringify(DB_CALENDARIO));
+    }
+
+    // =========================================================================
+    // LÓGICA DE NAVEGAÇÃO DAS ABAS
+    // =========================================================================
+    function switchMainTab(event, tabId) {
+        document.querySelectorAll('.main-tab-pane').forEach(pane => pane.style.display = 'none');
+        document.querySelectorAll('.tab-link').forEach(tab => tab.classList.remove('active'));
+        
+        document.getElementById(tabId).style.display = 'block';
+        if (event) event.currentTarget.classList.add('active');
+        else document.querySelector('.tab-link[onclick*="tab-agendador"]').classList.add('active');
+    }
+
+    function switchOutputTab(event, tabId) {
+        document.querySelectorAll('.card .tab-content').forEach(pane => pane.style.display = 'none');
+        document.querySelectorAll('#output-tabs .tab-button').forEach(tab => tab.classList.remove('active'));
+        
+        const pane = document.getElementById(tabId);
+        if (pane) pane.style.display = 'block';
+        if (event) event.currentTarget.classList.add('active');
+        else {
+            const defaultTab = document.querySelector('#output-tabs .tab-button[onclick*="agenda"]');
+            if (defaultTab) defaultTab.classList.add('active');
+        }
+    }
+    
+    // =========================================================================
+    // LÓGICA DO MÓDULO 2: GERENCIADOR DE ALUNOS (COM FILTROS)
+    // =========================================================================
+    const statusAlunos = document.getElementById('status-alunos');
+
+    function populateFilters() {
+        const pelotoes = new Set();
+        for (const num in DB_ALUNOS) {
+            pelotoes.add(DB_ALUNOS[num].pelotao);
+        }
+        
+        const filtroPelotao = document.getElementById('filtro-pelotao');
+        const valorAtual = filtroPelotao.value;
+        filtroPelotao.innerHTML = '<option value="">Todos</option>';
+        
+        [...pelotoes].sort().forEach(pelotao => {
+            filtroPelotao.innerHTML += `<option value="${pelotao}">${pelotao}</option>`;
+        });
+        filtroPelotao.value = valorAtual;
+    }
+
+    function renderizarTabelaAlunos() {
+        const filtroBusca = document.getElementById('filtro-busca').value.toUpperCase();
+        const filtroPlantao = document.getElementById('filtro-plantao').value;
+        const filtroPelotao = document.getElementById('filtro-pelotao').value;
+        
+        const container = document.getElementById('tabela-alunos-container');
+        
+        let tableHTML = `
+            <table class="aluno-table">
+                <thead>
+                    <tr>
+                        <th>Nº</th>
+                        <th>Nome</th>
+                        <th>Plantão</th>
+                        <th>Pelotão/Cia</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        
+        const numerosOrdenados = Object.keys(DB_ALUNOS).map(Number).sort((a,b) => a - b);
+        let alunosEncontrados = 0;
+
+        for (const num of numerosOrdenados) {
+            const aluno = DB_ALUNOS[num];
+            
+            if (filtroPlantao && aluno.plantao !== filtroPlantao) continue;
+            if (filtroPelotao && aluno.pelotao !== filtroPelotao) continue;
+            if (filtroBusca && !String(num).includes(filtroBusca) && !aluno.nome.toUpperCase().includes(filtroBusca)) {
+                continue;
+            }
+
+            alunosEncontrados++;
+            tableHTML += `
+                <tr id="aluno-row-${num}">
+                    <td>${String(num).padStart(2, '0')}</td>
+                    <td>${aluno.nome}</td>
+                    <td>${aluno.plantao}</td>
+                    <td>${aluno.pelotao}</td>
+                    <td>
+                        <button class="copy-button" style="padding: 5px 10px;" onclick="preencherFormularioAluno(${num})">Editar</button>
+                        <button class="button-danger" style="padding: 5px 10px; margin-top: 0;" onclick="removerAluno(${num})">X</button>
+                    </td>
+                </tr>
+            `;
+        }
+        
+        tableHTML += `</tbody></table>`;
+        if (alunosEncontrados === 0) {
+            container.innerHTML = `<p style="color: var(--text-secondary); text-align: center; padding: 20px;">Nenhum aluno encontrado para os filtros selecionados.</p>`;
+        } else {
+            container.innerHTML = tableHTML;
+        }
+    }
+
+    function preencherFormularioAluno(numero) {
+        const aluno = DB_ALUNOS[numero];
+        if (!aluno) return;
+        
+        document.getElementById('aluno-numero').value = numero;
+        document.getElementById('aluno-numero').disabled = true; // Trava o número ao editar
+        document.getElementById('aluno-nome').value = aluno.nome;
+        document.getElementById('aluno-plantao').value = aluno.plantao;
+        document.getElementById('aluno-pelotao').value = aluno.pelotao;
+        
+        document.getElementById('aluno-nome').focus();
+        window.scrollTo(0, 0);
+    }
+
+    function limparFormularioAluno() {
+        document.getElementById('form-aluno').reset();
+        document.getElementById('aluno-numero').disabled = false;
+        statusAlunos.textContent = '';
+    }
+
+    function salvarAluno() {
+        try {
+            const num = parseInt(document.getElementById('aluno-numero').value);
+            const nome = document.getElementById('aluno-nome').value.toUpperCase();
+            const plantao = document.getElementById('aluno-plantao').value.toUpperCase();
+            const pelotao = document.getElementById('aluno-pelotao').value.toUpperCase();
+
+            if (!num || !nome || !plantao || !pelotao) throw new Error("Todos os campos são obrigatórios.");
+
+            DB_ALUNOS[num] = { nome, plantao, pelotao };
+            salvarAlunosDB();
+            renderizarTabelaAlunos();
+            
+            statusAlunos.className = 'success-msg';
+            statusAlunos.textContent = `Aluno ${num} - ${nome} salvo com sucesso!`;
+            limparFormularioAluno();
+
+        } catch (e) {
+            statusAlunos.className = 'error-msg';
+            statusAlunos.textContent = 'Erro ao salvar: ' + e.message;
+        }
+    }
+    
+    function removerAluno(numero) {
+        const aluno = DB_ALUNOS[numero];
+        if (!aluno) return;
+
+        if (confirm(`Tem certeza de que deseja remover o Aluno ${numero} - ${aluno.nome}?`)) {
+            delete DB_ALUNOS[numero];
+            salvarAlunosDB();
+            renderizarTabelaAlunos();
+            
+            statusAlunos.className = 'success-msg';
+            statusAlunos.textContent = `Aluno ${numero} - ${aluno.nome} removido.`;
+        }
+    }
+
+    // =========================================================================
+    // LÓGICA DO MÓDULO 3: GERENCIADOR DE CALENDÁRIO
+    // =========================================================================
+    const statusCalendario = document.getElementById('status-calendario');
+
+    function carregarDiaCalendario() {
+        const dataSelecionada = document.getElementById('calendar-picker').value;
+        if (!dataSelecionada) {
+            document.getElementById('form-calendario').style.display = 'none';
+            return;
+        }
+        
+        document.getElementById('form-calendario-titulo').textContent = `Editando Dia: ${dataSelecionada}`;
+        
+        const dadosDoDia = DB_CALENDARIO[dataSelecionada] || {};
+        
+        document.getElementById('dia-plantao').value = dadosDoDia.plantao || "NENHUM";
+        
+        const formatarListaParaTextarea = (listaNumeros) => {
+            if (!listaNumeros) return "";
+            // Mostra "NUM NOME" para fácil leitura
+            return listaNumeros.map(num => `${String(num).padStart(2, '0')} ${DB_ALUNOS[num]?.nome || 'ALUNO NÃO ENCONTRADO'}`).join('\n');
+        };
+        
+        document.getElementById('dia-adjuntos').value = formatarListaParaTextarea(dadosDoDia.adjunto);
+        document.getElementById('dia-sobreaviso').value = formatarListaParaTextarea(dadosDoDia.sobreaviso);
+        
+        document.getElementById('form-calendario').style.display = 'block';
+        statusCalendario.textContent = '';
+    }
+
+    function salvarDiaCalendario() {
+        try {
+            const dataSelecionada = document.getElementById('calendar-picker').value;
+            if (!dataSelecionada) throw new Error("Nenhuma data selecionada.");
+
+            const plantao = document.getElementById('dia-plantao').value;
+            
+            const parsearListaDeTextarea = (textoTextarea) => {
+                return textoTextarea.trim().split('\n')
+                    .filter(Boolean)
+                    .map(linha => {
+                        const num = parseInt(linha.trim().split(' ')[0]);
+                        if (isNaN(num)) throw new Error(`Número inválido na lista: "${linha}"`);
+                        if (!DB_ALUNOS[num]) throw new Error(`Aluno com Nº ${num} não encontrado. Cadastre-o primeiro.`);
+                        return num;
+                    });
+            };
+            
+            const adjuntos = parsearListaDeTextarea(document.getElementById('dia-adjuntos').value);
+            const sobreaviso = parsearListaDeTextarea(document.getElementById('dia-sobreaviso').value);
+
+            DB_CALENDARIO[dataSelecionada] = { plantao, adjunto, sobreaviso };
+            salvarCalendarioDB();
+            
+            statusCalendario.className = 'success-msg';
+            statusCalendario.textContent = `Dia ${dataSelecionada} salvo com sucesso!`;
+
+        } catch (e) {
+            statusCalendario.className = 'error-msg';
+            statusCalendario.textContent = 'Erro ao salvar: ' + e.message;
+        }
+    }
+    
+    // =========================================================================
+    // LÓGICA DO MÓDULO 1: AGENDADOR DE PUNIÇÕES (v35)
     // =========================================================================
     const statusGeral = document.getElementById('status-geral');
     const outputContainer = document.getElementById('output-container');
     const statsContainer = document.getElementById('estatisticas-output-container');
 
-    // --- Lógica das Abas de Saída ---
-    function switchOutputTab(event, tabName) {
-        let tabContents = document.getElementsByClassName("tab-content");
-        for (let i = 0; i < tabContents.length; i++) {
-            tabContents[i].style.display = "none";
-        }
-        
-        let tabButtons = document.querySelectorAll("#output-tabs .tab-button");
-        for (let i = 0; i < tabButtons.length; i++) {
-            tabButtons[i].className = tabButtons[i].className.replace(" active", "");
-        }
-        
-        document.getElementById(tabName).style.display = "block";
-        event.currentTarget.className += " active";
-    }
-    // Inicia a primeira aba de saída
-    document.addEventListener("DOMContentLoaded", () => {
-        document.getElementById('agenda').style.display = 'block';
-    });
-
-
-    // --- Função Auxiliar: Formatar Data (JS) - CORRIGIDA ---
-    function formatarDataJS(data) { // Formato YYYY-MM-DD
-        const dataObj = new Date(data + 'T12:00:00Z'); // Usa Z (UTC) para travar a data
-        
+    function formatarDataJS(data) {
+        const dataObj = new Date(data + 'T12:00:00Z');
         const sex = new Date(dataObj.getTime());
         sex.setUTCDate(sex.getUTCDate() - 1);
-        
         const dom = new Date(dataObj.getTime());
         dom.setUTCDate(dom.getUTCDate() + 1);
-
         return {
             sex: sex.toISOString().split('T')[0],
-            sab: data, // O 'data' original já é o sábado
+            sab: data,
             dom: dom.toISOString().split('T')[0]
         };
     }
 
-    // --- Função Auxiliar: Parsear Lista TSV ---
     function extrairPunidosDoTSV(tsv_string) {
         let punicoes = [];
         const linhas = tsv_string.trim().split('\n');
@@ -530,7 +815,6 @@
         
         for (const linha of linhas) {
             if (!linha.trim()) continue;
-            
             const match = linha.trim().match(padrao_flexivel);
             if (!match) {
                 console.warn("Linha TSV não reconhecida, pulando:", linha);
@@ -539,7 +823,7 @@
             
             const [, num_str, data_rel, sei, resumo] = match;
             const numero = parseInt(num_str, 10);
-            const alunoInfo = MASTER_ALUNO_DB[numero];
+            const alunoInfo = DB_ALUNOS[numero]; // Lê do DB dinâmico
             
             if (!alunoInfo) {
                 console.warn(`Aluno com Nº ${numero} não encontrado no DB Mestre.`);
@@ -570,77 +854,64 @@
         return punicoes;
     }
 
-    // --- Função Principal de Agendamento ---
     function agendar() {
         statusGeral.textContent = 'Agendando...';
         statusGeral.style.color = 'var(--accent-blue-light)';
         outputContainer.innerHTML = '';
-        statsContainer.innerHTML = ''; // Limpa as estatísticas
+        statsContainer.innerHTML = '';
 
         try {
+            // Recarrega os dados do localStorage CADA VEZ que agendar
+            // Isso garante que os dados mais recentes das outras abas sejam usados
+            DB_ALUNOS = JSON.parse(localStorage.getItem('MASTER_ALUNO_DB')) || DEFAULT_MASTER_ALUNO_DB;
+            DB_CALENDARIO = JSON.parse(localStorage.getItem('CALENDARIO_SERVICO')) || DEFAULT_CALENDARIO_SERVICO;
+            rebuildGlobalData();
+            
             const data_sabado_str = document.getElementById('data_sabado').value;
             const lista_permutas_bruta = document.getElementById('lista_permutas').value;
             const lista_punidos_tsv = document.getElementById('lista_punidos_tsv').value;
 
-            if (!lista_punidos_tsv.trim()) {
-                throw new Error("A lista de punição está vazia. Cole os dados da planilha.");
-            }
+            if (!lista_punidos_tsv.trim()) throw new Error("A lista de punição está vazia.");
 
             const punicoes = extrairPunidosDoTSV(lista_punidos_tsv);
-            if (punicoes.length === 0) {
-                 throw new Error("Nenhuma punição válida foi extraída. Verifique o formato: Nº DATA SEI RESUMO");
-            }
+            if (punicoes.length === 0) throw new Error("Nenhuma punição válida foi extraída. Verifique o formato.");
             
             const lista_permutas = new Set(lista_permutas_bruta.trim().split('\n').filter(Boolean).map(n => n.trim()));
             const datas = formatarDataJS(data_sabado_str);
             
-            const servico_sex = CALENDARIO_SERVICO[datas.sex];
-            const servico_sab = CALENDARIO_SERVICO[datas.sab];
-            const servico_dom = CALENDARIO_SERVICO[datas.dom];
+            const servico_sex = DB_CALENDARIO[datas.sex];
+            const servico_sab = DB_CALENDARIO[datas.sab];
+            const servico_dom = DB_CALENDARIO[datas.dom];
 
             if (!servico_sex || !servico_sab || !servico_dom) {
-                throw new Error(`Calendário de serviço não encontrado para a data base ${datas.sab}. Verifique o Banco de Dados.`);
+                throw new Error(`Calendário de serviço não encontrado para a data ${datas.sab}. Verifique a aba "Gerenciar Calendário".`);
             }
-
-            const excecoes_sex = new Set([...(servico_sex.plantao || []), ...(servico_sex.adjunto || []), ...(servico_sex.sobreaviso || [])]);
-            const excecoes_sab = new Set([...(servico_sab.plantao || []), ...(servico_sab.adjunto || []), ...(servico_sab.sobreaviso || [])]);
-            const excecoes_dom = new Set([...(servico_dom.plantao || []), ...(servico_dom.adjunto || []), ...(servico_dom.sobreaviso || [])]);
+            
+            const getFullNameSet = (numeros) => new Set(numeros.map(num => DB_ALUNOS[num]?.full_name).filter(Boolean));
+            
+            const excecoes_sex = new Set([...LISTAS_PLANTOES[servico_sex.plantao], ...getFullNameSet(servico_sex.adjunto), ...getFullNameSet(servico_sex.sobreaviso)]);
+            const excecoes_sab = new Set([...LISTAS_PLANTOES[servico_sab.plantao], ...getFullNameSet(servico_sab.adjunto), ...getFullNameSet(servico_sab.sobreaviso)]);
+            const excecoes_dom = new Set([...LISTAS_PLANTOES[servico_dom.plantao], ...getFullNameSet(servico_dom.adjunto), ...getFullNameSet(servico_dom.sobreaviso)]);
 
             const horarios = ["Sábado (Manhã)", "Sábado (Tarde)", "Domingo (Manhã)", "Domingo (Tarde)"];
             let agenda_final = {
-                "Sábado (Manhã)": [],
-                "Sábado (Tarde)": [],
-                "Domingo (Manhã)": [],
-                "Domingo (Tarde)": [],
-                "Próximo Fim de Semana": []
+                "Sábado (Manhã)": [], "Sábado (Tarde)": [], "Domingo (Manhã)": [], "Domingo (Tarde)": [], "Próximo Fim de Semana": []
             };
             let removidos = {"PERMUTA": []};
-            
             let aluno_slots_ocupados = {};
             
             for (const punicao of punicoes) {
                 const aluno_full_name = punicao.full_name;
-
                 if (lista_permutas.has(aluno_full_name)) {
                     removidos["PERMUTA"].push(aluno_full_name);
                     continue;
                 }
-                
-                if (!aluno_slots_ocupados[aluno_full_name]) {
-                    aluno_slots_ocupados[aluno_full_name] = new Set();
-                }
+                if (!aluno_slots_ocupados[aluno_full_name]) aluno_slots_ocupados[aluno_full_name] = new Set();
 
                 let horarios_disponiveis_aluno = [...horarios];
-                
-                if (excecoes_sex.has(aluno_full_name)) {
-                    horarios_disponiveis_aluno = horarios_disponiveis_aluno.filter(h => h !== "Sábado (Manhã)");
-                }
-                if (excecoes_sab.has(aluno_full_name)) {
-                    horarios_disponiveis_aluno = horarios_disponiveis_aluno.filter(h => h !== "Sábado (Manhã)" && h !== "Sábado (Tarde)" && h !== "Domingo (Manhã)");
-                }
-                if (excecoes_dom.has(aluno_full_name)) {
-                    horarios_disponiveis_aluno = horarios_disponiveis_aluno.filter(h => h !== "Domingo (Manhã)" && h !== "Domingo (Tarde)");
-                }
+                if (excecoes_sex.has(aluno_full_name)) horarios_disponiveis_aluno = horarios_disponiveis_aluno.filter(h => h !== "Sábado (Manhã)");
+                if (excecoes_sab.has(aluno_full_name)) horarios_disponiveis_aluno = horarios_disponiveis_aluno.filter(h => h !== "Sábado (Manhã)" && h !== "Sábado (Tarde)" && h !== "Domingo (Manhã)");
+                if (excecoes_dom.has(aluno_full_name)) horarios_disponiveis_aluno = horarios_disponiveis_aluno.filter(h => h !== "Domingo (Manhã)" && h !== "Domingo (Tarde)");
 
                 const slots_ja_ocupados = aluno_slots_ocupados[aluno_full_name];
                 horarios_disponiveis_aluno = horarios_disponiveis_aluno.filter(h => !slots_ja_ocupados.has(h));
@@ -654,7 +925,6 @@
                 }
             }
 
-            // Renderiza as tabelas
             statusGeral.textContent = 'Agendamento concluído com sucesso!';
             statusGeral.style.color = '#38A169';
             
@@ -667,8 +937,6 @@
             if (removidos["PERMUTA"].length > 0) {
                 outputContainer.innerHTML += buildRemovidosHTML(removidos["PERMUTA"]);
             }
-
-            // Renderiza as estatísticas
             renderizarEstatisticas(agenda_final);
 
         } catch (error) {
@@ -678,65 +946,46 @@
         }
     }
     
-    // =========================================================================
-    // FUNÇÕES DE RENDERIZAÇÃO E CÓPIA
-    // =========================================================================
-
     function buildTableHTML(titulo, punicoes) {
         const tableId = `table-${titulo.replace(/[^a-zA-Z0-9]/g, '-')}`;
-        
         let headerHTML = `
             <div class="table-header">
-                <h3>${titulo} <span style="font-size: 0.8em; color: var(--text-secondary); font-weight: 400;">(${punicoes.length} aluno${punicoes.length > 1 ? 's' : ''})</span></h3>
-                <button class="copy-button" onclick="copiarTabelaParaSEI('${tableId}', '${titulo}')">Copiar para SEI</button>
+                <h3>${titulo} <span>(${punicoes.length} aluno${punicoes.length > 1 ? 's' : ''})</span></h3>
+                <button class="copy-button" onclick="copiarTabelaParaSEI(event, '${tableId}', '${titulo}')">Copiar para SEI</button>
             </div>`;
-        
         let tableHTML = `
             <table class="punishment-table" id="${tableId}">
                 <thead>
                     <tr>
-                        <th>RELATÓRIO</th>
-                        <th>№</th>
-                        <th>ALUNO</th>
-                        <th>PLANTÃO</th>
-                        <th>PELOTÃO/2° CIA</th>
-                        <th>SEI</th>
-                        <th>RESUMO</th>
+                        <th>RELATÓRIO</th> <th>№</th> <th>ALUNO</th> <th>PLANTÃO</th>
+                        <th>PELOTÃO/2° CIA</th> <th>SEI</th> <th>RESUMO</th>
                         <th>ASSINATURA DO ALUNO NO ATO DA CIÊNCIA</th>
                     </tr>
                 </thead>
                 <tbody>
         `;
-        
         punicoes.forEach(p => {
             tableHTML += `
                 <tr>
-                    <td>${p.data_relatorio}</td>
-                    <td>${p.n}</td>
-                    <td>${p.aluno}</td>
-                    <td>${p.plantao}</td>
-                    <td>${p.pelotao}</td>
-                    <td>${p.sei}</td>
-                    <td>${p.resumo}</td>
-                    <td></td>
+                    <td>${p.data_relatorio}</td> <td>${p.n}</td> <td>${p.aluno}</td> <td>${p.plantao}</td>
+                    <td>${p.pelotao}</td> <td>${p.sei}</td> <td>${p.resumo}</td> <td></td>
                 </tr>
             `;
         });
-
         tableHTML += `</tbody></table>`;
         return headerHTML + tableHTML;
     }
 
     function buildRemovidosHTML(removidos) {
-        let html = `
+        return `
             <h3 style="color: #E53E3E;">Alunos Removidos (Permuta)</h3>
             <textarea readonly rows="${removidos.length || 1}">${removidos.join('\n')}</textarea>
         `;
-        return html;
     }
 
     function renderizarEstatisticas(agenda_final) {
         const todasPunicoes = [].concat(...Object.values(agenda_final));
+        const statsContainer = document.getElementById('estatisticas-output-container');
         
         if (todasPunicoes.length === 0) {
             statsContainer.innerHTML = "<p>Nenhuma punição agendada para exibir estatísticas.</p>";
@@ -749,7 +998,6 @@
         for (const punicao of todasPunicoes) {
             const plantao = punicao.plantao || "N/A";
             const pelotao = punicao.pelotao || "N/A";
-
             porPlantao[plantao] = (porPlantao[plantao] || 0) + 1;
             porPelotao[pelotao] = (porPelotao[pelotao] || 0) + 1;
         }
@@ -780,52 +1028,29 @@
         `;
     }
     
-    function switchOutputTab(event, tabName) {
-        let tabContents = document.querySelectorAll("#output-tabs + .tab-content");
-        for (let i = 0; i < tabContents.length; i++) {
-            tabContents[i].style.display = "none";
-        }
-        
-        let tabButtons = document.querySelectorAll("#output-tabs .tab-button");
-        for (let i = 0; i < tabButtons.length; i++) {
-            tabButtons[i].className = tabButtons[i].className.replace(" active", "");
-        }
-        
-        document.getElementById(tabName).style.display = "block";
-        event.currentTarget.className += " active";
-    }
-    // Inicia a primeira aba de saída
-    document.addEventListener("DOMContentLoaded", () => {
-        document.getElementById('agenda').style.display = 'block';
-    });
-
-    function copiarTabelaParaSEI(tableId, titulo) {
+    function copiarTabelaParaSEI(event, tableId, titulo) {
         const originalTable = document.getElementById(tableId);
         if (!originalTable) return;
 
-        // 1. Cria a tabela "limpa" para o SEI
         let seiTable = document.createElement('table');
         seiTable.setAttribute('style', 'width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 10pt; border: 1px solid #000;');
 
-        // 2. Adiciona a Linha de Título Mesclada
         let titleRow = seiTable.insertRow();
         let titleCell = titleRow.insertCell();
-        titleCell.colSpan = 8; // A tabela tem 8 colunas
+        titleCell.colSpan = 8;
         titleCell.innerHTML = `<strong>${titulo.toUpperCase()}</strong>`;
         titleCell.setAttribute('style', 'border: 1px solid #000; padding: 5px; text-align: center; background-color: #f0f0f0; font-weight: bold;');
 
-        // 3. Clona Cabeçalhos
         const headerRows = originalTable.querySelectorAll('thead tr');
         headerRows.forEach(tr => {
             let newTr = seiTable.insertRow();
             tr.querySelectorAll('th').forEach(cell => {
                 let newCell = newTr.insertCell();
                 newCell.innerHTML = cell.innerHTML;
-                newCell.setAttribute('style', 'border: 1px solid #000; padding: 5px; background-color: #f0f0f0; font-weight: bold; text-align: left;');
+                newCell.setAttribute('style', 'border: 1px solid #000; padding: 5px; background-color: #f0f0f0; font-weight: bold; text-align: left; vertical-align: top;');
             });
         });
         
-        // 4. Clona Linhas de Dados
         const dataRows = originalTable.querySelectorAll('tbody tr');
         dataRows.forEach(tr => {
             let newTr = seiTable.insertRow();
@@ -836,7 +1061,6 @@
             });
         });
 
-        // 5. Copia o HTML limpo para a área de transferência
         const tempDiv = document.createElement('div');
         tempDiv.appendChild(seiTable);
         
