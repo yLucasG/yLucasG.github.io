@@ -171,10 +171,29 @@
         
         <div class="card">
             <h2>2. Listas Variáveis</h2>
-            <div class="grid-container-2col">
+            
+            <label style="font-size: 1.1rem; color: var(--text-primary); margin-bottom: 15px;">Exceções de Serviço (Permutas Diárias)</label>
+            <div class="grid-container-3col">
                 <div>
-                    <label for="lista_permutas">Alunos em Permuta (Um por linha)</label>
-                    <textarea id="lista_permutas" rows="10" placeholder="AL CFO PM 01 NOME A..."></textarea>
+                    <label for="permuta_sex">Trabalhando na Sexta (Bloqueia Sáb. Manhã)</label>
+                    <textarea id="permuta_sex" rows="5" placeholder="AL CFO PM 01 NOME A..."></textarea>
+                </div>
+                <div>
+                    <label for="permuta_sab">Trabalhando no Sábado (Bloqueia Sáb. Tarde / Dom. Manhã)</label>
+                    <textarea id="permuta_sab" rows="5" placeholder="AL CFO PM 01 NOME A..."></textarea>
+                </div>
+                <div>
+                    <label for="permuta_dom">Trabalhando no Domingo (Bloqueia Dom. Tarde)</label>
+                    <textarea id="permuta_dom" rows="5" placeholder="AL CFO PM 01 NOME A..."></textarea>
+                </div>
+            </div>
+            
+            <hr style="margin: 25px 0; border-top: 1px solid var(--border-color); border-bottom: 0;">
+            
+            <div class="grid-container-2col">
+                 <div>
+                    <label for="lista_indisponiveis">Alunos 100% Indisponíveis (Ex: Viagem, FDS todo)</label>
+                    <textarea id="lista_indisponiveis" rows="10" placeholder="AL CFO PM 01 NOME A..."></textarea>
                 </div>
                 <div>
                     <label for="lista_punidos_tsv">Lista de Punição (Copie da planilha)</label>
@@ -741,20 +760,34 @@
         statsContainer.innerHTML = '';
 
         try {
-            // Recarrega os dados do localStorage CADA VEZ que agendar
-            // Isso garante que os dados mais recentes das outras abas sejam usados
+            // Garante que o DB_ALUNOS local está com os 'full_names' atualizados
             rebuildGlobalData();
             
+            // --- 1. LER DADOS DO HTML ---
             const data_sabado_str = document.getElementById('data_sabado').value;
-            const lista_permutas_bruta = document.getElementById('lista_permutas').value;
             const lista_punidos_tsv = document.getElementById('lista_punidos_tsv').value;
+            
+            // Novas listas de permuta
+            const permuta_sex_bruta = document.getElementById('permuta_sex').value;
+            const permuta_sab_bruta = document.getElementById('permuta_sab').value;
+            const permuta_dom_bruta = document.getElementById('permuta_dom').value;
+            
+            // Lista de 100% indisponíveis (antiga lista de permuta)
+            const lista_indisponiveis_bruta = document.getElementById('lista_indisponiveis').value;
 
             if (!lista_punidos_tsv.trim()) throw new Error("A lista de punição está vazia.");
 
             const punicoes = extrairPunidosDoTSV(lista_punidos_tsv);
             if (punicoes.length === 0) throw new Error("Nenhuma punição válida foi extraída. Verifique o formato.");
             
-            const lista_permutas = new Set(lista_permutas_bruta.trim().split('\n').filter(Boolean).map(n => n.trim()));
+            // --- 2. PREPARAR LISTAS DE EXCEÇÃO ---
+            const parseListToSet = (bruta) => new Set(bruta.trim().split('\n').filter(Boolean).map(n => n.trim()));
+
+            const lista_indisponiveis_set = parseListToSet(lista_indisponiveis_bruta);
+            const permuta_sex_set = parseListToSet(permuta_sex_bruta);
+            const permuta_sab_set = parseListToSet(permuta_sab_bruta);
+            const permuta_dom_set = parseListToSet(permuta_dom_bruta);
+
             const datas = formatarDataJS(data_sabado_str);
             
             const servico_sex = DB_CALENDARIO[datas.sex];
@@ -767,10 +800,18 @@
             
             const getFullNameSet = (numeros) => new Set(numeros.map(num => DB_ALUNOS[num]?.full_name).filter(Boolean));
             
-            const excecoes_sex = new Set([...LISTAS_PLANTOES[servico_sex.plantao], ...getFullNameSet(servico_sex.adjunto), ...getFullNameSet(servico_sex.sobreaviso)]);
-            const excecoes_sab = new Set([...LISTAS_PLANTOES[servico_sab.plantao], ...getFullNameSet(servico_sab.adjunto), ...getFullNameSet(servico_sab.sobreaviso)]);
-            const excecoes_dom = new Set([...LISTAS_PLANTOES[servico_dom.plantao], ...getFullNameSet(servico_dom.adjunto), ...getFullNameSet(servico_dom.sobreaviso)]);
+            // Criar a base de exceções (quem JÁ ESTÁ de serviço)
+            const excecoes_sex_base = new Set([...LISTAS_PLANTOES[servico_sex.plantao], ...getFullNameSet(servico_sex.adjunto), ...getFullNameSet(servico_sex.sobreaviso)]);
+            const excecoes_sab_base = new Set([...LISTAS_PLANTOES[servico_sab.plantao], ...getFullNameSet(servico_sab.adjunto), ...getFullNameSet(servico_sab.sobreaviso)]);
+            const excecoes_dom_base = new Set([...LISTAS_PLANTOES[servico_dom.plantao], ...getFullNameSet(servico_dom.adjunto), ...getFullNameSet(servico_dom.sobreaviso)]);
 
+            // **A NOVA LÓGICA:** Adicionar as permutas diárias à base de exceções
+            const excecoes_sex = new Set([...excecoes_sex_base, ...permuta_sex_set]);
+            const excecoes_sab = new Set([...excecoes_sab_base, ...permuta_sab_set]);
+            const excecoes_dom = new Set([...excecoes_dom_base, ...permuta_dom_set]);
+
+
+            // --- 3. EXECUTAR O AGENDAMENTO ---
             const horarios = ["Sábado (Manhã)", "Sábado (Tarde)", "Domingo (Manhã)", "Domingo (Tarde)"];
             let agenda_final = {
                 "Sábado (Manhã)": [], "Sábado (Tarde)": [], "Domingo (Manhã)": [], "Domingo (Tarde)": [], "Próximo Fim de Semana": []
@@ -780,12 +821,16 @@
             
             for (const punicao of punicoes) {
                 const aluno_full_name = punicao.full_name;
-                if (lista_permutas.has(aluno_full_name)) {
+
+                // 1. Verificar se está 100% indisponível
+                if (lista_indisponiveis_set.has(aluno_full_name)) {
                     removidos["PERMUTA"].push(aluno_full_name);
                     continue;
                 }
+
                 if (!aluno_slots_ocupados[aluno_full_name]) aluno_slots_ocupados[aluno_full_name] = new Set();
 
+                // 2. Aplicar as exceções diárias (que agora incluem as permutas)
                 let horarios_disponiveis_aluno = [...horarios];
                 if (excecoes_sex.has(aluno_full_name)) horarios_disponiveis_aluno = horarios_disponiveis_aluno.filter(h => h !== "Sábado (Manhã)");
                 if (excecoes_sab.has(aluno_full_name)) horarios_disponiveis_aluno = horarios_disponiveis_aluno.filter(h => h !== "Sábado (Manhã)" && h !== "Sábado (Tarde)" && h !== "Domingo (Manhã)");
@@ -803,6 +848,7 @@
                 }
             }
 
+            // --- 4. EXIBIR RESULTADOS ---
             statusGeral.textContent = 'Agendamento concluído com sucesso!';
             statusGeral.style.color = '#38A169';
             
@@ -823,40 +869,10 @@
             statusGeral.style.color = '#E53E3E';
         }
     }
-    
-    function buildTableHTML(titulo, punicoes) {
-        const tableId = `table-${titulo.replace(/[^a-zA-Z0-9]/g, '-')}`;
-        let headerHTML = `
-            <div class="table-header">
-                <h3>${titulo} <span>(${punicoes.length} aluno${punicoes.length > 1 ? 's' : ''})</span></h3>
-                <button class="copy-button" onclick="copiarTabelaParaSEI(event, '${tableId}', '${titulo}')">Copiar para SEI</button>
-            </div>`;
-        let tableHTML = `
-            <table class="punishment-table" id="${tableId}">
-                <thead>
-                    <tr>
-                        <th>RELATÓRIO</th> <th>№</th> <th>ALUNO</th> <th>PLANTÃO</th>
-                        <th>PELOTÃO/2° CIA</th> <th>SEI</th> <th>RESUMO</th>
-                        <th>ASSINATURA DO ALUNO NO ATO DA CIÊNCIA</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
-        punicoes.forEach(p => {
-            tableHTML += `
-                <tr>
-                    <td>${p.data_relatorio}</td> <td>${p.n}</td> <td>${p.aluno}</td> <td>${p.plantao}</td>
-                    <td>${p.pelotao}</td> <td>${p.sei}</td> <td>${p.resumo}</td> <td></td>
-                </tr>
-            `;
-        });
-        tableHTML += `</tbody></table>`;
-        return headerHTML + tableHTML;
-    }
 
     function buildRemovidosHTML(removidos) {
         return `
-            <h3 style="color: #E53E3E;">Alunos Removidos (Permuta)</h3>
+            <h3 style="color: #E53E3E;">Alunos Removidos (100% Indisponíveis)</h3>
             <textarea readonly rows="${removidos.length || 1}">${removidos.join('\n')}</textarea>
         `;
     }
