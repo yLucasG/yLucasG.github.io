@@ -319,7 +319,7 @@
     const { createClient } = supabase;
     // E aqui criamos o nosso cliente, que também chamaremos de 'supabase'
     // para o resto do código usar.
-    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+    const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
 // =========================================================================
 
     // =========================================================================
@@ -369,7 +369,7 @@
         console.log("Carregando dados do Supabase...");
         try {
             // 1. Carregar Alunos
-            let { data: alunosData, error: alunosError } = await supabase
+            let { data: alunosData, error: alunosError } = await supabaseClient
                 .from('alunos')
                 .select('*')
                 .order('numero', { ascending: true }); // Boa prática
@@ -387,7 +387,7 @@
             }
 
             // 2. Carregar Calendário
-            let { data: calendarioData, error: calendarioError } = await supabase
+            let { data: calendarioData, error: calendarioError } = await supabaseClient
                 .from('calendario')
                 .select('*');
             
@@ -543,7 +543,7 @@
             if (!num || !nome || !plantao || !pelotao) throw new Error("Todos os campos são obrigatórios.");
 
             // Comando Supabase (upsert = insere se não existe, ou atualiza se existe)
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from('alunos')
                 .upsert({ numero: num, nome: nome, plantao: plantao, pelotao: pelotao });
             
@@ -573,7 +573,7 @@
         if (confirm(`Tem certeza de que deseja remover o Aluno ${numero} - ${aluno.nome}?`)) {
             try {
                 // Comando Supabase para deletar
-                const { error } = await supabase
+                const { error } = await supabaseClient
                     .from('alunos')
                     .delete()
                     .eq('numero', numero); // Onde numero = numero
@@ -650,7 +650,7 @@
             const sobreaviso = parsearListaDeTextarea(document.getElementById('dia-sobreaviso').value);
 
             // Comando Supabase
-            const { error } = await supabase
+            const { error } = await supabaseClient
                 .from('calendario')
                 .upsert({ data: dataSelecionada, plantao: plantao, adjunto: adjuntos, sobreaviso: sobreaviso });
 
