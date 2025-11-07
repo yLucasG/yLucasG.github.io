@@ -869,6 +869,35 @@
             statusGeral.style.color = '#E53E3E';
         }
     }
+    function buildTableHTML(titulo, punicoes) {
+        const tableId = `table-${titulo.replace(/[^a-zA-Z0-9]/g, '-')}`;
+        let headerHTML = `
+            <div class="table-header">
+                <h3>${titulo} <span>(${punicoes.length} aluno${punicoes.length > 1 ? 's' : ''})</span></h3>
+                <button class="copy-button" onclick="copiarTabelaParaSEI(event, '${tableId}', '${titulo}')">Copiar para SEI</button>
+            </div>`;
+        let tableHTML = `
+            <table class="punishment-table" id="${tableId}">
+                <thead>
+                    <tr>
+                        <th>RELATÓRIO</th> <th>№</th> <th>ALUNO</th> <th>PLANTÃO</th>
+                        <th>PELOTÃO/2° CIA</th> <th>SEI</th> <th>RESUMO</th>
+                        <th>ASSINATURA DO ALUNO NO ATO DA CIÊNCIA</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        punicoes.forEach(p => {
+            tableHTML += `
+                <tr>
+                    <td>${p.data_relatorio}</td> <td>${p.n}</td> <td>${p.aluno}</td> <td>${p.plantao}</td>
+                    <td>${p.pelotao}</td> <td>${p.sei}</td> <td>${p.resumo}</td> <td></td>
+                </tr>
+            `;
+        });
+        tableHTML += `</tbody></table>`;
+        return headerHTML + tableHTML;
+    }
 
     function buildRemovidosHTML(removidos) {
         return `
