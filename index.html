@@ -143,6 +143,7 @@
             .stats-container { grid-template-columns: 1fr; }
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -309,200 +310,30 @@
 
 <script>
     // =========================================================================
+    // INICIALIZAÇÃO DO SUPABASE
+    // =========================================================================
+    const SUPABASE_URL = 'https://iogtissohqhgxiskzgvc.supabase.co';       // Cole sua URL (Passo 1)
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlvZ3Rpc3NvaHFoZ3hpc2t6Z3ZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1MDAwNTEsImV4cCI6MjA3ODA3NjA1MX0.4Fj05iwaUNDpdDaAch-dGp5TUtcumV72uzpIovQeCbg';    // Cole sua Chave 'anon' (Passo 1)
+    
+    // Isso 'extrai' a função 'createClient' da biblioteca global 'supabase'
+    const { createClient } = supabase;
+    // E aqui criamos o nosso cliente, que também chamaremos de 'supabase'
+    // para o resto do código usar.
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+// =========================================================================
+
+    // BANCOS DE DADOS GLOBAIS (Carregados do Supabase)
+    // =========================================================================
+    let DB_ALUNOS = {};
+    // ... (o resto do seu script) ...
+    // =========================================================================
     // BANCOS DE DADOS GLOBAIS (Carregados do LocalStorage ou Padrão)
     // =========================================================================
     let DB_ALUNOS = {};
     let DB_CALENDARIO = {};
     let DB_PLANTOES = {};
 
-    // =========================================================================
-    // BANCOS DE DADOS PADRÃO (Corrigidos e Atualizados v35)
-    // =========================================================================
-    const DEFAULT_MASTER_ALUNO_DB = {
-        1: {"nome": "MÁRCIO SOUZA", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
-        2: {"nome": "RENATO", "plantao": "GOLF", "pelotao": "2º PEL/2ª CIA"},
-        3: {"nome": "FERNANDO", "plantao": "HOTEL", "pelotao": "3º PEL/2ª CIA"},
-        4: {"nome": "ROBERTO FREITAS", "plantao": "INDIA", "pelotao": "4º PEL/2ª CIA"},
-        5: {"nome": "SILVANA", "plantao": "FOXTROT", "pelotao": "5º PEL/2ª CIA"},
-        6: {"nome": "DANIELLE PRADO", "plantao": "GOLF", "pelotao": "6º PEL/2ª CIA"},
-        7: {"nome": "ARCOVERDE", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
-        8: {"nome": "AUREA", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
-        9: {"nome": "R. FERREIRA", "plantao": "GOLF", "pelotao": "1º PEL/2ª CIA"},
-        10: {"nome": "VICTOR FERREIRA", "plantao": "HOTEL", "pelotao": "2º PEL/2ª CIA"},
-        11: {"nome": "ORLANDO", "plantao": "INDIA", "pelotao": "2º PEL/2ª CIA"},
-        12: {"nome": "ISABELLA", "plantao": "INDIA", "pelotao": "2º PEL/2ª CIA"},
-        13: {"nome": "BRENDA", "plantao": "FOXTROT", "pelotao": "3º PEL/2ª CIA"},
-        14: {"nome": "AMANDA COELHO", "plantao": "GOLF", "pelotao": "4º PEL/2ª CIA"},
-        15: {"nome": "JUNIOR", "plantao": "GOLF", "pelotao": "3º PEL/2ª CIA"},
-        16: {"nome": "THIAGO TAVARES", "plantao": "FOXTROT", "pelotao": "4º PEL/2ª CIA"},
-        17: {"nome": "MURILO", "plantao": "HOTEL", "pelotao": "5º PEL/2ª CIA"},
-        18: {"nome": "ARYANA", "plantao": "HOTEL", "pelotao": "5º PEL/2ª CIA"},
-        19: {"nome": "ALENCAR", "plantao": "INDIA", "pelotao": "3º PEL/2ª CIA"},
-        20: {"nome": "LUAN PEREIRA", "plantao": "GOLF", "pelotao": "4º PEL/2ª CIA"},
-        21: {"nome": "MANOEL", "plantao": "FOXTROT", "pelotao": "5º PEL/2ª CIA"},
-        24: {"nome": "MATHEUS MESQUITA", "plantao": "GOLF", "pelotao": "2º PEL/2ª CIA"},
-        25: {"nome": "DAVI OLIVEIRA", "plantao": "FOXTROT", "pelotao": "3º PEL/2ª CIA"},
-        26: {"nome": "MARCOLINO", "plantao": "INDIA", "pelotao": "4º PEL/2ª CIA"},
-        27: {"nome": "FATIMA AGUIAR", "plantao": "INDIA", "pelotao": "6º PEL/2ª CIA"},
-        28: {"nome": "LEMOS", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
-        29: {"nome": "MACIEL", "plantao": "INDIA", "pelotao": "6º PEL/2ª CIA"},
-        30: {"nome": "M ALBUQUERQUE", "plantao": "GOLF", "pelotao": "2º PEL/2ª CIA"},
-        31: {"nome": "ALLATAS SOUSA", "plantao": "HOTEL", "pelotao": "3º PEL/2ª CIA"},
-        32: {"nome": "KAYO GABRIEL", "plantao": "HOTEL", "pelotao": "5º PEL/2ª CIA"},
-        33: {"nome": "KAROLINE ABREU", "plantao": "GOLF", "pelotao": "1º PEL/2ª CIA"},
-        34: {"nome": "GIOVANNI", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
-        35: {"nome": "PAULINO", "plantao": "GOLF", "pelotao": "6º PEL/2ª CIA"},
-        36: {"nome": "M. FEITOSA", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
-        37: {"nome": "VALDECI", "plantao": "FOXTROT", "pelotao": "2º PEL/2ª CIA"},
-        38: {"nome": "W. SILVA", "plantao": "FOXTROT", "pelotao": "4º PEL/2ª CIA"},
-        39: {"nome": "ELLIO", "plantao": "GOLF", "pelotao": "2º PEL/2ª CIA"},
-        40: {"nome": "MARINHO", "plantao": "HOTEL", "pelotao": "3º PEL/2ª CIA"},
-        41: {"nome": "MALAQUIAS", "plantao": "INDIA", "pelotao": "4º PEL/2ª CIA"},
-        42: {"nome": "CARLA ARAUJO", "plantao": "FOXTROT", "pelotao": "2º PEL/2ª CIA"},
-        43: {"nome": "CINTIA SOUZA", "plantao": "HOTEL", "pelotao": "3º PEL/2ª CIA"},
-        44: {"nome": "PRISCILA CORREIA", "plantao": "INDIA", "pelotao": "4º PEL/2ª CIA"},
-        45: {"nome": "WALYSON", "plantao": "FOXTROT", "pelotao": "5º PEL/2ª CIA"},
-        46: {"nome": "GRANGEIRO", "plantao": "GOLF", "pelotao": "3º PEL/2ª CIA"},
-        47: {"nome": "MACEDO", "plantao": "HOTEL", "pelotao": "4º PEL/2ª CIA"},
-        48: {"nome": "ELVIS", "plantao": "INDIA", "pelotao": "5º PEL/2ª CIA"},
-        49: {"nome": "JEFFERSON SILVA", "plantao": "FOXTROT", "pelotao": "6º PEL/2ª CIA"},
-        50: {"nome": "QUEIROZ", "plantao": "GOLF", "pelotao": "6º PEL/2ª CIA"},
-        52: {"nome": "RUBSLEY", "plantao": "INDIA", "pelotao": "2º PEL/2ª CIA"},
-        53: {"nome": "G. SILVA", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
-        54: {"nome": "FRANÇA", "plantao": "GOLF", "pelotao": "1º PEL/2ª CIA"},
-        57: {"nome": "SANTANA", "plantao": "INDIA", "pelotao": "2º PEL/2ª CIA"},
-        58: {"nome": "WESLEY", "plantao": "FOXTROT", "pelotao": "5º PEL/2ª CIA"},
-        59: {"nome": "RAYANNE", "plantao": "GOLF", "pelotao": "6º PEL/2ª CIA"},
-        60: {"nome": "S.GOMES", "plantao": "GOLF", "pelotao": "6º PEL/2ª CIA"},
-        61: {"nome": "FIRMINO", "plantao": "INDIA", "pelotao": "4º PEL/2ª CIA"},
-        62: {"nome": "LUCAS MAGALHÃES", "plantao": "INDIA", "pelotao": "5º PEL/2ª CIA"},
-        63: {"nome": "PAULO", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
-        64: {"nome": "BONFIM", "plantao": "GOLF", "pelotao": "6º PEL/2ª CIA"},
-        66: {"nome": "JONATAS SANTOS", "plantao": "HOTEL", "pelotao": "2º PEL/2ª CIA"},
-        67: {"nome": "LAYANNE", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
-        68: {"nome": "KAROLINNE MOREIRA", "plantao": "INDIA", "pelotao": "2º PEL/2ª CIA"},
-        69: {"nome": "FALCÃO", "plantao": "FOXTROT", "pelotao": "3º PEL/2ª CIA"},
-        70: {"nome": "MEIRA", "plantao": "HOTEL", "pelotao": "3º PEL/2ª CIA"},
-        71: {"nome": "SERAFIM", "plantao": "GOLF", "pelotao": "4º PEL/2ª CIA"},
-        72: {"nome": "NONATO", "plantao": "INDIA", "pelotao": "5º PEL/2ª CIA"},
-        73: {"nome": "PEREIRA", "plantao": "FOXTROT", "pelotao": "2º PEL/2ª CIA"},
-        74: {"nome": "GABRIEL", "plantao": "GOLF", "pelotao": "6º PEL/2ª CIA"},
-        75: {"nome": "PEDRO", "plantao": "HOTEL", "pelotao": "3º PEL/2ª CIA"},
-        76: {"nome": "FERREIRA", "plantao": "INDIA", "pelotao": "4º PEL/2ª CIA"},
-        77: {"nome": "EDUARDA", "plantao": "HOTEL", "pelotao": "3º PEL/2ª CIA"},
-        78: {"nome": "GISELE FERREIRA", "plantao": "GOLF", "pelotao": "4º PEL/2ª CIA"},
-        79: {"nome": "DIOGENES", "plantao": "FOXTROT", "pelotao": "4º PEL/2ª CIA"},
-        80: {"nome": "JOSE", "plantao": "GOLF", "pelotao": "5º PEL/2ª CIA"},
-        81: {"nome": "COSTA", "plantao": "HOTEL", "pelotao": "6º PEL/2ª CIA"},
-        82: {"nome": "MARCOS NASCIMENTO", "plantao": "INDIA", "pelotao": "1º PEL/2ª CIA"},
-        83: {"nome": "P. SOUZA", "plantao": "FOXTROT", "pelotao": "2º PEL/2ª CIA"},
-        84: {"nome": "SIDNEI ARAÚJO", "plantao": "GOLF", "pelotao": "3º PEL/2ª CIA"},
-        85: {"nome": "ANDERSON", "plantao": "HOTEL", "pelotao": "4º PEL/2ª CIA"},
-        86: {"nome": "FERNANDO CRUZ", "plantao": "INDIA", "pelotao": "5º PEL/2ª CIA"},
-        87: {"nome": "ARYCLAYTON", "plantao": "FOXTROT", "pelotao": "6º PEL/2ª CIA"},
-        88: {"nome": "S. NETO", "plantao": "GOLF", "pelotao": "1º PEL/2ª CIA"},
-        89: {"nome": "SILVA", "plantao": "HOTEL", "pelotao": "2º PEL/2ª CIA"},
-        90: {"nome": "RAFAEL BEZERRA", "plantao": "INDIA", "pelotao": "3º PEL/2ª CIA"},
-        91: {"nome": "GESSICA", "plantao": "FOXTROT", "pelotao": "5º PEL/2ª CIA"},
-        92: {"nome": "ALINE", "plantao": "INDIA", "pelotao": "6º PEL/2ª CIA"},
-        93: {"nome": "REVERTHON", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
-        94: {"nome": "FERNANDA SOARES", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
-        95: {"nome": "BRUNO", "plantao": "INDIA", "pelotao": "5º PEL/2ª CIA"},
-        96: {"nome": "ERIVELTON", "plantao": "HOTEL", "pelotao": "2º PEL/2ª CIA"},
-        97: {"nome": "ITALO", "plantao": "INDIA", "pelotao": "3º PEL/2ª CIA"},
-        98: {"nome": "EMANNUEL", "plantao": "FOXTROT", "pelotao": "4º PEL/2ª CIA"},
-        99: {"nome": "G. GOMES", "plantao": "GOLF", "pelotao": "4º PEL/2ª CIA"},
-        100: {"nome": "RENAN", "plantao": "INDIA", "pelotao": "6º PEL/2ª CIA"},
-        102: {"nome": "ALLAN MARIANO", "plantao": "FOXTROT", "pelotao": "5º PEL/2ª CIA"},
-        103: {"nome": "RAISSA SOARES", "plantao": "FOXTROT", "pelotao": "2º PEL/2ª CIA"},
-        105: {"nome": "JOSÉ NETO", "plantao": "GOLF", "pelotao": "5º PEL/2ª CIA"},
-        106: {"nome": "LUCAS RANIELLE", "plantao": "HOTEL", "pelotao": "6º PEL/2ª CIA"},
-        107: {"nome": "LUCIANO", "plantao": "HOTEL", "pelotao": "6º PEL/2ª CIA"},
-        108: {"nome": "HENRIQUE", "plantao": "GOLF", "pelotao": "1º PEL/2ª CIA"},
-        109: {"nome": "ERIKA DUARTE", "plantao": "HOTEL", "pelotao": "4º PEL/2ª CIA"},
-        110: {"nome": "CÉSAR MEDEIROS", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
-        111: {"nome": "FELIPE MORAIS", "plantao": "HOTEL", "pelotao": "2º PEL/2ª CIA"},
-        112: {"nome": "MARQUES", "plantao": "INDIA", "pelotao": "3º PEL/2ª CIA"},
-        113: {"nome": "AURÉLIO", "plantao": "GOLF", "pelotao": "4º PEL/2ª CIA"},
-        114: {"nome": "BARBALHO", "plantao": "FOXTROT", "pelotao": "5º PEL/2ª CIA"},
-        115: {"nome": "VINICIUS OLIVEIRA", "plantao": "HOTEL", "pelotao": "2º PEL/2ª CIA"},
-        116: {"nome": "SANTIAGO", "plantao": "INDIA", "pelotao": "6º PEL/2ª CIA"},
-        118: {"nome": "DURVAL", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
-        119: {"nome": "VINÍCIUS SOUZA", "plantao": "GOLF", "pelotao": "2º PEL/2ª CIA"},
-        120: {"nome": "EGITO", "plantao": "INDIA", "pelotao": "3º PEL/2ª CIA"},
-        121: {"nome": "JOÃO NASCIMENTO", "plantao": "INDIA", "pelotao": "2º PEL/2ª CIA"},
-        122: {"nome": "BATISTA", "plantao": "FOXTROT", "pelotao": "4º PEL/2ª CIA"},
-        123: {"nome": "GONZAGA", "plantao": "GOLF", "pelotao": "5º PEL/2ª CIA"},
-        125: {"nome": "MEDEIROS", "plantao": "HOTEL", "pelotao": "3º PEL/2ª CIA"},
-        126: {"nome": "GILMARA", "plantao": "INDIA", "pelotao": "5º PEL/2ª CIA"},
-        127: {"nome": "CAIO GUIMARAES", "plantao": "HOTEL", "pelotao": "6º PEL/2ª CIA"},
-        128: {"nome": "ALEXANDRO GOMES", "plantao": "FOXTROT", "pelotao": "4º PEL/2ª CIA"},
-        129: {"nome": "LUIZ NUNES", "plantao": "GOLF", "pelotao": "5º PEL/2ª CIA"},
-        130: {"nome": "PAULO ROBERTO", "plantao": "INDIA", "pelotao": "6º PEL/2ª CIA"},
-        131: {"nome": "RENATA", "plantao": "FOXTROT", "pelotao": "6º PEL/2ª CIA"},
-        132: {"nome": "SERGIO", "plantao": "INDIA", "pelotao": "1º PEL/2ª CIA"},
-        133: {"nome": "ISRAEL", "plantao": "FOXTROT", "pelotao": "2º PEL/2ª CIA"},
-        134: {"nome": "SAMEA FERRAZ", "plantao": "GOLF", "pelotao": "2º PEL/2ª CIA"},
-        135: {"nome": "JOÃO HENRIQUE", "plantao": "GOLF", "pelotao": "3º PEL/2ª CIA"},
-        136: {"nome": "PATRICIA", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
-        137: {"nome": "RAFAEL PEREIRA", "plantao": "HOTEL", "pelotao": "6º PEL/2ª CIA"},
-        138: {"nome": "ICARO", "plantao": "HOTEL", "pelotao": "5º PEL/2ª CIA"},
-        139: {"nome": "JULIANA GONDIM", "plantao": "INDIA", "pelotao": "3º PEL/2ª CIA"},
-        140: {"nome": "VICTOR COSTA", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
-        141: {"nome": "JULIANE CORDEIRO", "plantao": "FOXTROT", "pelotao": "4º PEL/2ª CIA"},
-        142: {"nome": "JABNER", "plantao": "GOLF", "pelotao": "2º PEL/2ª CIA"},
-        143: {"nome": "SAMARA MELO", "plantao": "GOLF", "pelotao": "5º PEL/2ª CIA"},
-        144: {"nome": "EDJANE", "plantao": "HOTEL", "pelotao": "6º PEL/2ª CIA"},
-        145: {"nome": "HIGOR ALVES", "plantao": "INDIA", "pelotao": "5º PEL/2ª CIA"},
-        146: {"nome": "PEREIRA MORAIS", "plantao": "INDIA", "pelotao": "6º PEL/2ª CIA"},
-        147: {"nome": "JORGE FILHO", "plantao": "FOXTROT", "pelotao": "1º PEL/2ª CIA"},
-        148: {"nome": "OLAVO", "plantao": "INDIA", "pelotao": "3º PEL/2ª CIA"},
-        149: {"nome": "CAVALCANTI", "plantao": "HOTEL", "pelotao": "6º PEL/2ª CIA"},
-        150: {"nome": "ROBERTA", "plantao": "INDIA", "pelotao": "1º PEL/2ª CIA"},
-        151: {"nome": "OLIVEIRA JUNIOR", "plantao": "HOTEL", "pelotao": "5º PEL/2ª CIA"},
-        152: {"nome": "MOURA", "plantao": "GOLF", "pelotao": "2º PEL/2ª CIA"},
-        153: {"nome": "AFONSO", "plantao": "FOXTROT", "pelotao": "3º PEL/2ª CIA"},
-        154: {"nome": "DAYANE", "plantao": "FOXTROT", "pelotao": "2º PEL/2ª CIA"},
-        156: {"nome": "MONALIZA", "plantao": "GOLF", "pelotao": "3º PEL/2ª CIA"},
-        157: {"nome": "VALADARES", "plantao": "INDIA", "pelotao": "3º PEL/2ª CIA"},
-        158: {"nome": "HEYVERSON", "plantao": "FOXTROT", "pelotao": "5º PEL/2ª CIA"},
-        161: {"nome": "JOSE ALISSON", "plantao": "GOLF", "pelotao": "6º PEL/2ª CIA"},
-        162: {"nome": "JESUS", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
-        163: {"nome": "NATALIA", "plantao": "INDIA", "pelotao": "5º PEL/2ª CIA"},
-        164: {"nome": "CIBELE", "plantao": "FOXTROT", "pelotao": "6º PEL/2ª CIA"},
-        165: {"nome": "GUSTAVO", "plantao": "GOLF", "pelotao": "2º PEL/2ª CIA"},
-        166: {"nome": "FELIPE FELIX", "plantao": "FOXTROT", "pelotao": "3º PEL/2ª CIA"},
-        168: {"nome": "LEONAM", "plantao": "GOLF", "pelotao": "5º PEL/2ª CIA"},
-        169: {"nome": "MATHEUS BARROS", "plantao": "INDIA", "pelotao": "6º PEL/2ª CIA"},
-        170: {"nome": "ANTONIO REIS", "plantao": "FOXTROT", "pelotao": "4º PEL/2ª CIA"},
-        171: {"nome": "JHONEY", "plantao": "HOTEL", "pelotao": "5º PEL/2ª CIA"},
-        172: {"nome": "FRANCISCO", "plantao": "GOLF", "pelotao": "1º PEL/2ª CIA"},
-        173: {"nome": "IURY", "plantao": "INDIA", "pelotao": "3º PEL/2ª CIA"},
-        174: {"nome": "LIMA PAIVA", "plantao": "FOXTROT", "pelotao": "6º PEL/2ª CIA"},
-        175: {"nome": "LUIZ LEAL", "plantao": "HOTEL", "pelotao": "2º PEL/2ª CIA"},
-        176: {"nome": "RHAYSA", "plantao": "INDIA", "pelotao": "1º PEL/2ª CIA"},
-        177: {"nome": "DIONIZIO", "plantao": "HOTEL", "pelotao": "4º PEL/2ª CIA"},
-        178: {"nome": "HIAGO", "plantao": "INDIA", "pelotao": "4º PEL/2ª CIA"},
-        179: {"nome": "DEBORA GOUVEIA", "plantao": "HOTEL", "pelotao": "2º PEL/2ª CIA"},
-        180: {"nome": "NOBREGA", "plantao": "GOLF", "pelotao": "5º PEL/2ª CIA"},
-        181: {"nome": "THAYNARA", "plantao": "GOLF", "pelotao": "3º PEL/2ª CIA"},
-        182: {"nome": "JOSINALDO", "plantao": "FOXTROT", "pelotao": "4º PEL/2ª CIA"},
-        183: {"nome": "JULIO", "plantao": "HOTEL", "pelotao": "5º PEL/2ª CIA"},
-        184: {"nome": "ABRAÃO", "plantao": "HOTEL", "pelotao": "6º PEL/2ª CIA"},
-        185: {"nome": "RONILSON", "plantao": "HOTEL", "pelotao": "1º PEL/2ª CIA"},
-        186: {"nome": "SOUTO", "plantao": "INDIA", "pelotao": "3º PEL/2ª CIA"},
-        187: {"nome": "BELEM", "plantao": "HOTEL", "pelotao": "4º PEL/2ª CIA"},
-        188: {"nome": "MAXEMBERG", "plantao": "INDIA", "pelotao": "3º PEL/2ª CIA"},
-        189: {"nome": "KAMYLA", "plantao": "HOTEL", "pelotao": "4º PEL/2ª CIA"},
-        190: {"nome": "JÚLIA", "plantao": "GOLF", "pelotao": "5º PEL/2ª CIA"},
-        191: {"nome": "SELTON", "plantao": "FOXTROT", "pelotao": "4º PEL/2ª CIA"},
-        192: {"nome": "JEFFERSON GOMES", "plantao": "GOLF", "pelotao": "1º PEL/2ª CIA"},
-        193: {"nome": "JAILTON", "plantao": "HOTEL", "pelotao": "3º PEL/2ª CIA"},
-        194: {"nome": "KLEVER", "plantao": "INDIA", "pelotao": "5º PEL/2ª CIA"},
-        195: {"nome": "PETTERSON", "plantao": "INDIA", "pelotao": "2º PEL/2ª CIA"},
-        196: {"nome": "CARDOSO", "plantao": "GOLF", "pelotao": "6º PEL/2ª CIA"},
-        197: {"nome": "ISRAEL OLIVEIRA", "plantao": "HOTEL", "pelotao": "4º PEL/2ª CIA"}
-    };
+   
 
     function formatarNomeAluno(num, nome) {
         return `AL CFO PM ${String(num).padStart(2, '0')} ${nome.trim().toUpperCase()}`;
@@ -517,52 +348,70 @@
             if (!LISTAS_PLANTOES[plantao]) LISTAS_PLANTOES[plantao] = new Set();
             LISTAS_PLANTOES[plantao].add(full_name);
         }
-    }
-    
-    // =========================================================================
-    // CALENDÁRIO DE SERVIÇO (Carregado do LocalStorage ou Padrão)
-    // =========================================================================
-    const DEFAULT_CALENDARIO_SERVICO = {
-        "2025-11-07": {"plantao": "INDIA", "adjunto": [42, 140], "sobreaviso": [141, 128, 122, 118, 114, 110, 102]},
-        "2025-11-08": {"plantao": "GOLF", "adjunto": [45, 133], "sobreaviso": [67, 63, 38, 37, 58, 53, 49]},
-        "2025-11-09": {"plantao": "HOTEL", "adjunto": [48, 146], "sobreaviso": [132, 120, 100, 26, 12, 11, 4]},
-        "2025-11-14": {"plantao": "HOTEL", "adjunto": [74, 99], "sobreaviso": [156, 152, 143, 15, 14, 9, 2]},
-        "2025-11-15": {"plantao": "INDIA", "adjunto": [78, 84], "sobreaviso": [68, 61, 48, 44, 41, 29, 27]},
-        "2025-11-16": {"plantao": "FOXTROT", "adjunto": [75, 138], "sobreaviso": [77, 66, 47, 43, 40, 31, 28]},
-        "2025-11-21": {"plantao": "FOXTROT", "adjunto": [61, 139], "sobreaviso": [169, 148, 130, 126, 121, 116, 97]},
-        "2025-11-22": {"plantao": "HOTEL", "adjunto": [60, 196], "sobreaviso": [192, 181, 172, 168, 105]},
-        "2025-11-23": {"plantao": "INDIA", "adjunto": [58, 118], "sobreaviso": [24, 20, 69, 45, 42, 16, 7, 5, 1]},
-        "2025-11-28": {"plantao": "HOTEL", "adjunto": [67, 110], "sobreaviso": [191, 182, 170, 166, 164, 158, 154]},
-        "2025-11-29": {"plantao": "GOLF", "adjunto": [82, 120], "sobreaviso": [95, 97, 52, 62, 72, 112, 121]},
-        "2025-11-30": {"plantao": "FOXTROT", "adjunto": [92, 116], "sobreaviso": [195, 194, 188, 186, 178, 176, 173]}
-    };
+    }   
 
     // =========================================================================
     // INICIALIZAÇÃO DA PÁGINA E LÓGICA DE LOCALSTORAGE
     // =========================================================================
-    document.addEventListener('DOMContentLoaded', () => {
-        // Carrega os bancos de dados
-        DB_ALUNOS = JSON.parse(localStorage.getItem('MASTER_ALUNO_DB')) || DEFAULT_MASTER_ALUNO_DB;
-        DB_CALENDARIO = JSON.parse(localStorage.getItem('CALENDARIO_SERVICO')) || DEFAULT_CALENDARIO_SERVICO;
-        rebuildGlobalData(); // Recria as listas de plantão a partir do DB_ALUNOS
+    document.addEventListener('DOMContentLoaded', async () => {
+        // Primeiro, carregamos os dados do Supabase
+        await carregarDadosDoSupabase();
         
-        // Inicia as abas
+        // Agora o resto do seu código pode rodar
+        // pois DB_ALUNOS e DB_CALENDARIO estão prontos
+        rebuildGlobalData();
+        
         switchMainTab(null, 'tab-agendador');
         switchOutputTab(null, 'agenda');
 
-        // Renderiza a tabela de alunos e os filtros na aba "Gerenciar Alunos"
         populateFilters();
         renderizarTabelaAlunos();
     });
 
-    function salvarAlunosDB() {
-        localStorage.setItem('MASTER_ALUNO_DB', JSON.stringify(DB_ALUNOS));
-        rebuildGlobalData(); // Atualiza a variável global de plantões
-        populateFilters(); // Atualiza os filtros
-    }
+    async function carregarDadosDoSupabase() {
+        console.log("Carregando dados do Supabase...");
+        try {
+            // 1. Carregar Alunos
+            let { data: alunosData, error: alunosError } = await supabase
+                .from('alunos')
+                .select('*')
+                .order('numero', { ascending: true }); // Boa prática
+            
+            if (alunosError) throw new Error("Erro ao buscar alunos: " + alunosError.message);
+            
+            // Converte o array do Supabase para o formato de objeto que seu código espera
+            DB_ALUNOS = {};
+            for (const aluno of alunosData) {
+                DB_ALUNOS[aluno.numero] = {
+                    nome: aluno.nome,
+                    plantao: aluno.plantao,
+                    pelotao: aluno.pelotao
+                };
+            }
 
-    function salvarCalendarioDB() {
-        localStorage.setItem('CALENDARIO_SERVICO', JSON.stringify(DB_CALENDARIO));
+            // 2. Carregar Calendário
+            let { data: calendarioData, error: calendarioError } = await supabase
+                .from('calendario')
+                .select('*');
+            
+            if (calendarioError) throw new Error("Erro ao buscar calendário: " + calendarioError.message);
+            
+            // Converte o array para o formato de objeto
+            DB_CALENDARIO = {};
+            for (const dia of calendarioData) {
+                DB_CALENDARIO[dia.data] = {
+                    plantao: dia.plantao,
+                    adjunto: dia.adjunto || [],
+                    sobreaviso: dia.sobreaviso || []
+                };
+            }
+            
+            console.log("Dados carregados com sucesso!");
+
+        } catch (error) {
+            console.error(error);
+            alert(`ERRO CRÍTICO: Não foi possível carregar o banco de dados. Verifique a console (F12). \n\n${error.message}`);
+        }
     }
 
     // =========================================================================
@@ -687,7 +536,7 @@
         statusAlunos.textContent = '';
     }
 
-    function salvarAluno() {
+    async function salvarAluno() { // Adicionado 'async'
         try {
             const num = parseInt(document.getElementById('aluno-numero').value);
             const nome = document.getElementById('aluno-nome').value.toUpperCase();
@@ -696,31 +545,58 @@
 
             if (!num || !nome || !plantao || !pelotao) throw new Error("Todos os campos são obrigatórios.");
 
+            // Comando Supabase (upsert = insere se não existe, ou atualiza se existe)
+            const { data, error } = await supabase
+                .from('alunos')
+                .upsert({ numero: num, nome: nome, plantao: plantao, pelotao: pelotao });
+            
+            if (error) throw error; // Se der erro no Supabase, pare aqui
+
+            // Atualiza o DB_ALUNOS local (em memória) para refletir a mudança
             DB_ALUNOS[num] = { nome, plantao, pelotao };
-            salvarAlunosDB();
+            
+            // Funções que você já tinha para redesenhar a tela
+            rebuildGlobalData();
             renderizarTabelaAlunos();
             
             statusAlunos.className = 'success-msg';
-            statusAlunos.textContent = `Aluno ${num} - ${nome} salvo com sucesso!`;
+            statusAlunos.textContent = `Aluno ${num} - ${nome} salvo com sucesso no Supabase!`;
             limparFormularioAluno();
 
         } catch (e) {
             statusAlunos.className = 'error-msg';
             statusAlunos.textContent = 'Erro ao salvar: ' + e.message;
-        }
+        }    
     }
     
-    function removerAluno(numero) {
+    async function removerAluno(numero) { // Adicionado 'async'
         const aluno = DB_ALUNOS[numero];
         if (!aluno) return;
 
         if (confirm(`Tem certeza de que deseja remover o Aluno ${numero} - ${aluno.nome}?`)) {
-            delete DB_ALUNOS[numero];
-            salvarAlunosDB();
-            renderizarTabelaAlunos();
+            try {
+                // Comando Supabase para deletar
+                const { error } = await supabase
+                    .from('alunos')
+                    .delete()
+                    .eq('numero', numero); // Onde numero = numero
+
+                if (error) throw error;
+
+                // Atualiza o DB_ALUNOS local (em memória)
+                delete DB_ALUNOS[numero];
+                
+                // Redesenha a tela
+                rebuildGlobalData();
+                renderizarTabelaAlunos();
+                
+                statusAlunos.className = 'success-msg';
+                statusAlunos.textContent = `Aluno ${numero} - ${aluno.nome} removido.`;
             
-            statusAlunos.className = 'success-msg';
-            statusAlunos.textContent = `Aluno ${numero} - ${aluno.nome} removido.`;
+            } catch (e) {
+                statusAlunos.className = 'error-msg';
+                statusAlunos.textContent = 'Erro ao remover: ' + e.message;
+            }
         }
     }
 
@@ -755,7 +631,7 @@
         statusCalendario.textContent = '';
     }
 
-    function salvarDiaCalendario() {
+    async function salvarDiaCalendario() { // Adicionado 'async'
         try {
             const dataSelecionada = document.getElementById('calendar-picker').value;
             if (!dataSelecionada) throw new Error("Nenhuma data selecionada.");
@@ -776,8 +652,15 @@
             const adjuntos = parsearListaDeTextarea(document.getElementById('dia-adjuntos').value);
             const sobreaviso = parsearListaDeTextarea(document.getElementById('dia-sobreaviso').value);
 
+            // Comando Supabase
+            const { error } = await supabase
+                .from('calendario')
+                .upsert({ data: dataSelecionada, plantao: plantao, adjunto: adjuntos, sobreaviso: sobreaviso });
+
+            if (error) throw error;
+
+            // Atualiza o DB_CALENDARIO local (em memória)
             DB_CALENDARIO[dataSelecionada] = { plantao, adjunto, sobreaviso };
-            salvarCalendarioDB();
             
             statusCalendario.className = 'success-msg';
             statusCalendario.textContent = `Dia ${dataSelecionada} salvo com sucesso!`;
@@ -785,7 +668,7 @@
         } catch (e) {
             statusCalendario.className = 'error-msg';
             statusCalendario.textContent = 'Erro ao salvar: ' + e.message;
-        }
+        }    
     }
     
     // =========================================================================
@@ -863,8 +746,6 @@
         try {
             // Recarrega os dados do localStorage CADA VEZ que agendar
             // Isso garante que os dados mais recentes das outras abas sejam usados
-            DB_ALUNOS = JSON.parse(localStorage.getItem('MASTER_ALUNO_DB')) || DEFAULT_MASTER_ALUNO_DB;
-            DB_CALENDARIO = JSON.parse(localStorage.getItem('CALENDARIO_SERVICO')) || DEFAULT_CALENDARIO_SERVICO;
             rebuildGlobalData();
             
             const data_sabado_str = document.getElementById('data_sabado').value;
