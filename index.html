@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S.I.G.A. - Sistema Integrado de Gestão do Aluno</title>
+    
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        military: {
+                            900: '#0a1a2f', 800: '#112240', 700: '#233554',
+                            500: '#64ffda', 100: '#e6f1ff',
+                        },
+                        fo: { pos: '#10B981', neg: '#EF4444' }
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white; color: black; }
+            .card-shadow { box-shadow: none; border: 1px solid #ccc; }
+        }
+        .print-only { display: none; }
+        .fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
+        .fade-enter-from, .fade-leave-to { opacity: 0; }
+        
+        /* Estilo para imagem quebrada */
+        img[alt="Brasão CFO"] { object-fit: contain; }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans h-screen overflow-hidden">
+
+    <div id="app" class="h-full flex flex-col">
+
+        <div v-if="!authenticated" class="fixed inset-0 z-50 bg-military-900 flex items-center justify-center p-4">
+            <div class="bg-white rounded-lg shadow-2xl p-8 max-w-md w-full text-center relative">
+                <div class="mb-6 flex justify-center">
+                    <img src="cfo.jpg" alt="Brasão CFO" class="h-24 w-auto mx-auto mb-4" onerror="this.src='https://via.placeholder.com/150?text=LOGO+CFO'">
+                </div>
+                <h1 class="text-2xl font-bold text-military-900 mb-2">S.I.G.A. - APMP</h1>
+                <p class="text-gray-500 mb-6">Acesso Restrito à Coordenação</p>
+                
+                <p v-if="loading" class="text-blue-500 font-bold mb-4 animate-pulse">Conectando ao Banco de Dados...</p>
+
+                <form @submit.prevent="login">
+                    <input v-model="passwordInput" type="password" placeholder="Senha de Acesso" class="w-full border p-3 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-military-900">
+                    <button type="submit" class="w-full bg-military-900 text-white py-3 rounded font-bold hover:bg-military-800 transition" :disabled="loading">
+                        {{ loading ? 'AGUARDE...' : 'ENTRAR' }}
+                    </button>
+                    <p v-if="loginError" class="text-red-500 text-sm mt-3">{{ loginErrorMsg }}</p>
+                </form>
+
+                <div class="mt-8 pt-4 border-t border-gray-100">
+                    <button @click="seedDatabase" class="text-xs text-gray-400 hover:text-red-500 underline">
+                        [SETUP] Inicializar Banco de Dados (1ª Vez)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div v-else class="flex h-full">
+            
+            <aside class="w-64 bg-military-900 text-white flex-shrink-0 flex flex-col no-print">
+                <div class="p-6 flex flex-col items-center border-b border-military-700">
+                    <img src="cfo.jpg" alt="Brasão CFO" class="h-20 w-auto mb-3" onerror="this.style.display='none'">
+                    <div class="flex items-center gap-2 font-bold text-xl">
+                        <i class="ph-fill ph-shield-check text-military-500"></i>
+                        <span>S.I.G.A.</span>
+                    </div>
+                </div>
+                
+                <nav class="flex-1 p-4 space-y-2">
+                    <a href="#" @click="currentView = 'dashboard'" :class="{'bg-military-800 text-military-500': currentView === 'dashboard'}" class="flex items-center gap-3 p-3 rounded hover:bg-military-800 transition">
+                        <i class="ph ph-chart-pie-slice text-lg"></i> Dashboard
+                    </a>
+                    <a href="#" @click="currentView = 'students'" :class="{'bg-military-800 text-military-500': currentView === 'students'}" class="flex items-center gap-3 p-3 rounded hover:bg-military-800 transition">
+                        <i class="ph ph-users text-lg"></i> Cadetes
+                    </a>
+                    <button @click="refreshData" class="w-full flex items-center gap-3 p-3 rounded hover:bg-military-800 transition text-yellow-400">
+                        <i class="ph-bold ph-arrows-clockwise text-lg" :class="{'animate-spin': loading}"></i> Atualizar Dados
+                    </button>
+                </nav>
+
+                <div class="p-4 border-t border-military-700">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-military-700 flex items-center justify-center">
+                            <i class="ph ph-user-gear"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold">Coordenação</p>
+                            <p class="text-xs text-gray-400">Online</p>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <main class="flex-1 flex flex-col overflow-hidden bg-slate-50 relative">
+                
+                <header class="bg-white h-16 shadow-sm flex items-center justify-between px-6 no-print">
+                    <h2 class="text-xl font-bold text-gray-700 uppercase tracking-wide">{{ viewTitle }}</h2>
+                    <div class="flex items-center gap-4">
+                        <div v-if="currentView === 'students'" class="relative">
+                            <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            <input v-model="searchQuery" type="text" placeholder="Pesquisar Cadete..." class="pl-10 pr-4 py-2 border rounded-full text-sm w-64 focus:w-80 transition-all focus:outline-none focus:border-military-900">
+                        </div>
+                    </div>
+                </header>
+
+                <div class="flex-1 overflow-y-auto p-6 scroll-smooth">
+                    
+                    <div v-if="currentView === 'dashboard'" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                            <div class="bg-white p-6 rounded-lg shadow-sm border-l-4 border-blue-500">
+                                <p class="text-gray-500 text-sm">Total Cadetes</p>
+                                <p class="text-3xl font-bold text-gray-800">{{ students.length }}</p>
+                            </div>
+                            <div class="bg-white p-6 rounded-lg shadow-sm border-l-4 border-green-500">
+                                <p class="text-gray-500 text-sm">FO+ (Hoje)</p>
+                                <p class="text-3xl font-bold text-gray-800">{{ stats.foPosToday }}</p>
+                            </div>
+                            <div class="bg-white p-6 rounded-lg shadow-sm border-l-4 border-red-500">
+                                <p class="text-gray-500 text-sm">FO- (Hoje)</p>
+                                <p class="text-3xl font-bold text-gray-800">{{ stats.foNegToday }}</p>
+                            </div>
+                            
+                            <div @click="openRewardListModal" class="bg-yellow-50 p-6 rounded-lg shadow-sm border-l-4 border-yellow-500 cursor-pointer hover:shadow-md transition group relative overflow-hidden">
+                                <div class="relative z-10">
+                                    <p class="text-yellow-800 text-sm font-bold flex items-center gap-2">
+                                        Elogios Disponíveis
+                                        <i class="ph-bold ph-arrow-right opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                                    </p>
+                                    <p class="text-3xl font-bold text-yellow-900">{{ stats.rewardsAvailable }}</p>
+                                    <p class="text-xs text-yellow-700 mt-1">Clique para visualizar</p>
+                                </div>
+                                <i class="ph-fill ph-medal absolute right-2 bottom-2 text-6xl text-yellow-200 opacity-50"></i>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-white rounded-lg shadow-sm p-6">
+                                <h3 class="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
+                                    <i class="ph-fill ph-trophy text-yellow-500"></i> Destaques Positivos
+                                </h3>
+                                <ul class="space-y-3">
+                                    <li v-for="(student, index) in stats.topStudents" :key="student.id" class="flex items-center justify-between border-b pb-2">
+                                        <div class="flex items-center gap-3">
+                                            <span class="w-6 h-6 rounded-full bg-military-900 text-white flex items-center justify-center text-xs font-bold">{{ index + 1 }}</span>
+                                            <div>
+                                                <p class="font-bold text-sm">{{ student.nome }}</p>
+                                                <p class="text-xs text-gray-500">{{ student.pelotao }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <span class="text-green-600 font-bold">+{{ getRawScore(student) }}</span>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div class="bg-white rounded-lg shadow-sm p-6">
+                                <h3 class="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
+                                    <i class="ph-fill ph-warning-circle text-red-500"></i> Atenção (Maior nº de FO-)
+                                </h3>
+                                <ul class="space-y-3">
+                                    <li v-for="(student, index) in stats.alertStudents" :key="student.id" class="flex items-center justify-between border-b pb-2">
+                                        <div class="flex items-center gap-3">
+                                            <span class="w-6 h-6 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center text-xs font-bold">{{ index + 1 }}</span>
+                                            <div>
+                                                <p class="font-bold text-sm">{{ student.nome }}</p>
+                                                <p class="text-xs text-gray-500">{{ student.pelotao }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <span class="text-red-600 font-bold">-{{ getNegScore(student) }}</span>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-if="currentView === 'students'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        <div v-for="student in filteredStudents" :key="student.id" class="bg-white rounded-lg shadow hover:shadow-md transition-shadow p-4 flex flex-col relative overflow-hidden group">
+                            <div v-if="getCycleScore(student) >= 5" class="absolute top-0 right-0 bg-yellow-400 text-military-900 text-xs font-bold px-3 py-1 rounded-bl-lg shadow-sm z-10 animate-pulse">
+                                DISPONÍVEL
+                            </div>
+
+                            <div class="flex items-start justify-between mb-3">
+                                <div>
+                                    <span class="text-xs font-bold text-gray-400">#{{ student.id }}</span>
+                                    <h3 class="font-bold text-military-900 leading-tight truncate w-40">{{ student.nome }}</h3>
+                                    <p class="text-xs text-gray-500">{{ student.pelotao }}</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-2xl font-bold" :class="getCycleScore(student) >= 5 ? 'text-green-600' : 'text-gray-700'">
+                                        {{ getCycleScore(student) }}<span class="text-xs text-gray-400 font-normal">/5</span>
+                                    </p>
+                                    <p class="text-[10px] text-gray-400 uppercase">Ciclo Atual</p>
+                                </div>
+                            </div>
+
+                            <div class="w-full bg-gray-200 rounded-full h-2 mb-4">
+                                <div class="h-2 rounded-full transition-all duration-500" 
+                                     :class="getProgressColor(getCycleScore(student))"
+                                     :style="{ width: Math.min((getCycleScore(student) / 5) * 100, 100) + '%' }">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-2 mt-auto">
+                                <button @click="openFOModal(student, 'FO+')" class="bg-green-50 hover:bg-green-100 text-green-700 py-2 rounded flex items-center justify-center gap-1 text-sm font-bold transition">
+                                    <i class="ph-bold ph-thumbs-up"></i> FO+
+                                </button>
+                                <button @click="openFOModal(student, 'FO-')" class="bg-red-50 hover:bg-red-100 text-red-700 py-2 rounded flex items-center justify-center gap-1 text-sm font-bold transition">
+                                    <i class="ph-bold ph-thumbs-down"></i> FO-
+                                </button>
+                            </div>
+                            <button @click="openHistoryModal(student)" class="mt-2 w-full py-2 text-xs text-gray-400 hover:text-military-900 flex items-center justify-center gap-1">
+                                <i class="ph ph-list-dashes"></i> Ver Extrato / Editar SEI
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <transition name="fade">
+            <div v-if="showFOModal" class="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
+                <div class="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden transform transition-all">
+                    <div class="p-4 flex items-center justify-between" :class="modalType === 'FO+' ? 'bg-green-600' : 'bg-red-600'">
+                        <h3 class="text-white font-bold flex items-center gap-2">
+                            <i :class="modalType === 'FO+' ? 'ph-thumbs-up' : 'ph-thumbs-down'"></i>
+                            Registrar {{ modalType }}
+                        </h3>
+                        <button @click="closeFOModal" class="text-white hover:bg-white/20 rounded-full p-1"><i class="ph ph-x text-xl"></i></button>
+                    </div>
+
+                    <div class="p-6">
+                        <p class="mb-4 text-gray-600">Cadete: <span class="font-bold text-gray-900">{{ selectedStudent?.nome }}</span></p>
+                        <form @submit.prevent="submitFO">
+                            <div class="mb-4">
+                                <label class="block text-sm font-bold text-gray-700 mb-1">Motivo / Fato Observado</label>
+                                <textarea v-model="foForm.motivo" required rows="3" class="w-full border rounded p-2 focus:outline-none focus:ring-2" :class="modalType === 'FO+' ? 'focus:ring-green-500' : 'focus:ring-red-500'"></textarea>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label class="block text-sm font-bold text-gray-700 mb-1">Data</label>
+                                    <input v-model="foForm.data" type="date" required class="w-full border rounded p-2 focus:ring-2 focus:ring-gray-400">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold text-gray-700 mb-1">Oficial</label>
+                                    <select v-model="foForm.oficial" required class="w-full border rounded p-2 bg-white focus:ring-2 focus:ring-gray-400">
+                                        <option value="" disabled>Selecione...</option>
+                                        <option v-for="oficial in officers" :key="oficial" :value="oficial">{{ oficial }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mb-6">
+                                <label class="block text-sm font-bold text-gray-700 mb-1">Nº SEI (Opcional)</label>
+                                <input v-model="foForm.sei" type="text" placeholder="Ex: 12345.0000/2025-99" class="w-full border rounded p-2 focus:ring-2 focus:ring-gray-400">
+                            </div>
+                            <div class="flex gap-3">
+                                <button type="button" @click="closeFOModal" class="flex-1 py-3 border border-gray-300 rounded text-gray-600 font-bold hover:bg-gray-50">Cancelar</button>
+                                <button type="submit" class="flex-1 py-3 rounded text-white font-bold shadow hover:shadow-lg transition transform active:scale-95" :class="modalType === 'FO+' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'">CONFIRMAR</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </transition>
+
+        <transition name="fade">
+            <div v-if="showRewardListModal" class="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
+                <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                    <div class="p-4 bg-yellow-500 flex items-center justify-between text-white">
+                        <h3 class="font-bold text-lg flex items-center gap-2">
+                            <i class="ph-fill ph-medal"></i> Cadetes Aptos a Elogio
+                        </h3>
+                        <button @click="showRewardListModal = false" class="hover:bg-white/20 rounded-full p-1"><i class="ph ph-x text-xl"></i></button>
+                    </div>
+                    <div class="flex-1 overflow-y-auto p-0">
+                        <table class="w-full text-left">
+                            <thead class="bg-gray-50 border-b">
+                                <tr>
+                                    <th class="p-4 font-bold text-gray-600">Cadete</th>
+                                    <th class="p-4 font-bold text-gray-600 text-center">Saldo</th>
+                                    <th class="p-4 font-bold text-gray-600 text-right">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y">
+                                <tr v-for="student in studentsEligibleForReward" :key="student.id" class="hover:bg-yellow-50">
+                                    <td class="p-4">
+                                        <p class="font-bold text-gray-900">{{ student.nome }}</p>
+                                        <p class="text-xs text-gray-500">{{ student.pelotao }}</p>
+                                    </td>
+                                    <td class="p-4 text-center">
+                                        <span class="inline-block bg-green-100 text-green-800 font-bold px-2 py-1 rounded">{{ getCycleScore(student) }} / 5</span>
+                                    </td>
+                                    <td class="p-4 text-right">
+                                        <button @click="claimReward(student)" class="bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-bold px-3 py-2 rounded shadow flex items-center gap-1 ml-auto">
+                                            <i class="ph-bold ph-check"></i> CONCEDER
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr v-if="studentsEligibleForReward.length === 0">
+                                    <td colspan="3" class="p-8 text-center text-gray-500">Nenhum cadete com 5 pontos no momento.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </transition>
+
+        <transition name="fade">
+            <div v-if="showEditSeiModal" class="fixed inset-0 z-[60] bg-black bg-opacity-30 flex items-center justify-center p-4">
+                <div class="bg-white rounded-lg shadow-xl p-4 w-full max-w-sm">
+                    <h4 class="font-bold text-gray-800 mb-2">Editar Número SEI</h4>
+                    <input v-model="tempSeiValue" type="text" class="w-full border p-2 rounded mb-4" placeholder="Cole o número SEI aqui">
+                    <div class="flex justify-end gap-2">
+                        <button @click="showEditSeiModal = false" class="px-3 py-1 text-gray-500 hover:bg-gray-100 rounded">Cancelar</button>
+                        <button @click="saveSeiEdit" class="px-3 py-1 bg-military-900 text-white rounded hover:bg-military-800">Salvar</button>
+                    </div>
+                </div>
+            </div>
+        </transition>
+
+        <transition name="slide">
+            <div v-if="showHistoryModal" class="fixed inset-y-0 right-0 z-50 w-full max-w-2xl bg-white shadow-2xl flex flex-col">
+                <div class="p-6 bg-military-900 text-white flex items-center justify-between no-print">
+                    <div>
+                        <h2 class="text-xl font-bold">{{ selectedStudent?.nome }}</h2>
+                        <p class="text-military-100 text-sm">{{ selectedStudent?.pelotao }}</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button @click="printHistory" class="p-2 bg-military-700 rounded hover:bg-military-600" title="Imprimir"><i class="ph ph-printer text-xl"></i></button>
+                        <button @click="closeHistoryModal" class="p-2 bg-military-700 rounded hover:bg-military-600"><i class="ph ph-x text-xl"></i></button>
+                    </div>
+                </div>
+
+                <div class="print-only p-8">
+                    <div class="text-center mb-6">
+                        <img src="cfo.jpg" alt="Logo" class="h-16 mx-auto mb-2" onerror="this.style.display='none'">
+                        <h1 class="text-xl font-bold">FICHA INDIVIDUAL DE FATOS OBSERVADOS</h1>
+                        <p class="text-sm">Academia de Polícia Militar do Paudalho</p>
+                    </div>
+                    <div class="border border-black p-4 mb-4 grid grid-cols-2 gap-2 text-sm">
+                        <p><strong>Cadete:</strong> {{ selectedStudent?.nome }}</p>
+                        <p><strong>Pelotão:</strong> {{ selectedStudent?.pelotao }}</p>
+                        <p><strong>Ciclo Atual:</strong> {{ getCycleScore(selectedStudent) }}/5</p>
+                        <p><strong>Elogios Totais:</strong> {{ Math.floor(getRawScore(selectedStudent) / 5) }}</p>
+                    </div>
+                </div>
+
+                <div class="flex-1 overflow-y-auto p-6">
+                    <h3 class="font-bold text-gray-700 mb-4 border-b pb-2">Histórico Detalhado</h3>
+                    <table class="w-full text-sm text-left">
+                        <thead class="bg-gray-100 text-gray-600 uppercase text-xs">
+                            <tr>
+                                <th class="p-3">Data</th>
+                                <th class="p-3">Tipo</th>
+                                <th class="p-3">Motivo / SEI</th>
+                                <th class="p-3">Oficial</th>
+                                <th class="p-3 text-right no-print">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y">
+                            <tr v-for="(fo, idx) in selectedStudent?.history" :key="idx" class="hover:bg-gray-50">
+                                <td class="p-3 whitespace-nowrap align-top">{{ formatDate(fo.data) }}</td>
+                                <td class="p-3 font-bold align-top" :class="fo.tipo === 'FO+' ? 'text-green-600' : (fo.tipo === 'SYSTEM' ? 'text-blue-600' : 'text-red-600')">{{ fo.tipo }}</td>
+                                <td class="p-3 align-top">
+                                    <p>{{ fo.motivo }}</p>
+                                    <div v-if="fo.tipo !== 'SYSTEM'" class="mt-1 flex items-center gap-2">
+                                        <span v-if="fo.sei" class="text-xs bg-gray-200 px-2 py-0.5 rounded text-gray-600 font-mono">SEI: {{ fo.sei }}</span>
+                                        <span v-else class="text-xs text-red-300 italic no-print">Sem SEI</span>
+                                        <button @click="openSeiEdit(idx, fo.sei)" class="text-gray-400 hover:text-military-900 no-print" title="Adicionar/Editar SEI"><i class="ph-bold ph-pencil-simple text-xs"></i></button>
+                                    </div>
+                                </td>
+                                <td class="p-3 text-gray-500 text-xs align-top">{{ fo.oficial }}</td>
+                                <td class="p-3 text-right no-print align-top">
+                                    <button v-if="fo.tipo !== 'SYSTEM'" @click="deleteFO(selectedStudent, idx)" class="text-red-400 hover:text-red-600"><i class="ph ph-trash"></i></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </transition>
+
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        // --- CONFIGURAÇÃO DO SUPABASE ---
+        // SUBSTITUA ESTES VALORES PELOS SEUS DO PAINEL DO SUPABASE
+        const SUPABASE_URL = 'https://iogtissohqhgxiskzgvc.supabase.co'; 
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlvZ3Rpc3NvaHFoZ3hpc2t6Z3ZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1MDAwNTEsImV4cCI6MjA3ODA3NjA1MX0.4Fj05iwaUNDpdDaAch-dGp5TUtcumV72uzpIovQeCbg';
+        
+        // Inicializa cliente
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        createApp({
+            data() {
+                return {
+                    authenticated: false,
+                    passwordInput: '',
+                    loginError: false,
+                    loginErrorMsg: '',
+                    loading: false,
+                    
+                    currentView: 'dashboard',
+                    searchQuery: '',
+                    
+                    showFOModal: false, showHistoryModal: false, showRewardListModal: false, showEditSeiModal: false,
+                    selectedStudent: null, modalType: 'FO+', editingFoIndex: null, tempSeiValue: '',
+                    
+                    foForm: { motivo: '', data: '', oficial: '', sei: '' },
+                    officers: ['Cap. Rodrigo', 'Ten. Pedro', 'Ten. João', 'Sgt. Silva', 'Cb. Oliveira'],
+                    
+                    students: [] // Agora vem do banco
+                }
+            },
+            computed: {
+                viewTitle() { return this.currentView === 'dashboard' ? 'Dashboard Executivo' : 'Gestão de Cadetes'; },
+                filteredStudents() {
+                    if (!this.searchQuery) return this.students;
+                    const lower = this.searchQuery.toLowerCase();
+                    return this.students.filter(s => s.nome.toLowerCase().includes(lower) || s.id.toString().includes(lower) || s.pelotao.toLowerCase().includes(lower));
+                },
+                studentsEligibleForReward() { return this.students.filter(s => this.getCycleScore(s) >= 5); },
+                stats() {
+                    const today = new Date().toISOString().split('T')[0];
+                    let foPosToday = 0, foNegToday = 0;
+                    this.students.forEach(s => {
+                        s.history?.forEach(h => { if (h.data === today) { if (h.tipo === 'FO+') foPosToday++; else if (h.tipo === 'FO-') foNegToday++; } });
+                    });
+                    const sorted = [...this.students].map(s => ({ ...s, rawScore: this.getRawScore(s), negScore: this.getNegScore(s) }));
+                    return { foPosToday, foNegToday, rewardsAvailable: this.studentsEligibleForReward.length, topStudents: sorted.sort((a, b) => b.rawScore - a.rawScore).slice(0, 5), alertStudents: sorted.sort((a, b) => b.negScore - a.negScore).filter(s => s.negScore > 0).slice(0, 5) }
+                }
+            },
+            methods: {
+                async login() {
+                    if (this.passwordInput === 'admin') {
+                        this.loading = true;
+                        await this.loadData(); // Tenta carregar do Supabase ao logar
+                        this.authenticated = true;
+                        this.loading = false;
+                    } else { this.loginError = true; this.loginErrorMsg = 'Senha incorreta.'; }
+                },
+                
+                // --- INTEGRAÇÃO SUPABASE ---
+                
+                async loadData() {
+                    // Busca todos os alunos ordenados por ID
+                    const { data, error } = await supabase.from('cadetes').select('*').order('id', { ascending: true });
+                    
+                    if (error) {
+                        alert('Erro ao conectar com Supabase: ' + error.message);
+                        return;
+                    }
+                    
+                    // Garante que o history seja um array se vier nulo
+                    this.students = data.map(s => ({...s, history: s.history || []}));
+                },
+
+                async refreshData() {
+                    this.loading = true;
+                    await this.loadData();
+                    this.loading = false;
+                },
+
+                async saveStudentData(student) {
+                    // Salva APENAS o aluno modificado para economizar banda
+                    const { error } = await supabase
+                        .from('cadetes')
+                        .update({ 
+                            history: student.history,
+                            rewards_claimed: student.rewards_claimed 
+                        })
+                        .eq('id', student.id);
+
+                    if (error) alert('Erro ao salvar: ' + error.message);
+                },
+
+                // SETUP INICIAL (Apenas para rodar na primeira vez)
+                async seedDatabase() {
+                    if(!confirm('ATENÇÃO: Isso vai apagar o banco atual e subir a lista padrão de 192 alunos. Continuar?')) return;
+                    
+                    this.loading = true;
+                    const initialList = this.initialDB(); // Pega a lista gigante
+                    
+                    // Supabase permite insert de array
+                    const { error } = await supabase.from('cadetes').insert(initialList);
+                    
+                    if (error) {
+                        alert('Erro ao popular banco: ' + error.message);
+                    } else {
+                        alert('Sucesso! Banco de dados inicializado com 192 alunos.');
+                        await this.loadData();
+                    }
+                    this.loading = false;
+                },
+
+                // --- LÓGICA DE NEGÓCIO ---
+
+                getRawScore(student) {
+                    if (!student.history) return 0;
+                    return student.history.reduce((acc, curr) => curr.tipo === 'FO+' ? acc + 1 : (curr.tipo === 'FO-' ? acc - 1 : acc), 0);
+                },
+                getNegScore(student) { return student.history ? student.history.filter(h => h.tipo === 'FO-').length : 0; },
+                getCycleScore(student) {
+                    const totalScore = this.getRawScore(student);
+                    const claimedRewards = student.rewards_claimed || 0; // Usando o nome da coluna do banco
+                    return totalScore - (claimedRewards * 5); 
+                },
+                getProgressColor(score) {
+                    if (score < 0) return 'bg-red-500';
+                    if (score >= 4) return 'bg-green-500';
+                    return 'bg-blue-500';
+                },
+                openFOModal(student, type) {
+                    this.selectedStudent = student; this.modalType = type; this.showFOModal = true;
+                    this.foForm = { motivo: '', data: new Date().toISOString().split('T')[0], oficial: '', sei: '' };
+                },
+                closeFOModal() { this.showFOModal = false; this.selectedStudent = null; },
+                
+                async submitFO() {
+                    if (!this.selectedStudent.history) this.selectedStudent.history = [];
+                    this.selectedStudent.history.push({ ...this.foForm, tipo: this.modalType });
+                    
+                    // Salva na nuvem
+                    await this.saveStudentData(this.selectedStudent);
+                    this.closeFOModal();
+                },
+
+                openHistoryModal(student) { this.selectedStudent = student; this.showHistoryModal = true; },
+                closeHistoryModal() { this.showHistoryModal = false; },
+                
+                openSeiEdit(index, currentVal) { this.editingFoIndex = index; this.tempSeiValue = currentVal || ''; this.showEditSeiModal = true; },
+                async saveSeiEdit() {
+                    if (this.selectedStudent && this.editingFoIndex !== null) {
+                        this.selectedStudent.history[this.editingFoIndex].sei = this.tempSeiValue;
+                        await this.saveStudentData(this.selectedStudent);
+                        this.showEditSeiModal = false;
+                    }
+                },
+                
+                async deleteFO(student, index) {
+                    if(confirm('Apagar registro?')) { 
+                        student.history.splice(index, 1); 
+                        await this.saveStudentData(student); 
+                    }
+                },
+                
+                openRewardListModal() { this.showRewardListModal = true; },
+                async claimReward(student) {
+                    if(confirm(`Confirmar elogio para ${student.nome}?`)) {
+                        if (!student.rewards_claimed) student.rewards_claimed = 0;
+                        student.rewards_claimed++;
+                        if (!student.history) student.history = [];
+                        student.history.push({
+                            tipo: 'SYSTEM',
+                            motivo: 'Elogio Conquistado (Ciclo Completado)',
+                            data: new Date().toISOString().split('T')[0],
+                            oficial: 'SISTEMA',
+                            sei: 'N/A'
+                        });
+                        
+                        await this.saveStudentData(student);
+                        
+                        if (this.studentsEligibleForReward.length === 0) this.showRewardListModal = false;
+                    }
+                },
+                printHistory() { window.print(); },
+                formatDate(d) { if(!d) return '-'; const [y, m, day] = d.split('-'); return `${day}/${m}/${y}`; },
+                
+                // Lista Completa para Setup Inicial
+                initialDB() {
+                    return [
+                        { id: 1, nome: "MÁRCIO SOUZA", pelotao: "1º PEL/2ª CIA", history: [] },
+                        { id: 2, nome: "RENATO", pelotao: "2º PEL/2ª CIA", history: [] },
+                        { id: 3, nome: "FERNANDO", pelotao: "3º PEL/2ª CIA", history: [] },
+                        { id: 4, nome: "ROBERTO FREITAS", pelotao: "4º PEL/2ª CIA", history: [] },
+                        { id: 5, nome: "SILVANA", pelotao: "5º PEL/2ª CIA", history: [] },
+                        { id: 6, nome: "DANIELLE PRADO", pelotao: "6º PEL/2ª CIA", history: [] },
+                        { id: 7, nome: "ARCOVERDE", pelotao: "1º PEL/2ª CIA", history: [] },
+                        { id: 8, nome: "AUREA", pelotao: "1º PEL/2ª CIA", history: [] },
+                        { id: 9, nome: "R. FERREIRA", pelotao: "1º PEL/2ª CIA", history: [] },
+                        { id: 10, nome: "VICTOR FERREIRA", pelotao: "2º PEL/2ª CIA", history: [] },
+                        { id: 11, nome: "ORLANDO", pelotao: "2º PEL/2ª CIA", history: [] },
+                        { id: 12, nome: "ISABELLA", pelotao: "2º PEL/2ª CIA", history: [] },
+                        { id: 13, nome: "BRENDA", pelotao: "3º PEL/2ª CIA", history: [] },
+                        { id: 14, nome: "AMANDA COELHO", pelotao: "4º PEL/2ª CIA", history: [] },
+                        { id: 15, nome: "JUNIOR", pelotao: "3º PEL/2ª CIA", history: [] },
+                        { id: 16, nome: "THIAGO TAVARES", pelotao: "4º PEL/2ª CIA", history: [] },
+                        { id: 17, nome: "MURILO", pelotao: "5º PEL/2ª CIA", history: [] },
+                        { id: 18, nome: "ARYANA", pelotao: "5º PEL/2ª CIA", history: [] },
+                        { id: 19, nome: "ALENCAR", pelotao: "3º PEL/2ª CIA", history: [] },
+                        { id: 20, nome: "LUAN PEREIRA", pelotao: "4º PEL/2ª CIA", history: [] },
+                        { id: 21, nome: "MANOEL", pelotao: "5º PEL/2ª CIA", history: [] },
+                        { id: 24, nome: "MATHEUS MESQUITA", pelotao: "2º PEL/2ª CIA", history: [] },
+                        { id: 25, nome: "DAVI OLIVEIRA", pelotao: "3º PEL/2ª CIA", history: [] },
+                        { id: 26, nome: "MARCOLINO", pelotao: "4º PEL/2ª CIA", history: [] },
+                        { id: 27, nome: "FATIMA AGUIAR", pelotao: "6º PEL/2ª CIA", history: [] },
+                        { id: 28, nome: "LEMOS", pelotao: "1º PEL/2ª CIA", history: [] },
+                        { id: 29, nome: "MACIEL", pelotao: "6º PEL/2ª CIA", history: [] },
+                        { id: 30, nome: "M ALBUQUERQUE", pelotao: "2º PEL/2ª CIA", history: [] },
+                        { id: 31, nome: "ALLATAS SOUSA", pelotao: "3º PEL/2ª CIA", history: [] },
+                        { id: 32, nome: "KAYO GABRIEL", pelotao: "5º PEL/2ª CIA", history: [] },
+                        { id: 33, nome: "KAROLINE ABREU", pelotao: "1º PEL/2ª CIA", history: [] },
+                        { id: 34, nome: "GIOVANNI", pelotao: "1º PEL/2ª CIA", history: [] },
+                        { id: 35, nome: "PAULINO", pelotao: "6º PEL/2ª CIA", history: [] },
+                        { id: 36, nome: "M. FEITOSA", pelotao: "1º PEL/2ª CIA", history: [] },
+                        { id: 37, nome: "VALDECI", pelotao: "2º PEL/2ª CIA", history: [] },
+                        { id: 38, nome: "W. SILVA", pelotao: "4º PEL/2ª CIA", history: [] },
+                        { id: 39, nome: "ELLIO", pelotao: "2º PEL/2ª CIA", history: [] },
+                        { id: 40, nome: "MARINHO", pelotao: "3º PEL/2ª CIA", history: [] },
+                        { id: 41, nome: "MALAQUIAS", pelotao: "4º PEL/2ª CIA", history: [] },
+                        { id: 42, nome: "CARLA ARAUJO", pelotao: "2º PEL/2ª CIA", history: [] },
+                        { id: 43, nome: "CINTIA SOUZA", pelotao: "3º PEL/2ª CIA", history: [] },
+                        { id: 44, nome: "PRISCILA CORREIA", pelotao: "4º PEL/2ª CIA", history: [] },
+                        { id: 45, nome: "WALYSON", pelotao: "5º PEL/2ª CIA", history: [] },
+                        { id: 46, nome: "GRANGEIRO", pelotao: "3º PEL/2ª CIA", history: [] },
+                        { id: 47, nome: "MACEDO", pelotao: "4º PEL/2ª CIA", history: [] },
+                        { id: 48, nome: "ELVIS", pelotao: "5º PEL/2ª CIA", history: [] },
+                        { id: 49, nome: "JEFERSON SILVA", pelotao: "6º PEL/2ª CIA", history: [] },
+                        { id: 50, nome: "QUEIROZ", pelotao: "6º PEL/2ª CIA", history: [] },
+                        { id: 52, nome: "RUBSLEY", pelotao: "2º PEL/2ª CIA", history: [] },
+                        { id: 53, nome: "G. SILVA", pelotao: "1º PEL/2ª CIA", history: [] },
+                        { id: 54, nome: "FRANÇA", pelotao: "1º PEL/2ª CIA", history: [] },
+                        { id: 57, nome: "SANTANA", pelotao: "2º PEL/2ª CIA", history: [] },
+                        { id: 58, nome: "WESLEY", pelotao: "5º PEL/2ª CIA", history: [] },
+                        { id: 59, nome: "RAYANNE", pelotao: "6º PEL/2ª CIA", history: [] },
+                        { id: 60, nome: "S.GOMES", pelotao: "6º PEL/2ª CIA", history: [] },
+                        { id: 61, nome: "FIRMINO", pelotao: "4º PEL/2ª CIA", history: [] },
+                        { id: 62, nome: "LUCAS MAGALHÃES", pelotao: "5º PEL/2ª CIA", history: [] },
+                        { id: 63, nome: "PAULO", pelotao: "1º PEL/2ª CIA", history: [] },
+                        { id: 64, nome: "BONFIM", pelotao: "6º PEL/2ª CIA", history: [] },
+                        { id: 66, nome: "JÔNATAS SANTOS", pelotao: "2º PEL/2ª CIA", history: [] },
+                        { id: 67, nome: "LAYANNE", pelotao: "1º PEL/2ª CIA", history: [] },
+                        { id: 68, nome: "KAROLINNE MOREIRA", pelotao: "2º PEL/2ª CIA", history: [] },
+                        { id: 69, nome: "FALCÃO", pelotao: "3º PEL/2ª CIA", history: [] },
+                        { id: 70, nome: "MEIRA", pelotao: "3º PEL/2ª CIA", history: [] },
+                        { id: 71, nome: "SERAFIM", pelotao: "4º PEL/2ª CIA", history: [] },
+                        { id: 72, nome: "NONATO", pelotao: "5º PEL/2ª CIA", history: [] },
+                        { id: 73, nome: "PEREIRA", pelotao: "2º PEL/2ª CIA", history: [] },
+                        { id: 74, nome: "GABRIEL", pelotao: "6º PEL/2ª CIA", history: [] },
+                        { id: 75, nome: "PEDRO", pelotao: "3º PEL/2ª CIA", history: [] },
+                        { id: 76, nome: "FERREIRA", pelotao: "4º PEL/2ª CIA", history: [] },
+                        { id: 77, nome: "EDUARDA", pelotao: "3º PEL/2ª CIA", history: [] },
+                        { id: 78, nome: "GISELE FERREIRA", pelotao: "4º PEL/2ª CIA", history: [] },
+                        { id: 79, nome: "DIÓGENES", pelotao: "4º PEL/2ª CIA", history: [] },
+                        { id: 80, nome: "JOSÉ", pelotao: "5º PEL/2ª CIA", history: [] },
+                        { id: 81, nome: "COSTA", pelotao: "6º PEL/2ª CIA", history: [] },
+                        { id: 82, nome: "MARCOS NASCIMENTO", pelotao: "1º PEL/2ª CIA", history: [] },
+                        { id: 83, nome: "P. SOUZA", pelotao: "2º PEL/2ª CIA", history: [] },
+                        { id: 84, nome: "SIDNEI ARAÚJO", pelotao: "3º PEL/2ª CIA", history: [] },
+                        { id: 85, nome: "ANDERSON", pelotao: "4º PEL/2ª CIA", history: [] },
+                        { id: 86, nome: "FERNANDO CRUZ", pelotao: "5º PEL/2ª CIA", history: [] },
+                        { id: 87, nome: "ARYCLAYTON", pelotao: "6º PEL/2ª CIA", history: [] },
+                        { id: 88, nome: "S. NETO", pelotao: "1º PEL/2ª CIA", history: [] },
+                        { id: 89, nome: "SILVA", pelotao: "2º PEL/2ª CIA", history: [] },
+                        { id: 90, nome: "RAFAEL BEZERRA", pelotao: "3º PEL/2ª CIA", history: [] },
+                        { id: 91, nome: "GESSICA", pelotao: "5º PEL/2ª CIA", history: [] },
+                        { id: 92, nome: "ALINE", pelotao: "6º PEL/2ª CIA", history: [] },
+                        { id: 93, nome: "REVERTHON", pelotao: "1º PEL/2ª CIA", history: [] },
+                        { id: 94, nome: "FERNANDA SOARES", pelotao: "1º PEL/2ª CIA", history: [] },
+                        { id: 95, nome: "BRUNO", pelotao: "5º PEL/2ª CIA", history: [] },
+                        { id: 96, nome: "ERIVELTON", pelotao: "2º PEL/2ª CIA", history: [] },
+                        { id: 97, nome: "ÍTALO", pelotao: "3º PEL/2ª CIA", history: [] },
+                        { id: 98, nome: "EMANNUEL", pelotao: "4º PEL/2ª CIA", history: [] },
+                        { id: 99, nome: "G. GOMES", pelotao: "4º PEL/2ª CIA", history: [] },
+                        { id: 100, nome: "RENAN", pelotao: "6º PEL/2ª CIA", history: [] },
+                        { id: 102, nome: "ALLAN MARIANO", pelotao: "5º PEL/2ª CIA", history: [] },
+                        { id: 103, nome: "RAÍSSA SOARES", pelotao: "2º PEL/2ª CIA", history: [] },
+                        { id: 105, nome: "JOSÉ NETO", pelotao: "5º PEL/2ª CIA", history: [] },
+                        { id: 106, nome: "LUCAS RANIELLE", pelotao: "2º PEL/2ª CIA", history: [] },
+                        { id: 107, nome: "LUCIANO", pelotao: "6º PEL/2ª CIA", history: [] },
+                        { id: 108, nome: "HENRIQUE", pelotao: "1º PEL/2ª CIA", history: [] },
+                        { id: 109, nome: "ERIKA DUARTE", pelotao: "4º PEL/2ª CIA", history: [] },
+                        { id: 110, nome: "CÉSAR MEDEIROS", pelotao: "1º PEL/2ª CIA", history: [] },
+                        { id: 111, nome: "FELIPE MORAIS", pelotao: "2º PEL/2ª CIA", history: [] },
+                        { id: 112, nome: "MARQUES", pelotao: "3º PEL/2ª CIA", history: [] },
+                        { id: 113, nome: "AURÉLIO", pelotao: "4º PEL/2ª CIA", history: [] },
+                        { id: 114, nome: "BARBALHO", pelotao: "5º PEL/2ª CIA", history: [] },
+                        { id: 115, nome: "VINICIUS OLIVEIRA", pelotao: "2º PEL/2ª CIA", history: [] },
+                        { id: 116, nome: "SANTIAGO", pelotao: "6º PEL/2ª CIA", history: [] },
+                        { id: 118, nome: "DURVAL", pelotao: "1º PEL/2ª CIA", history: [] },
+                        { id: 119, nome: "VINÍCIUS SOUZA", pelotao: "2º PEL/2ª CIA", history: [] },
+                        { id: 120, nome: "EGITO", pelotao: "3º PEL/2ª CIA", history: [] },
+                        { id: 121, nome: "JOÃO NASCIMENTO", pelotao: "2º PEL/2ª CIA", history: [] },
+                        { id: 122, nome: "BATISTA", pelotao: "4º PEL/2ª CIA", history: [] },
+                        { id: 123, nome: "GONZAGA", pelotao: "5º PEL/2ª CIA", history: [] },
+                        { id: 125, nome: "MEDEIROS", pelotao: "3º PEL/2ª CIA", history: [] },
+                        { id: 126, nome: "GILMARA", pelotao: "5º PEL/2ª CIA", history: [] },
+                        { id: 127, nome: "CAIO GUIMARÃES", pelotao: "6º PEL/2ª CIA", history: [] },
+                        { id: 128, nome: "ALEXANDRO GOMES", pelotao: "4º PEL/2ª CIA", history: [] },
+                        { id: 129, nome: "LUIZ NUNES", pelotao: "5º PEL/2ª CIA", history: [] },
+                        { id: 130, nome: "PAULO ROBERTO", pelotao: "6º PEL/2ª CIA", history: [] },
+                        { id: 131, nome: "RENATA", pelotao: "6º PEL/2ª CIA", history: [] },
+                        { id: 132, nome: "SÉRGIO", pelotao: "1º PEL/2ª CIA", history: [] },
+                        { id: 133, nome: "ISRAEL", pelotao: "2º PEL/2ª CIA", history: [] },
+                        { id: 134, nome: "SAMEA FERRAZ", pelotao: "2º PEL/2ª CIA", history: [] },
+                        { id: 135, nome: "JOÃO HENRIQUE", pelotao: "3º PEL/2ª CIA", history: [] },
+                        { id: 136, nome: "PATRICIA", pelotao: "1º PEL/2ª CIA", history: [] },
+                        { id: 137, nome: "RAFAEL PEREIRA", pelotao: "6º PEL/2ª CIA", history: [] },
+                        { id: 138, nome: "ICARO", pelotao: "5º PEL/2ª CIA", history: [] },
+                        { id: 139, nome: "JULIANA GONDIM", pelotao: "3º PEL/2ª CIA", history: [] },
+                        { id: 140, nome: "VICTOR COSTA", pelotao: "1º PEL/2ª CIA", history: [] },
+                        { id: 141, nome: "JULIANE CORDEIRO", pelotao: "4º PEL/2ª CIA", history: [] },
+                        { id: 142, nome: "JABNER", pelotao: "2º PEL/2ª CIA", history: [] },
+                        { id: 143, nome: "SAMARA MELO", pelotao: "5º PEL/2ª CIA", history: [] },
+                        { id: 144, nome: "EDJANE", pelotao: "6º PEL/2ª CIA", history: [] },
+                        { id: 145, nome: "HIGOR ALVES", pelotao: "5º PEL/2ª CIA", history: [] },
+                        { id: 146, nome: "PEREIRA MORAIS", pelotao: "6º PEL/2ª CIA", history: [] },
+                        { id: 147, nome: "JORGE FILHO", pelotao: "1º PEL/2ª CIA", history: [] },
+                        { id: 148, nome: "OLAVO", pelotao: "3º PEL/2ª CIA", history: [] },
+                        { id: 149, nome: "CAVALCANTI", pelotao: "6º PEL/2ª CIA", history: [] },
+                        { id: 150, nome: "ROBERTA", pelotao: "1º PEL/2ª CIA", history: [] },
+                        { id: 151, nome: "OLIVEIRA JÚNIOR", pelotao: "5º PEL/2ª CIA", history: [] },
+                        { id: 152, nome: "MOURA", pelotao: "2º PEL/2ª CIA", history: [] },
+                        { id: 153, nome: "AFONSO", pelotao: "3º PEL/2ª CIA", history: [] },
+                        { id: 154, nome: "DAYANE", pelotao: "2º PEL/2ª CIA", history: [] },
+                        { id: 156, nome: "MONALIZA", pelotao: "3º PEL/2ª CIA", history: [] },
+                        { id: 157, nome: "VALADARES", pelotao: "3º PEL/2ª CIA", history: [] },
+                        { id: 158, nome: "HEYVERSON", pelotao: "5º PEL/2ª CIA", history: [] },
+                        { id: 161, nome: "JOSE ALISSON", pelotao: "6º PEL/2ª CIA", history: [] },
+                        { id: 162, nome: "JESUS", pelotao: "1º PEL/2ª CIA", history: [] },
+                        { id: 163, nome: "NATÁLIA", pelotao: "5º PEL/2ª CIA", history: [] },
+                        { id: 164, nome: "CIBELE", pelotao: "6º PEL/2ª CIA", history: [] },
+                        { id: 165, nome: "GUSTAVO", pelotao: "2º PEL/2ª CIA", history: [] },
+                        { id: 166, nome: "FELIPE FÉLIX", pelotao: "3º PEL/2ª CIA", history: [] },
+                        { id: 168, nome: "LEONAM", pelotao: "5º PEL/2ª CIA", history: [] },
+                        { id: 169, nome: "MATHEUS BARROS", pelotao: "6º PEL/2ª CIA", history: [] },
+                        { id: 170, nome: "ANTONIO REIS", pelotao: "4º PEL/2ª CIA", history: [] },
+                        { id: 171, nome: "JHONEY", pelotao: "5º PEL/2ª CIA", history: [] },
+                        { id: 172, nome: "FRANCISCO", pelotao: "1º PEL/2ª CIA", history: [] },
+                        { id: 173, nome: "IURY", pelotao: "3º PEL/2ª CIA", history: [] },
+                        { id: 174, nome: "LIMA PAIVA", pelotao: "6º PEL/2ª CIA", history: [] },
+                        { id: 175, nome: "LUIZ LEAL", pelotao: "2º PEL/2ª CIA", history: [] },
+                        { id: 176, nome: "RHAYSA", pelotao: "1º PEL/2ª CIA", history: [] },
+                        { id: 177, nome: "DIONIZIO", pelotao: "4º PEL/2ª CIA", history: [] },
+                        { id: 178, nome: "HIAGO", pelotao: "4º PEL/2ª CIA", history: [] },
+                        { id: 179, nome: "DÉBORA GOUVEIA", pelotao: "2º PEL/2ª CIA", history: [] },
+                        { id: 180, nome: "NOBREGA", pelotao: "5º PEL/2ª CIA", history: [] },
+                        { id: 181, nome: "THAYNARA", pelotao: "3º PEL/2ª CIA", history: [] },
+                        { id: 182, nome: "JOSINALDO", pelotao: "4º PEL/2ª CIA", history: [] },
+                        { id: 183, nome: "JULIO", pelotao: "5º PEL/2ª CIA", history: [] },
+                        { id: 184, nome: "ABRAAO", pelotao: "6º PEL/2ª CIA", history: [] },
+                        { id: 185, nome: "RONILSON", pelotao: "1º PEL/2ª CIA", history: [] },
+                        { id: 186, nome: "SOUTO", pelotao: "3º PEL/2ª CIA", history: [] },
+                        { id: 187, nome: "BELEM", pelotao: "4º PEL/2ª CIA", history: [] },
+                        { id: 188, nome: "MAXEMBERG", pelotao: "3º PEL/2ª CIA", history: [] },
+                        { id: 189, nome: "KAMYLA", pelotao: "4º PEL/2ª CIA", history: [] },
+                        { id: 190, nome: "JÚLIA", pelotao: "5º PEL/2ª CIA", history: [] },
+                        { id: 191, nome: "SELTON", pelotao: "4º PEL/2ª CIA", history: [] },
+                        { id: 192, nome: "JEFFERSON GOMES", pelotao: "1º PEL/2ª CIA", history: [] },
+                        { id: 193, nome: "JAILTON", pelotao: "6º PEL/2ª CIA", history: [] },
+                        { id: 194, nome: "KLEVER", pelotao: "5º PEL/2ª CIA", history: [] },
+                        { id: 195, nome: "PETTERSON", pelotao: "2º PEL/2ª CIA", history: [] },
+                        { id: 196, nome: "CARDOSO", pelotao: "6º PEL/2ª CIA", history: [] },
+                        { id: 197, nome: "ISRAEL OLIVEIRA", pelotao: "4º PEL/2ª CIA", history: [] }
+                    ];
+                }
+            },
+            mounted() { /* Carregar sessão se existir */ }
+        }).mount('#app')
+    </script>
+</body>
+</html>
