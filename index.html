@@ -36,11 +36,7 @@
         .print-only { display: none; }
         .fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
         .fade-enter-from, .fade-leave-to { opacity: 0; }
-        
-        /* Ajuste para Sidebar Mobile */
         .sidebar-transition { transition: transform 0.3s ease-in-out; }
-        
-        /* Imagem */
         img[alt="Brasão CFO"] { object-fit: contain; }
     </style>
 </head>
@@ -150,7 +146,6 @@
                                 <p class="text-gray-500 text-xs sm:text-sm">FO- (Hoje)</p>
                                 <p class="text-xl sm:text-3xl font-bold text-gray-800">{{ stats.foNegToday }}</p>
                             </div>
-                            
                             <div @click="openRewardListModal" class="bg-yellow-50 p-3 sm:p-6 rounded-lg shadow-sm border-l-4 border-yellow-500 cursor-pointer hover:shadow-md transition relative overflow-hidden col-span-2 md:col-span-1">
                                 <div class="relative z-10">
                                     <p class="text-yellow-800 text-xs sm:text-sm font-bold flex items-center gap-2">
@@ -270,6 +265,7 @@
                                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Data</label>
                                     <input v-model="foForm.data" type="date" required class="w-full border rounded p-2 bg-white h-10">
                                 </div>
+                                
                                 <div>
                                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Oficial</label>
                                     <select v-model="foForm.oficial" required class="w-full border rounded p-2 bg-white h-10">
@@ -277,6 +273,11 @@
                                         <option v-for="oficial in officers" :key="oficial" :value="oficial">{{ oficial }}</option>
                                     </select>
                                 </div>
+                            </div>
+
+                            <div v-if="foForm.oficial === 'Outro'" class="mb-4 animate-pulse">
+                                <label class="block text-xs font-bold text-blue-600 uppercase mb-1">Digite o Nome do Oficial</label>
+                                <input v-model="foForm.customOficial" type="text" class="w-full border-2 border-blue-200 rounded p-2 h-10 focus:ring-2 focus:ring-blue-500" placeholder="Ex: Cap. Visitante" required>
                             </div>
 
                             <div class="mb-6">
@@ -348,7 +349,7 @@
                 </div>
 
                 <div class="print-only p-8">
-                   <div class="text-center mb-6">
+                    <div class="text-center mb-6">
                         <img src="cfo.jpg" alt="Logo" class="h-16 mx-auto mb-2" onerror="this.style.display='none'">
                         <h1 class="text-xl font-bold">FICHA INDIVIDUAL</h1>
                         <p class="text-sm">Academia de Polícia Militar do Paudalho</p>
@@ -404,7 +405,6 @@
         const { createApp } = Vue;
 
         // --- CONFIGURAÇÃO SUPABASE ---
-        // PREENCHA AQUI COM SUAS CHAVES DO SUPABASE
         const SUPABASE_URL = 'https://iogtissohqhgxiskzgvc.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlvZ3Rpc3NvaHFoZ3hpc2t6Z3ZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1MDAwNTEsImV4cCI6MjA3ODA3NjA1MX0.4Fj05iwaUNDpdDaAch-dGp5TUtcumV72uzpIovQeCbg';
         
@@ -418,7 +418,7 @@
                     loginError: false,
                     loginErrorMsg: '',
                     loading: false,
-                    isMobileMenuOpen: false, // Menu Mobile State
+                    isMobileMenuOpen: false,
                     
                     currentView: 'dashboard',
                     searchQuery: '',
@@ -426,8 +426,17 @@
                     showFOModal: false, showHistoryModal: false, showRewardListModal: false, showEditSeiModal: false,
                     selectedStudent: null, modalType: 'FO+', editingFoIndex: null, tempSeiValue: '',
                     
-                    foForm: { motivo: '', data: '', oficial: '', sei: '' },
-                    officers: ['Cap. Rodrigo', 'Ten. Pedro', 'Ten. João', 'Sgt. Silva', 'Cb. Oliveira'],
+                    foForm: { motivo: '', data: '', oficial: '', sei: '', customOficial: '' },
+                    
+                    // LISTA ATUALIZADA DE OFICIAIS + "Outro"
+                    officers: [
+                        "Cel PM Carneiro", "Ten Cel PM Andreza", "Maj PM Juliane Santana", "Maj PM Emanuela",
+                        "Cap PM Marlon", "Cap PM Arantes", "Cap PM Nascimento",
+                        "1º Ten PM Otávio Neto", "1º Ten PM Letícia", "1º Ten PM Kemuel",
+                        "2º Ten PM Ribeiro", "2º Ten PM Paulo Lima", "2º Ten PM Thaysa", "2º Ten PM Pedro Lima",
+                        "2º Ten PM Vasconcelos", "2º Ten PM Brígida", "2º Ten PM Gudemberg",
+                        "2º Ten PM Melquezedeque", "2º Ten PM Viviane", "Outro"
+                    ],
                     
                     students: [] 
                 }
@@ -453,7 +462,7 @@
             methods: {
                 switchView(view) {
                     this.currentView = view;
-                    this.isMobileMenuOpen = false; // Fecha menu ao navegar
+                    this.isMobileMenuOpen = false;
                 },
                 async login() {
                     if (this.passwordInput === 'admin') {
@@ -504,15 +513,31 @@
                 },
                 openFOModal(student, type) {
                     this.selectedStudent = student; this.modalType = type; this.showFOModal = true;
-                    this.foForm = { motivo: '', data: new Date().toISOString().split('T')[0], oficial: '', sei: '' };
+                    this.foForm = { motivo: '', data: new Date().toISOString().split('T')[0], oficial: '', sei: '', customOficial: '' };
                 },
                 closeFOModal() { this.showFOModal = false; this.selectedStudent = null; },
+                
                 async submitFO() {
                     if (!this.selectedStudent.history) this.selectedStudent.history = [];
-                    this.selectedStudent.history.push({ ...this.foForm, tipo: this.modalType });
+                    
+                    // LÓGICA DO "OUTRO" -> DIGITAR NOME
+                    let oficialFinal = this.foForm.oficial;
+                    if (oficialFinal === 'Outro') {
+                        oficialFinal = this.foForm.customOficial || 'Não informado';
+                    }
+
+                    this.selectedStudent.history.push({ 
+                        motivo: this.foForm.motivo,
+                        data: this.foForm.data,
+                        oficial: oficialFinal,
+                        sei: this.foForm.sei,
+                        tipo: this.modalType 
+                    });
+                    
                     await this.saveStudentData(this.selectedStudent);
                     this.closeFOModal();
                 },
+                
                 openHistoryModal(student) { this.selectedStudent = student; this.showHistoryModal = true; },
                 closeHistoryModal() { this.showHistoryModal = false; },
                 openSeiEdit(index, currentVal) { this.editingFoIndex = index; this.tempSeiValue = currentVal || ''; this.showEditSeiModal = true; },
@@ -587,7 +612,7 @@
                         { id: 46, nome: "GRANGEIRO", pelotao: "3º PEL/2ª CIA", history: [] },
                         { id: 47, nome: "MACEDO", pelotao: "4º PEL/2ª CIA", history: [] },
                         { id: 48, nome: "ELVIS", pelotao: "5º PEL/2ª CIA", history: [] },
-                        { id: 49, nome: "JEFFERSON SILVA", pelotao: "6º PEL/2ª CIA", history: [] },
+                        { id: 49, nome: "JEFERSON SILVA", pelotao: "6º PEL/2ª CIA", history: [] },
                         { id: 50, nome: "QUEIROZ", pelotao: "6º PEL/2ª CIA", history: [] },
                         { id: 52, nome: "RUBSLEY", pelotao: "2º PEL/2ª CIA", history: [] },
                         { id: 53, nome: "G. SILVA", pelotao: "1º PEL/2ª CIA", history: [] },
