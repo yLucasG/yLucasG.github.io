@@ -131,6 +131,9 @@
                             <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Data</label><input v-model="forms.report.date" type="date" class="border rounded p-2 text-sm"></div>
                             <div class="flex-1"><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Auxiliar</label><input v-model="forms.report.auxiliar" type="text" placeholder="Nome" class="border rounded p-2 w-full text-sm"></div>
                             <button @click="generateReport" class="bg-military-900 text-white px-4 py-2 rounded text-sm font-bold shadow hover:bg-military-800">Visualizar</button>
+                            <button @click="enviarRelatorioWhatsApp" class="bg-green-600 text-white px-4 py-2 rounded text-sm font-bold shadow hover:bg-green-700 flex items-center gap-2">
+    <i class="ph-bold ph-whatsapp-logo"></i> Enviar Parte
+</button>
                         </div>
                         
                         <div class="border rounded-lg overflow-hidden bg-gray-50 shadow-sm" v-if="forms.report.data.punishments.length || forms.report.data.neg.length || forms.report.data.pos.length">
