@@ -20,9 +20,22 @@ Deno.serve(async (req) => {
     }
 
     const { texto } = await req.json()
-    console.log("Texto recebido:", texto)
+    console.log("Texto original:", texto)
 
-    // 3. Chama a IA (MODELO ATUALIZADO AQUI)
+    // 3. Prompt Ajustado para RESUMO CURTO E TÉCNICO
+    const systemPrompt = `
+      Atue como um Oficial da Polícia Militar preenchendo uma ficha disciplinar.
+      Sua missão: Transformar o relato informal do usuário em uma frase curta, técnica e formal para o campo 'MOTIVO'.
+      
+      Regras:
+      1. Seja extremamente conciso (máximo 10 palavras).
+      2. Use linguagem impessoal e culta (padrão RDPM).
+      3. NÃO comece com "Informo que", "O aluno", "Trata-se de". Vá direto ao fato.
+      4. Prefira estilo nominal. Ex: Em vez de "Ele chegou atrasado", use "Atraso injustificado à formatura".
+      5. Corrija erros de português.
+    `
+
+    // 4. Chama a IA (Modelo Llama 3.3)
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -30,26 +43,24 @@ Deno.serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        // MUDANÇA AQUI: Trocamos o modelo antigo pelo novo Llama 3.3
         model: 'llama-3.3-70b-versatile', 
         messages: [
-          { role: 'system', content: "Reescreva o texto em linguagem policial formal, culta e impessoal (PMPE). Seja direto, corrija erros e mantenha o sentido." },
+          { role: 'system', content: systemPrompt },
           { role: 'user', content: texto }
         ],
-        temperature: 0.3
+        temperature: 0.1 // Baixei a temperatura para ela ser menos criativa e mais direta
       }),
     })
 
     const data = await response.json()
 
-    // Verificação de erro vindo da Groq
     if (data.error) {
       console.error("Erro vindo da Groq:", data.error)
       throw new Error(`Erro na IA: ${data.error.message}`)
     }
 
     const textoMelhorado = data.choices[0].message.content
-    console.log("Sucesso! Texto gerado.")
+    console.log("Texto gerado:", textoMelhorado)
 
     return new Response(JSON.stringify({ resultado: textoMelhorado }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
