@@ -224,7 +224,108 @@ createApp({
         getBorderClass(s) { const sc = this.getCycleScore(s); if(sc >= 5) return 'border-green-500'; if(sc < 0) return 'border-red-500'; return 'border-transparent'; },
         getBorderColor(type) { if(!type) return 'border-gray-300'; if(type.includes('FO+')) return 'border-green-500'; if(type.includes('FO-')) return 'border-red-500'; if(type.includes('ELOGIO')) return 'border-blue-500'; return 'border-orange-500'; },
         getEventLabel(type) { if(!type) return '-'; const labels = { 'FO+': 'FO (+)', 'FO-': 'FO (-)', 'PUNICAO': 'Punição', 'MEDIDA_LEVE': 'M. Educativa (L)', 'MEDIDA_MEDIA': 'M. Educativa (M)', 'MEDIDA_GRAVE': 'M. Educativa (G)', 'ELOGIO': 'Elogio' }; return labels[type] || type; },
-        formatDate(d) { if(!d) return '-'; const [y,m,d2] = d.split('-'); return `${d2}/${m}/${y}`; }
+        formatDate(d) { if(!d) return '-'; const [y,m,d2] = d.split('-'); return `${d2}/${m}/${y}`; },
+
+
+
+        // Adicione isso junto aos outros methods
+// Substitua o método enviarRelatorioWhatsApp antigo por este:
+
+async enviarRelatorioWhatsApp() {
+    // 1. Dados do usuário (opcional: poderia pegar do perfil do aluno logado)
+    const oficialDia = prompt("Nome do Oficial de Dia:", "2º TEN QOAPM BRÍGIDA");
+    if (!oficialDia) return;
+    
+    // Tenta pegar o nome do aluno logado para ser o auxiliar
+    const auxiliarNome = this.session.isLoggedIn 
+        ? `AL CFO PM ${this.students.find(s => s.numero === 168)?.numero || 'XXX'} ${this.students.find(s => s.numero === 168)?.nome || 'LEONAM'}` // Exemplo fixo, ideal é pegar do this.students
+        : "AL CFO PM XXX AUXILIAR";
+
+    // 2. Coleta Fatos e Punições do dia (igual fizemos antes)
+    const hoje = new Date().toISOString().split('T')[0];
+    const fosDoDia = [];
+    const punicoesDoDia = [];
+
+    this.students.forEach(aluno => {
+        if (aluno.history) {
+            aluno.history.forEach(reg => {
+                if (reg.data === hoje) {
+                    const textoReg = `* ${aluno.numero} ${aluno.nome}: ${reg.motivo} (Of. ${reg.oficial})`;
+                    if (reg.type.includes('FO+')) fosDoDia.push(textoReg);
+                    else punicoesDoDia.push(textoReg);
+                }
+            });
+        }
+    });
+
+    const listaFos = fosDoDia.length ? fosDoDia.join('\n') : "* Sem alterações.";
+    const listaPunicoes = punicoesDoDia.length ? punicoesDoDia.join('\n') : "* Sem alterações.";
+    const efetivo = this.students.filter(s => s.cia === this.session.currentCia).length;
+
+    // 3. Monta o Texto (Usei exatamente seu modelo)
+    const relatorio = `*🔰 SDS – PMPE – DGA – DEIP – APMP 🔰*
+
+*RELATÓRIO DE PASSAGEM DE SERVIÇO DO AUXILIAR DO OFICIAL DE DIA – 1ª CIA*
+
+📌 Oficial de Dia: ${oficialDia}
+📌 Auxiliar do Oficial de Dia: ${auxiliarNome}
+📌 Adjunto: AL CFO PM 129 LUIZ NUNES
+
+🗓 Data: ${this.formatDate(hoje)}
+⏰ Horário: 07h às 07h
+🪖 Plantão: ÍNDIA
+
+---
+
+*🛡 ESCALA DE PERMANÊNCIA POR POSTO*
+📍 Fiscalização dos Postos – Rondas Noturnas
+* Auxiliar: ${auxiliarNome}
+* Adjunto: AL CFO PM 129 LUIZ NUNES
+
+---
+
+*📍 DAG*
+1º (22h00–23h00)
+* AL CFO PM 112 MARQUES / 145 HIGOR ALVES
+(Demais quartos preencher manualmente...)
+
+---
+
+*📍 ALAMEDA ALFA E BRAVO*
+(Preencher manualmente...)
+
+---
+
+*⭐ FATO OBSERVADO POSITIVAMENTE (FO+)*
+${listaFos}
+
+*⚠️ ALTERAÇÕES DISCIPLINARES*
+${listaPunicoes}
+
+---
+
+*📌 OBSERVAÇÕES*
+* Total de presentes: ${efetivo}
+* Controle de materiais: Sem alterações.
+* Ocorrências: Sem alterações.
+
+---
+
+📍 Paudalho – PE, ${new Date().toLocaleDateString('pt-BR')}
+
+${auxiliarNome}
+Auxiliar do Oficial de Dia
+
+🛡 “Nossa Presença, Sua Segurança.”`;
+
+    // 4. MÁGICA: Gera o link e abre o WhatsApp
+    const textoCodificado = encodeURIComponent(relatorio);
+    
+    // Se estiver no celular, abre o app. Se no PC, abre o WhatsApp Web.
+    const url = `https://api.whatsapp.com/send?text=${textoCodificado}`;
+    
+    window.open(url, '_blank');
+}
     },
     mounted() { 
         if(localStorage.getItem('SIGA_DB_MASTER_V35_CONNECTED')) {
