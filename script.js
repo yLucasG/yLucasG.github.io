@@ -16,7 +16,15 @@ createApp({
             isImprovingText: false,
             lists: { officers: ["Cel PM Carneiro","Ten Cel PM Andreza","Maj PM Juliane Santana","Maj PM Emanuela","Cap PM Marlon","Cap PM Arantes","Cap PM Nascimento","1º Ten PM Otávio Neto","1º Ten PM Letícia","1º Ten PM Kemuel","2º Ten PM Ribeiro","2º Ten PM Paulo Lima","2º Ten PM Thaysa","2º Ten PM Pedro Lima","2º Ten PM Vasconcelos","2º Ten PM Brígida","2º Ten PM Gudemberg","2º Ten PM Melquezedeque","2º Ten PM Viviane","Outro"] },
             modals: { record: { show: false, student: null, category: 'FO' }, history: { show: false, student: null }, rewards: { show: false } },
-            forms: { record: { type: 'FO+', motivo: '', data: '', oficial: '', customOficial: '', sei: '' }, report: { date: new Date().toISOString().split('T')[0], auxiliar: '', data: { punishments: [], neg: [], pos: [] } } }
+            forms: { 
+                record: { type: 'FO+', motivo: '', data: '', oficial: '', customOficial: '', sei: '' }, 
+                report: { 
+                    date: new Date().toISOString().split('T')[0], 
+                    auxiliar: '', 
+                    adjunto: '', // ADICIONEI ISSO AQUI
+                    data: { punishments: [], neg: [], pos: [] } 
+                } 
+            }
         }
     },
     computed: {
@@ -232,17 +240,21 @@ createApp({
 // Substitua o método enviarRelatorioWhatsApp antigo por este:
 
 async enviarRelatorioWhatsApp() {
-    // 1. Dados do usuário (opcional: poderia pegar do perfil do aluno logado)
-    const oficialDia = prompt("Nome do Oficial de Dia:", "2º TEN QOPM ");
+    // 1. Validação Simples
+    if (!this.forms.report.auxiliar || !this.forms.report.adjunto) {
+        alert("Por favor, preencha o nome do Auxiliar e do Adjunto na tela antes de enviar.");
+        return;
+    }
+
+    const oficialDia = prompt("Nome do Oficial de Dia:", "2º TEN QOAPM BRÍGIDA");
     if (!oficialDia) return;
     
-    // Tenta pegar o nome do aluno logado para ser o auxiliar
-    const auxiliarNome = this.session.isLoggedIn 
-        ? `AL CFO PM ` // Exemplo fixo, ideal é pegar do this.students
-        : "AL CFO PM ";
+    // Pega os nomes direto dos campos que você digitou na tela
+    const auxiliarNome = this.forms.report.auxiliar.toUpperCase();
+    const adjuntoNome = this.forms.report.adjunto.toUpperCase();
 
-    // 2. Coleta Fatos e Punições do dia (igual fizemos antes)
-    const hoje = new Date().toISOString().split('T')[0];
+    // 2. Coleta Fatos e Punições
+    const hoje = this.forms.report.date; // Usa a data selecionada na tela, não necessariamente "hoje"
     const fosDoDia = [];
     const punicoesDoDia = [];
 
@@ -262,14 +274,14 @@ async enviarRelatorioWhatsApp() {
     const listaPunicoes = punicoesDoDia.length ? punicoesDoDia.join('\n') : "* Sem alterações.";
     const efetivo = this.students.filter(s => s.cia === this.session.currentCia).length;
 
-    // 3. Monta o Texto (Usei exatamente seu modelo)
+    // 3. Monta o Relatório com os Novos Postos e Espaços em Branco
     const relatorio = `*🔰 SDS – PMPE – DGA – DEIP – APMP 🔰*
 
 *RELATÓRIO DE PASSAGEM DE SERVIÇO DO AUXILIAR DO OFICIAL DE DIA – 1ª CIA*
 
 📌 Oficial de Dia: ${oficialDia}
 📌 Auxiliar do Oficial de Dia: ${auxiliarNome}
-📌 Adjunto: AL CFO PM 
+📌 Adjunto ao Auxiliar: ${adjuntoNome}
 
 🗓 Data: ${this.formatDate(hoje)}
 ⏰ Horário: 07h às 07h
@@ -280,19 +292,83 @@ async enviarRelatorioWhatsApp() {
 *🛡 ESCALA DE PERMANÊNCIA POR POSTO*
 📍 Fiscalização dos Postos – Rondas Noturnas
 * Auxiliar: ${auxiliarNome}
-* Adjunto: AL CFO PM 
+* Adjunto: ${adjuntoNome}
 
 ---
 
-*📍 DAG*
+*📍 DIRETÓRIO ACADÊMICO GUARARAPES (D.A.G)*
+
 1º (22h00–23h00)
-* AL CFO PM / AL CFO PM 
-( preencher manualmente...)
+* AL CFO PM 
+
+2º (23h00–00h30)
+* AL CFO PM 
+
+3º (00h30–02h00)
+* AL CFO PM 
+
+4º (02h00–03h30)
+* AL CFO PM 
+
+5º (03h30–05h00)
+* AL CFO PM 
 
 ---
 
-*📍 ALAMEDA ALFA E BRAVO*
-(Preencher manualmente...)
+*📍 ALAMEDAS ALFA E BRAVO*
+
+1º (22h00–23h00)
+* AL CFO PM 
+
+2º (23h00–00h30)
+* AL CFO PM 
+
+3º (00h30–02h00)
+* AL CFO PM 
+
+4º (02h00–03h30)
+* AL CFO PM 
+
+5º (03h30–05h00)
+* AL CFO PM 
+
+---
+
+*📍 ALAMEDA FEMININO*
+
+1º (22h00–23h00)
+* AL CFO PM 
+
+2º (23h00–00h30)
+* AL CFO PM 
+
+3º (00h30–02h00)
+* AL CFO PM 
+
+4º (02h00–03h30)
+* AL CFO PM 
+
+5º (03h30–05h00)
+* AL CFO PM 
+
+---
+
+*📍 PÁTIO INTERNO E ALAMEDA RANCHO*
+
+1º (22h00–23h00)
+* AL CFO PM 
+
+2º (23h00–00h30)
+* AL CFO PM 
+
+3º (00h30–02h00)
+* AL CFO PM 
+
+4º (02h00–03h30)
+* AL CFO PM 
+
+5º (03h30–05h00)
+* AL CFO PM 
 
 ---
 
@@ -316,14 +392,14 @@ ${listaPunicoes}
 ${auxiliarNome}
 Auxiliar do Oficial de Dia
 
+${adjuntoNome}
+Adjunto ao Auxiliar
+
 🛡 “Nossa Presença, Sua Segurança.”`;
 
-    // 4. MÁGICA: Gera o link e abre o WhatsApp
+    // 4. Enviar
     const textoCodificado = encodeURIComponent(relatorio);
-    
-    // Se estiver no celular, abre o app. Se no PC, abre o WhatsApp Web.
     const url = `https://api.whatsapp.com/send?text=${textoCodificado}`;
-    
     window.open(url, '_blank');
 }
     },
@@ -334,4 +410,5 @@ Auxiliar do Oficial de Dia
         }
     }
 }).mount('#app');
+
 
