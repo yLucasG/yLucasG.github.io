@@ -233,13 +233,13 @@ createApp({
 
 async enviarRelatorioWhatsApp() {
     // 1. Dados do usuário (opcional: poderia pegar do perfil do aluno logado)
-    const oficialDia = prompt("Nome do Oficial de Dia:", "2º TEN QOAPM BRÍGIDA");
+    const oficialDia = prompt("Nome do Oficial de Dia:", "2º TEN QOPM ");
     if (!oficialDia) return;
     
     // Tenta pegar o nome do aluno logado para ser o auxiliar
     const auxiliarNome = this.session.isLoggedIn 
-        ? `AL CFO PM ${this.students.find(s => s.numero === 168)?.numero || 'XXX'} ${this.students.find(s => s.numero === 168)?.nome || 'LEONAM'}` // Exemplo fixo, ideal é pegar do this.students
-        : "AL CFO PM XXX AUXILIAR";
+        ? `AL CFO PM ` // Exemplo fixo, ideal é pegar do this.students
+        : "AL CFO PM ";
 
     // 2. Coleta Fatos e Punições do dia (igual fizemos antes)
     const hoje = new Date().toISOString().split('T')[0];
@@ -269,7 +269,7 @@ async enviarRelatorioWhatsApp() {
 
 📌 Oficial de Dia: ${oficialDia}
 📌 Auxiliar do Oficial de Dia: ${auxiliarNome}
-📌 Adjunto: AL CFO PM 129 LUIZ NUNES
+📌 Adjunto: AL CFO PM 
 
 🗓 Data: ${this.formatDate(hoje)}
 ⏰ Horário: 07h às 07h
@@ -280,14 +280,14 @@ async enviarRelatorioWhatsApp() {
 *🛡 ESCALA DE PERMANÊNCIA POR POSTO*
 📍 Fiscalização dos Postos – Rondas Noturnas
 * Auxiliar: ${auxiliarNome}
-* Adjunto: AL CFO PM 129 LUIZ NUNES
+* Adjunto: AL CFO PM 
 
 ---
 
 *📍 DAG*
 1º (22h00–23h00)
-* AL CFO PM 112 MARQUES / 145 HIGOR ALVES
-(Demais quartos preencher manualmente...)
+* AL CFO PM / AL CFO PM 
+( preencher manualmente...)
 
 ---
 
@@ -334,3 +334,4 @@ Auxiliar do Oficial de Dia
         }
     }
 }).mount('#app');
+
