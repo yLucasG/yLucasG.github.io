@@ -39,9 +39,24 @@ ${dados.escalaDag || "Sem alterações na escala."}
 
 ---
 
+*📍 ALAMEDA ALFA E BRAVO*
+${dados.escalaDag || "Sem alterações na escala."}
+
+---
+
+*📍 PATIO INTERNO*
+${dados.escalaDag || "Sem alterações na escala."}
+
+---
+
+*📍 ALAMEDA FEMININA*
+${dados.escalaDag || "Sem alterações na escala."}
+
+---
+
 *⭐ FATO OBSERVADO POSITIVAMENTE (FO+)*
 ${dados.foPositivos && dados.foPositivos.length > 0 
-  ? dados.foPositivos.map(fo => `* ${fo.aluno}: ${fo.texto}`).join('\n') 
+  ? dados.foPositivos.map(fo => `* AL CFO PM ${fo.aluno}: ${fo.texto}`).join('\n') 
   : "* Sem alterações."}
 
 *⚠️ ALTERAÇÕES DISCIPLINARES*
@@ -65,7 +80,7 @@ Auxiliar do Oficial de Dia
 
 🛡 “Nossa Presença, Sua Segurança.”`
 
-    // 2. ENVIAR PARA O CALLMEBOT
+    
     // Precisamos codificar o texto para URL (trocar espaços por %20, etc)
     const textoCodificado = encodeURIComponent(relatorio)
     
