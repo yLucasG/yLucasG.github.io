@@ -1,193 +1,23 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S.I.G.A. Pro - Gestão Integrada</title>
+<div class="flex flex-wrap gap-4 items-end mb-6">
+    <div class="w-full sm:w-auto">
+        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Data</label>
+        <input v-model="forms.report.date" type="date" class="border rounded p-2 text-sm w-full">
+    </div>
     
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: { military: { 900: '#0a1a2f', 800: '#112240', 700: '#233554', 500: '#64ffda', 100: '#e6f1ff' } },
-                    fontFamily: { sans: ['Inter', 'sans-serif'], serif: ['Times New Roman', 'serif'] }
-                }
-            }
-        }
-    </script>
-    
-    <link rel="stylesheet" href="style.css">
-</head>
-<body class="bg-slate-100 text-slate-800 font-sans h-screen overflow-hidden">
-
-    <div id="app" v-cloak class="h-full flex flex-col">
-
-        <div v-if="!session.isLoggedIn" class="fixed inset-0 bg-military-900 z-[50] flex items-center justify-center p-4">
-            <div class="bg-white p-8 rounded-lg shadow-2xl max-w-sm w-full text-center">
-                <img src="cfo.jpg" class="h-24 mx-auto mb-4 object-contain" onerror="this.style.display='none'">
-                <h1 class="text-2xl font-bold text-military-900 mb-2">S.I.G.A. Pro</h1>
-                <p class="text-gray-500 mb-6 text-sm">Acesso Restrito</p>
-                <form @submit.prevent="login">
-                    <input v-model="session.pwd" type="password" placeholder="Senha (admin)" class="w-full border p-3 rounded mb-4 text-lg outline-none focus:ring-2 focus:ring-military-500">
-                    <button class="w-full bg-military-900 text-white py-3 rounded font-bold hover:bg-military-800 transition transform active:scale-95">ENTRAR</button>
-                </form>
-                <p class="mt-6 text-xs text-gray-400 cursor-pointer hover:text-red-500" @click="resetDatabase">[RESETAR BANCO]</p>
-            </div>
-        </div>
-
-        <div v-else class="flex flex-1 h-full overflow-hidden relative">
-            
-            <aside class="fixed inset-y-0 left-0 z-40 w-72 bg-military-900 text-white flex flex-col transition-transform duration-300 shadow-2xl h-full" :class="ui.menuOpen ? 'translate-x-0' : '-translate-x-full'">
-                <div class="p-6 flex flex-col items-center border-b border-military-700 relative">
-                    <button @click="ui.menuOpen = false" class="absolute top-4 right-4 text-gray-400 hover:text-white p-1"><i class="ph ph-x text-xl"></i></button>
-                    <img src="cfo.jpg" class="h-16 mb-3 object-contain" onerror="this.style.display='none'">
-                    <h1 class="font-bold text-xl tracking-wider">S.I.G.A.</h1>
-                </div>
-                <div class="px-6 py-6">
-                    <label class="text-[10px] text-gray-400 uppercase font-bold ml-1">CIA Ativa</label>
-                    <div class="mt-2 bg-military-800 rounded-lg p-1 flex border border-military-700">
-                        <button @click="changeCia('2ª CIA')" class="flex-1 py-2 text-xs font-bold rounded transition-all" :class="session.currentCia === '2ª CIA' ? 'bg-military-500 text-military-900' : 'text-gray-400'">2ª CIA</button>
-                        <button @click="changeCia('3ª CIA')" class="flex-1 py-2 text-xs font-bold rounded transition-all" :class="session.currentCia === '3ª CIA' ? 'bg-military-500 text-military-900' : 'text-gray-400'">3ª CIA</button>
-                    </div>
-                </div>
-                <nav class="flex-1 px-4 space-y-1">
-                    <button @click="navigate('dashboard')" class="w-full flex items-center gap-4 p-3 rounded-lg text-left" :class="ui.currentView === 'dashboard' ? 'bg-military-800 text-military-500' : 'text-gray-400 hover:bg-military-800'"><i class="ph-bold ph-chart-pie-slice text-xl"></i> Dashboard</button>
-                    <button @click="navigate('students')" class="w-full flex items-center gap-4 p-3 rounded-lg text-left" :class="ui.currentView === 'students' ? 'bg-military-800 text-military-500' : 'text-gray-400 hover:bg-military-800'"><i class="ph-bold ph-users text-xl"></i> Efetivo</button>
-                    <button @click="navigate('report')" class="w-full flex items-center gap-4 p-3 rounded-lg text-left" :class="ui.currentView === 'report' ? 'bg-military-800 text-military-500' : 'text-gray-400 hover:bg-military-800'"><i class="ph-bold ph-file-text text-xl"></i> Relatório Diário</button>
-                </nav>
-            </aside>
-
-            <div v-if="ui.menuOpen" @click="ui.menuOpen = false" class="fixed inset-0 bg-black bg-opacity-50 z-30 glass-effect"></div>
-
-            <main class="flex-1 flex flex-col h-full min-w-0 bg-slate-50 relative transition-all duration-300">
-                <header class="h-16 bg-white shadow-sm flex items-center px-4 justify-between flex-shrink-0 z-20 sticky top-0">
-                    <div class="flex items-center gap-3">
-                        <button @click="ui.menuOpen = true" class="text-gray-600 p-2"><i class="ph ph-list text-2xl"></i></button>
-                        <span class="font-bold text-military-900 text-lg uppercase">S.I.G.A. <span class="text-gray-400">|</span> {{ session.currentCia }}</span>
-                    </div>
-                    <div class="w-9 h-9 rounded-full bg-military-900 text-military-500 flex items-center justify-center font-bold text-xs">OF</div>
-                </header>
-
-                <div class="flex-1 overflow-y-auto p-4 sm:p-6 pb-24 scroll-smooth bg-slate-200">
-                    
-                    <div v-if="ui.currentView === 'dashboard'" class="space-y-6 animate-fade-in max-w-7xl mx-auto" :key="session.dataVersion">
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div class="bg-white p-5 rounded-xl shadow-sm border-b-4 border-blue-500"><p class="text-xs font-bold text-gray-400 uppercase">Efetivo</p><p class="text-3xl font-bold mt-1">{{ ciaStats.total }}</p></div>
-                            <div class="bg-white p-5 rounded-xl shadow-sm border-b-4 border-green-500"><p class="text-xs font-bold text-gray-400 uppercase">FO+ (Ciclo)</p><p class="text-3xl font-bold text-green-600 mt-1">{{ ciaStats.foPos }}</p></div>
-                            <div class="bg-white p-5 rounded-xl shadow-sm border-b-4 border-red-500"><p class="text-xs font-bold text-gray-400 uppercase">Punições</p><p class="text-3xl font-bold text-red-600 mt-1">{{ ciaStats.punishments }}</p></div>
-                            <div @click="openRewardsModal" class="bg-yellow-50 p-5 rounded-xl shadow-sm border-b-4 border-yellow-500 cursor-pointer hover:bg-yellow-100 transition"><p class="text-yellow-700 text-xs font-bold uppercase">Aptos Elogio</p><p class="text-3xl font-bold text-yellow-900 mt-1">{{ ciaStats.rewards }}</p></div>
-                        </div>
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <div class="bg-white rounded-xl shadow-sm p-6"><h3 class="font-bold text-lg mb-4 text-gray-700 flex items-center gap-2"><i class="ph-fill ph-trophy text-green-500"></i> Destaques Positivos</h3><ul class="space-y-2"><li v-for="(s, i) in ciaStats.topPos" :key="s.id" @click="openHistory(s)" class="p-3 hover:bg-gray-50 rounded-lg cursor-pointer flex justify-between items-center transition border border-transparent hover:border-gray-200"><div class="flex items-center gap-3"><span class="w-6 h-6 bg-military-100 text-military-900 rounded-full flex items-center justify-center text-xs font-bold">{{ i+1 }}</span><div><p class="font-bold text-sm text-gray-800">{{ s.nome }}</p><p class="text-[10px] text-gray-500">{{ s.pelotao }}</p></div></div><span class="font-bold text-green-600 bg-green-50 px-2 py-1 rounded text-xs">+{{ getRawScore(s) }}</span></li><li v-if="!ciaStats.topPos.length" class="text-center text-gray-400 text-xs py-4">Sem destaques.</li></ul></div>
-                            <div class="bg-white rounded-xl shadow-sm p-6"><h3 class="font-bold text-lg mb-4 text-gray-700 flex items-center gap-2"><i class="ph-fill ph-warning-circle text-red-500"></i> Pontos de Atenção</h3><ul class="space-y-2"><li v-for="(s, i) in ciaStats.topNeg" :key="s.id" @click="openHistory(s)" class="p-3 hover:bg-gray-50 rounded-lg cursor-pointer flex justify-between items-center transition border border-transparent hover:border-gray-200"><div class="flex items-center gap-3"><span class="w-6 h-6 bg-red-100 text-red-800 rounded-full flex items-center justify-center text-xs font-bold">{{ i+1 }}</span><div><p class="font-bold text-sm text-gray-800">{{ s.nome }}</p><p class="text-[10px] text-gray-500">{{ s.pelotao }}</p></div></div><span class="font-bold text-red-600 bg-red-50 px-2 py-1 rounded text-xs">{{ s.negCount }} Reg.</span></li><li v-if="!ciaStats.topNeg.length" class="text-center text-gray-400 text-xs py-4">Tudo tranquilo.</li></ul></div>
-                        </div>
-                    </div>
-
-                    <div v-if="ui.currentView === 'students'" class="flex flex-col h-full max-w-7xl mx-auto w-full" :key="session.dataVersion">
-                        <div class="flex flex-col space-y-4 mb-6">
-                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                                <div class="flex items-center gap-3"><h2 class="text-xl font-bold text-gray-800">Efetivo</h2><span class="text-xs font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded">{{ filteredStudents.length }} Alunos</span></div>
-                                <div class="flex items-center gap-2 w-full sm:w-auto">
-                                    <div class="relative w-full sm:w-64"><i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i><input v-model="ui.search" type="text" placeholder="Nome ou Nº..." class="pl-9 pr-4 py-2 border rounded-full w-full text-sm focus:ring-2 focus:ring-military-500 outline-none"></div>
-                                    <button @click="ui.viewMode = ui.viewMode === 'grid' ? 'canga' : 'grid'" class="p-2 rounded-full border bg-white text-gray-500 hover:text-military-900 transition"><i class="ph-bold" :class="ui.viewMode === 'grid' ? 'ph-users-three' : 'ph-squares-four'"></i></button>
-                                </div>
-                            </div>
-                            <div class="flex flex-wrap gap-2 filters-bar">
-                                <select v-model="ui.filters.pelotao" class="text-xs border rounded px-2 py-1.5 bg-white"><option value="">Pelotão: Todos</option><option v-for="p in uniquePelotoes" :value="p">{{p}}</option></select>
-                                <select v-model="ui.filters.plantao" class="text-xs border rounded px-2 py-1.5 bg-white"><option value="">Plantão: Todos</option><option value="FOXTROT">Foxtrot</option><option value="GOLF">Golf</option><option value="HOTEL">Hotel</option><option value="INDIA">India</option></select>
-                                <select v-model="ui.filters.alojamento" class="text-xs border rounded px-2 py-1.5 bg-white"><option value="">Alojamento: Todos</option><option value="Alpha">Alpha</option><option value="Bravo">Bravo</option><option value="Fem">Feminino</option></select>
-                                <button v-if="hasFilters" @click="clearFilters" class="text-xs text-red-500 font-bold px-2 py-1">Limpar</button>
-                            </div>
-                        </div>
-
-                        <div v-if="ui.viewMode === 'grid'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                            <div v-for="student in filteredStudents" :key="student.id" class="bg-white rounded-xl shadow-sm hover:shadow-md p-4 border-l-4 relative group" :class="getBorderClass(student)">
-                                <div class="absolute top-2 left-0 right-0 flex justify-center pointer-events-none"><span class="text-[9px] font-bold px-2 py-0.5 rounded bg-gray-100 text-gray-600 border border-gray-200 shadow-sm">{{ (student.plantao || '').substring(0,3) }}</span></div>
-                                <div v-if="getCycleScore(student) >= 5" class="absolute top-0 right-0 bg-yellow-400 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg shadow-sm">APTO</div>
-                                <div class="flex justify-between items-start mb-2 mt-4"><div class="overflow-hidden w-full"><div class="flex justify-between w-full"><span class="text-[10px] font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">Nº {{ student.numero }}</span><span class="text-xl font-bold leading-none" :class="getCycleScore(student) >= 5 ? 'text-green-600' : 'text-gray-700'">{{ getCycleScore(student) }}</span></div><h3 class="font-bold text-gray-800 truncate mt-1 text-sm">{{ student.nome }}</h3><p class="text-[10px] text-gray-500">{{ student.pelotao }}</p></div></div>
-                                <div class="w-full bg-gray-100 h-1.5 rounded-full mb-3 overflow-hidden"><div class="h-full rounded-full transition-all duration-300" :class="getCycleScore(student) >= 5 ? 'bg-green-500' : (getCycleScore(student) < 0 ? 'bg-red-500' : 'bg-blue-500')" :style="{width: Math.min(Math.max(getCycleScore(student) * 20, 0), 100) + '%'}"></div></div>
-                                <div class="grid grid-cols-2 gap-2"><button @click="openModal(student, 'FO')" class="bg-slate-50 hover:bg-slate-100 text-slate-700 py-1.5 rounded text-[10px] font-bold border border-slate-200">FO</button><button @click="openModal(student, 'PUNICAO')" class="bg-red-50 hover:bg-red-100 text-red-700 py-1.5 rounded text-[10px] font-bold border border-red-200">Punição</button></div>
-                                <button @click="openHistory(student)" class="w-full mt-2 text-[10px] text-military-500 hover:underline">Extrato Completo</button>
-                            </div>
-                        </div>
-
-                        <div v-if="ui.viewMode === 'canga'" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                            <div v-for="pair in cangaList" :key="pair.id" class="bg-white rounded-lg shadow-sm border border-gray-200 p-1 flex">
-                                <div class="flex-1 p-2 border-r border-dashed"><div class="flex justify-between"><span class="text-xs font-bold text-gray-400">Nº {{ pair.s1.numero }}</span><span class="text-sm font-bold">{{ getCycleScore(pair.s1) }}</span></div><h3 class="font-bold text-xs truncate">{{ pair.s1.nome }}</h3><div class="mt-1 flex gap-1"><button @click="openModal(pair.s1, 'FO')" class="bg-slate-50 text-[9px] px-2 rounded border">FO</button><button @click="openHistory(pair.s1)" class="bg-slate-50 px-1 rounded border"><i class="ph-bold ph-list-dashes"></i></button></div></div>
-                                <div v-if="pair.s2" class="flex-1 p-2"><div class="flex justify-between"><span class="text-xs font-bold text-gray-400">Nº {{ pair.s2.numero }}</span><span class="text-sm font-bold">{{ getCycleScore(pair.s2) }}</span></div><h3 class="font-bold text-xs truncate">{{ pair.s2.nome }}</h3><div class="mt-1 flex gap-1"><button @click="openModal(pair.s2, 'FO')" class="bg-slate-50 text-[9px] px-2 rounded border">FO</button><button @click="openHistory(pair.s2)" class="bg-slate-50 px-1 rounded border"><i class="ph-bold ph-list-dashes"></i></button></div></div>
-                                <div v-else class="flex-1 p-2 flex items-center justify-center text-xs text-gray-300 italic">Sem Canga</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div v-if="ui.currentView === 'report'" class="bg-white rounded-xl shadow p-6 min-h-[500px]">
-                        <h2 class="text-xl font-bold text-gray-800 mb-4">Relatório do Dia</h2>
-                        <div class="flex flex-wrap gap-4 items-end mb-6">
-                            <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Data</label><input v-model="forms.report.date" type="date" class="border rounded p-2 text-sm"></div>
-                            <div class="flex-1"><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Auxiliar</label><input v-model="forms.report.auxiliar" type="text" placeholder="Nome" class="border rounded p-2 w-full text-sm"></div>
-                            <button @click="generateReport" class="bg-military-900 text-white px-4 py-2 rounded text-sm font-bold shadow hover:bg-military-800">Visualizar</button>
-                            <button @click="enviarRelatorioWhatsApp" class="bg-green-600 text-white px-4 py-2 rounded text-sm font-bold shadow hover:bg-green-700 flex items-center gap-2">
-    <i class="ph-bold ph-whatsapp-logo"></i> Enviar Parte
-</button>
-                        </div>
-                        
-                        <div class="border rounded-lg overflow-hidden bg-gray-50 shadow-sm" v-if="forms.report.data.punishments.length || forms.report.data.neg.length || forms.report.data.pos.length">
-                            
-                            <div v-if="forms.report.data.punishments.length">
-                                <div class="bg-gray-200 px-4 py-2 font-bold text-sm uppercase border-b border-gray-300">Alterações Disciplinares</div>
-                                <table class="w-full text-sm text-left">
-                                    <thead class="bg-gray-100 text-xs uppercase text-gray-700"><tr><th class="px-4 py-2 w-1/4">Aluno</th><th class="px-4 py-2 w-1/6">Tipo</th><th class="px-4 py-2">Motivo</th><th class="px-4 py-2 w-1/6">Oficial</th></tr></thead>
-                                    <tbody class="divide-y"><tr v-for="i in forms.report.data.punishments" class="bg-white hover:bg-gray-50"><td class="px-4 py-2 font-bold">{{i.studentName}}</td><td class="px-4 py-2 text-center">{{i.typeLabel}}</td><td class="px-4 py-2">{{i.reason}}</td><td class="px-4 py-2 text-center text-xs">{{i.officer}}</td></tr></tbody>
-                                </table>
-                            </div>
-
-                            <div v-if="forms.report.data.neg.length || forms.report.data.pos.length">
-                                <div class="bg-gray-200 px-4 py-2 font-bold text-sm uppercase border-t border-b border-gray-300" :class="{'mt-0': !forms.report.data.punishments.length, 'mt-4': forms.report.data.punishments.length}">Fatos Observados</div>
-                                <table class="w-full text-sm text-left">
-                                    <thead class="bg-gray-100 text-xs uppercase text-gray-700"><tr><th class="px-4 py-2 w-1/6 text-center">Natureza</th><th class="px-4 py-2 w-1/4">Aluno</th><th class="px-4 py-2">Fato</th><th class="px-4 py-2 w-1/6">Oficial</th></tr></thead>
-                                    <tbody class="divide-y">
-                                        <tr v-for="i in forms.report.data.neg" class="bg-white hover:bg-gray-50"><td class="px-4 py-2 font-bold text-red-600 text-center">FO NEGATIVO</td><td class="px-4 py-2">{{i.studentName}}</td><td class="px-4 py-2">{{i.reason}}</td><td class="px-4 py-2 text-center text-xs">{{i.officer}}</td></tr>
-                                        <tr v-for="i in forms.report.data.pos" class="bg-white hover:bg-gray-50"><td class="px-4 py-2 font-bold text-green-600 text-center">FO POSITIVO</td><td class="px-4 py-2">{{i.studentName}}</td><td class="px-4 py-2">{{i.reason}}</td><td class="px-4 py-2 text-center text-xs">{{i.officer}}</td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                        <div v-else class="p-12 text-center text-gray-400 italic bg-gray-50 rounded border border-dashed">
-                            <i class="ph ph-file-search text-3xl mb-2 block"></i>
-                            Nenhum registro encontrado para esta data.
-                        </div>
-                    </div>
-                </div>
-            </main>
-        </div>
-
-        <div v-if="modals.record.show" class="fixed inset-0 bg-black bg-opacity-60 z-[200] flex items-center justify-center p-4"><div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in"><div class="p-4 flex justify-between items-center text-white" :class="modals.record.category === 'FO' ? 'bg-military-900' : 'bg-red-700'"><h3 class="font-bold flex items-center gap-2">Registrar {{ modals.record.category === 'FO' ? 'FO' : 'Punição' }}</h3><button @click="modals.record.show = false"><i class="ph-bold ph-x text-xl"></i></button></div><form @submit.prevent="submitRecord" class="p-6 space-y-4"><p class="text-sm font-bold text-gray-800">{{ modals.record.student?.nome }}</p><select v-model="forms.record.tipo" class="w-full border p-2 rounded"><optgroup label="Fatos Observados" v-if="modals.record.category === 'FO'"><option value="FO+">FO+</option><option value="FO-">FO-</option></optgroup><optgroup label="Sanções Disciplinares" v-if="modals.record.category === 'PUNICAO'"><option value="MEDIDA_LEVE">Medida Educativa (Leve)</option><option value="MEDIDA_MEDIA">Medida Educativa (Média)</option><option value="MEDIDA_GRAVE">Medida Educativa (Grave)</option><option value="PUNICAO">Punição (Extraclasse)</option></optgroup></select>
-                <div class="relative">
-                    <textarea v-model="forms.record.motivo" rows="3" class="w-full border p-2 rounded pr-24" placeholder="Motivo (ex: aluno chegou atrasado)"></textarea>
-                    <button 
-                        @click.prevent="melhorarTextoComIA" 
-                        class="absolute right-2 bottom-2 bg-indigo-600 text-white text-[10px] px-2 py-1 rounded hover:bg-indigo-700 flex items-center gap-1 shadow-sm transition-all"
-                        :class="{'opacity-50 cursor-wait': isImprovingText}"
-                        :disabled="isImprovingText"
-                        title="Reescrever com Inteligência Artificial"
-                    >
-                        <i class="ph-bold" :class="isImprovingText ? 'ph-spinner animate-spin' : 'ph-magic-wand'"></i>
-                        {{ isImprovingText ? 'Gerando...' : 'Melhorar Texto' }}
-                    </button>
-                </div>
-                <div class="grid grid-cols-2 gap-2"><input type="date" v-model="forms.record.data" class="border p-2 rounded"><select v-model="forms.record.oficial" class="border p-2 rounded"><option v-for="o in lists.officers" :value="o">{{o}}</option></select></div><input v-if="forms.record.oficial === 'Outro'" type="text" v-model="forms.record.customOficial" placeholder="Nome Oficial" class="w-full border p-2 rounded"><input type="text" v-model="forms.record.sei" placeholder="Nº SEI (Opcional)" class="w-full border p-2 rounded"><button class="w-full bg-military-900 text-white py-3 rounded font-bold">SALVAR</button></form></div></div>
-        
-        <div v-if="modals.history.show" class="fixed inset-0 bg-black bg-opacity-50 z-[200] flex justify-end"><div class="w-full max-w-lg bg-white h-full shadow-2xl flex flex-col slide-in"><div class="p-5 bg-military-900 text-white flex justify-between items-center"><div><h3 class="font-bold">{{ modals.history.student?.nome }}</h3><p class="text-xs opacity-70">{{ modals.history.student?.pelotao }}</p></div><button @click="modals.history.show = false"><i class="ph-bold ph-x text-xl"></i></button></div><div class="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50"><div v-for="(item, idx) in modals.history.student?.history" :key="idx" class="bg-white border-l-4 p-3 shadow-sm" :class="getBorderColor(item.type)"><div class="flex justify-between"><span class="text-xs font-bold">{{ getEventLabel(item.type) }}</span><span class="text-xs text-gray-400">{{ formatDate(item.data) }}</span></div><p class="text-sm mt-1">{{ item.motivo || item.reason }}</p><div class="text-xs text-gray-500 mt-2 flex justify-between"><span>Oficial: {{ item.oficial || item.officer }}</span><button @click="deleteRecord(modals.history.student, idx)" class="text-red-500"><i class="ph-bold ph-trash"></i></button></div></div><div v-if="!modals.history.student?.history?.length" class="text-center py-4 text-gray-400 text-xs">Sem registros.</div></div></div></div>
-        <div v-if="modals.rewards.show" class="fixed inset-0 bg-black bg-opacity-60 z-[200] flex items-center justify-center"><div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[80vh]"><div class="p-4 bg-yellow-500 text-white flex justify-between items-center"><h3 class="font-bold text-lg">Aptos a Elogio</h3><button @click="modals.rewards.show = false"><i class="ph-bold ph-x text-xl"></i></button></div><div class="flex-1 overflow-y-auto"><table class="w-full text-left text-sm"><thead class="bg-gray-50 border-b sticky top-0"><tr><th class="p-4">Cadete</th><th class="p-4 text-right">Saldo</th><th class="p-4 text-right">Ação</th></tr></thead><tbody class="divide-y"><tr v-for="s in rewardList" :key="s.id" class="hover:bg-yellow-50"><td class="p-4 font-bold">{{ s.nome }}</td><td class="p-4 text-right text-green-600 font-bold">{{ getCycleScore(s) }}/5</td><td class="p-4 text-right"><button @click="claimReward(s)" class="bg-yellow-500 text-white text-xs px-3 py-1 rounded font-bold">CONCEDER</button></td></tr></tbody></table></div></div></div>
-
+    <div class="flex-1 min-w-[200px]">
+        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Auxiliar</label>
+        <input v-model="forms.report.auxiliar" type="text" placeholder="Nome do Auxiliar" class="border rounded p-2 w-full text-sm">
     </div>
 
-    <script src="script.js"></script>
+    <div class="flex-1 min-w-[200px]">
+        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Adjunto</label>
+        <input v-model="forms.report.adjunto" type="text" placeholder="Nome do Adjunto" class="border rounded p-2 w-full text-sm">
+    </div>
 
-</body>
-</html>
+    <button @click="generateReport" class="bg-military-900 text-white px-4 py-2 rounded text-sm font-bold shadow hover:bg-military-800 h-[38px]">
+        Visualizar
+    </button>
+    <button @click="enviarRelatorioWhatsApp" class="bg-green-600 text-white px-4 py-2 rounded text-sm font-bold shadow hover:bg-green-700 flex items-center gap-2 h-[38px]">
+        <i class="ph-bold ph-whatsapp-logo"></i> Enviar Parte
+    </button>
+</div>
