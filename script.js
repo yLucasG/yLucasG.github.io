@@ -225,51 +225,72 @@ createApp({
         getCycleScore(s) { return this.getRawScore(s) - ((s.rewards_claimed || 0) * 5); },
         openModal(student, category) { this.modals.record.student = student; this.modals.record.category = category; const defaultType = category === 'FO' ? 'FO+' : 'MEDIDA_LEVE'; this.forms.record = { type: defaultType, motivo: '', data: new Date().toISOString().split('T')[0], oficial: '', sei: '' }; this.modals.record.show = true; },
         async submitRecord() {
-    // COLE AQUI SEU LINK NOVO DO PASSO 2
+    // ⚠️ IMPORTANTE: COLE AQUI O LINK DA SUA PLANILHA (DO DEPLOY)
     const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbxHzb_mz0M8kjU_R1J0ttnfSbaJ4NedkesDcJKeONjppJ3322bd7P9ZEDjZ_zLbaXdsPA/exec'; 
 
     const s = this.modals.record.student;
     const finalOfficial = this.forms.record.oficial === 'Outro' ? this.forms.record.customOficial : this.forms.record.oficial;
     
-    // Cria o objeto para o Supabase
+    // Objeto do registro
     const newEntry = { 
         type: this.forms.record.tipo, 
         motivo: this.forms.record.motivo, 
-        data: this.forms.record.data, // Formato YYYY-MM-DD
+        data: this.forms.record.data, 
         oficial: finalOfficial, 
         sei: this.forms.record.sei, 
         timestamp: Date.now() 
     };
 
-    // 1. Formata a data para o Google Sheets (DD/MM/AAAA)
+    // 1. Formata a data (DD/MM/AAAA) para a Planilha ficar bonita
     let dataFormatada = newEntry.data;
-    if(newEntry.data.includes('-')) {
-        const partes = newEntry.data.split('-'); // [2025, 12, 17]
+    if(newEntry.data && newEntry.data.includes('-')) {
+        const partes = newEntry.data.split('-');
         dataFormatada = `${partes[2]}/${partes[1]}/${partes[0]}`;
     }
 
-    // 2. Salva no Supabase (Banco Principal)
-    s.history = [...(s.history || []), newEntry];
-    await this.saveData(s);
+    // 2. Salva no Supabase (Banco do Site)
+    // Adicionamos try/catch para garantir que erros aqui não travem o resto
+    try {
+        s.history = [...(s.history || []), newEntry];
+        await this.saveData(s);
+        console.log("✅ Salvo no Supabase com sucesso.");
+    } catch (err) {
+        console.error("❌ Erro ao salvar no Supabase:", err);
+        alert("Erro ao salvar no banco de dados.");
+        return; // Para tudo se o banco falhar
+    }
     
-    // 3. Envia para a Sua Planilha
+    // 3. Envia para o Google Planilhas
+    console.log("📤 Enviando para Planilha...");
+    
+    const dadosParaPlanilha = {
+        data: dataFormatada,
+        nome: s.nome,
+        numero: s.numero, // Pode ir vazio se não tiver, mas ajuda a identificar
+        tipo: newEntry.type,
+        motivo: newEntry.motivo,
+        sei: newEntry.sei || "",
+        oficial: newEntry.oficial
+    };
+
+    // TRUQUE: Usamos 'text/plain' para evitar erro de CORS (Preflight)
     fetch(GOOGLE_SHEET_URL, {
         method: 'POST',
-        mode: 'no-cors', 
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            data: dataFormatada, // Envia 17/12/2025
-            nome: s.nome,        // Envia "MÁRCIO SOUZA" (deve bater com seu dropdown)
-            tipo: newEntry.type,
-            motivo: newEntry.motivo,
-            sei: newEntry.sei,
-            oficial: newEntry.oficial
-        })
-    }).then(() => console.log("Enviado para Planilha"))
-      .catch(err => console.error("Erro Planilha:", err));
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(dadosParaPlanilha)
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log("✅ Resposta da Planilha:", data);
+        if(data.status === 'sucesso') {
+             // Opcional: Avisar o usuário discretamente ou só manter no log
+        }
+    })
+    .catch(err => console.error("❌ Erro ao enviar para Planilha:", err));
 
+    // Fecha o modal e avisa
     this.modals.record.show = false;
-    alert("Registro salvo com sucesso e enviado para a planilha!");
+    alert("Registro salvo!");
 },
         openRewardsModal() { this.modals.rewards.show = true; },
         openHistory(s) { this.modals.history.student = s; this.modals.history.show = true; },
@@ -456,6 +477,7 @@ Adjunto ao Auxiliar
         }
     }
 }).mount('#app');
+
 
 
 
