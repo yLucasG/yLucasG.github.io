@@ -226,8 +226,7 @@ createApp({
         openModal(student, category) { this.modals.record.student = student; this.modals.record.category = category; const defaultType = category === 'FO' ? 'FO+' : 'MEDIDA_LEVE'; this.forms.record = { type: defaultType, motivo: '', data: new Date().toISOString().split('T')[0], oficial: '', sei: '' }; this.modals.record.show = true; },
         async submitRecord() {
     // ⚠️
-    const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbwyCpKaxAPjK6n1WAht85o1BzbMbQ0b-wiR9GJwdypPRefCv3egDux-sThYPiXsddsrDg/exec
-'; 
+    const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbwyCpKaxAPjK6n1WAht85o1BzbMbQ0b-wiR9GJwdypPRefCv3egDux-sThYPiXsddsrDg/exec'; 
 
     const s = this.modals.record.student;
     const finalOfficial = this.forms.record.oficial === 'Outro' ? this.forms.record.customOficial : this.forms.record.oficial;
@@ -478,6 +477,7 @@ Adjunto ao Auxiliar
         }
     }
 }).mount('#app');
+
 
 
 
