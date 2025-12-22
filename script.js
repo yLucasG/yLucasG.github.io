@@ -224,7 +224,53 @@ createApp({
         getRawScore(s) { if(!s.history) return 0; return s.history.reduce((acc, curr) => (curr.type && curr.type.includes('FO+')) ? acc + 1 : ((curr.type && curr.type.includes('FO-')) ? acc - 1 : acc), 0); },
         getCycleScore(s) { return this.getRawScore(s) - ((s.rewards_claimed || 0) * 5); },
         openModal(student, category) { this.modals.record.student = student; this.modals.record.category = category; const defaultType = category === 'FO' ? 'FO+' : 'MEDIDA_LEVE'; this.forms.record = { type: defaultType, motivo: '', data: new Date().toISOString().split('T')[0], oficial: '', sei: '' }; this.modals.record.show = true; },
-        submitRecord() { const s = this.modals.record.student; const finalOfficial = this.forms.record.oficial === 'Outro' ? this.forms.record.customOficial : this.forms.record.oficial; const newEntry = { type: this.forms.record.tipo, motivo: this.forms.record.motivo, data: this.forms.record.data, oficial: finalOfficial, sei: this.forms.record.sei, timestamp: Date.now() }; s.history = [...(s.history || []), newEntry]; this.saveData(s); this.modals.record.show = false; },
+        async submitRecord() {
+    // COLE AQUI SEU LINK NOVO DO PASSO 2
+    const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbxHzb_mz0M8kjU_R1J0ttnfSbaJ4NedkesDcJKeONjppJ3322bd7P9ZEDjZ_zLbaXdsPA/exec'; 
+
+    const s = this.modals.record.student;
+    const finalOfficial = this.forms.record.oficial === 'Outro' ? this.forms.record.customOficial : this.forms.record.oficial;
+    
+    // Cria o objeto para o Supabase
+    const newEntry = { 
+        type: this.forms.record.tipo, 
+        motivo: this.forms.record.motivo, 
+        data: this.forms.record.data, // Formato YYYY-MM-DD
+        oficial: finalOfficial, 
+        sei: this.forms.record.sei, 
+        timestamp: Date.now() 
+    };
+
+    // 1. Formata a data para o Google Sheets (DD/MM/AAAA)
+    let dataFormatada = newEntry.data;
+    if(newEntry.data.includes('-')) {
+        const partes = newEntry.data.split('-'); // [2025, 12, 17]
+        dataFormatada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+    }
+
+    // 2. Salva no Supabase (Banco Principal)
+    s.history = [...(s.history || []), newEntry];
+    await this.saveData(s);
+    
+    // 3. Envia para a Sua Planilha
+    fetch(GOOGLE_SHEET_URL, {
+        method: 'POST',
+        mode: 'no-cors', 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            data: dataFormatada, // Envia 17/12/2025
+            nome: s.nome,        // Envia "MÁRCIO SOUZA" (deve bater com seu dropdown)
+            tipo: newEntry.type,
+            motivo: newEntry.motivo,
+            sei: newEntry.sei,
+            oficial: newEntry.oficial
+        })
+    }).then(() => console.log("Enviado para Planilha"))
+      .catch(err => console.error("Erro Planilha:", err));
+
+    this.modals.record.show = false;
+    alert("Registro salvo com sucesso e enviado para a planilha!");
+},
         openRewardsModal() { this.modals.rewards.show = true; },
         openHistory(s) { this.modals.history.student = s; this.modals.history.show = true; },
         generateReport() { const date = this.forms.report.date; const list = this.students.filter(s => s.cia === this.session.currentCia); const pun = [], neg = [], pos = []; list.forEach(s => { if(!s.history) return; s.history.forEach(h => { if(h.data === date) { const item = { studentName: s.nome, typeLabel: this.getEventLabel(h.type), reason: h.motivo, officer: h.oficial, sei: h.sei }; if(h.type.includes('FO+')) pos.push(item); else if(h.type.includes('FO-')) neg.push(item); else if(!h.type.includes('ELOGIO')) pun.push(item); } }); }); this.forms.report.data = { punishments: pun, neg, pos }; },
@@ -410,5 +456,6 @@ Adjunto ao Auxiliar
         }
     }
 }).mount('#app');
+
 
 
