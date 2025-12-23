@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SENTINELA AI - ESCALA COMPLETA</title>
+    <style>
+        body { font-family: sans-serif; background-color: #0a1a2f; color: #e6f1ff; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
+        .container { max-width: 500px; width: 100%; background: #112240; padding: 20px; border-radius: 15px; border: 1px solid #233554; box-shadow: 0 10px 30px rgba(0,0,0,0.5); box-sizing: border-box; }
+        h1 { color: #64ffda; text-align: center; margin: 0; font-size: 20px; }
+        .sub { text-align: center; color: #8892b0; font-size: 9px; text-transform: uppercase; margin-bottom: 15px; }
+        
+        .config-box { background: #0a1a2f; padding: 12px; border-radius: 10px; border: 1px solid #233554; margin-bottom: 15px; }
+        label { font-size: 10px; font-weight: bold; color: #64ffda; text-transform: uppercase; display: block; margin-bottom: 4px; }
+        select { width: 100%; padding: 8px; background: #112240; color: white; border: 1px solid #233554; border-radius: 5px; margin-bottom: 10px; font-size: 12px; outline: none; }
+
+        .cam-box { width: 100%; aspect-ratio: 4/3; background: #000; border-radius: 10px; position: relative; overflow: hidden; border: 2px solid #233554; }
+        video { width: 100%; height: 100%; object-fit: cover; }
+        .line { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; border-left: 2px dashed rgba(100, 255, 218, 0.3); }
+        
+        button { width: 100%; padding: 14px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; margin-top: 8px; font-size: 13px; transition: 0.2s; }
+        .btn-main { background: #64ffda; color: #0a1a2f; }
+        .btn-sec { background: #233554; color: #ccd6f6; font-size: 11px; }
+        .btn-wa { background: #25d366; color: white; margin-top: 15px; }
+        .btn-clear { background: #f87171; color: white; padding: 5px; font-size: 10px; margin-top: 20px; width: auto; padding: 8px 15px; }
+        
+        #status { text-align: center; font-size: 10px; margin: 10px; color: #64ffda; min-height: 16px; font-weight: bold; }
+        
+        .escala-preview { margin-top: 20px; width: 100%; border-top: 1px solid #233554; padding-top: 15px; }
+        .escala-item { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin-bottom: 10px; font-size: 11px; border-left: 4px solid #64ffda; position: relative; }
+        .escala-item b { color: #64ffda; font-size: 12px; }
+        .del-btn { position: absolute; top: 5px; right: 5px; color: #f87171; font-weight: bold; cursor: pointer; font-size: 16px; padding: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>SENTINELA AI</h1>
+    <p class="sub">Troca de Posto - 2ª CIA / APMP</p>
+
+    <div class="config-box">
+        <label>Posto de Serviço</label>
+        <select id="posto">
+            <option>DIRETÓRIO ACADÊMICO GUARARAPES (D.A.G)</option>
+            <option>ALAMEDAS ALFA E BRAVO</option>
+            <option>ALAMEDA FEMININO</option>
+            <option>PÁTIO INTERNO E ALAMEDA RANCHO</option>
+        </select>
+
+        <label>Horário (Quarto de Hora)</label>
+        <select id="horario">
+            <option>1º (22:00 - 23:30)</option>
+            <option>2º (23:30 - 01:00)</option>
+            <option>3º (01:00 - 02:30)</option>
+            <option>4º (02:30 - 04:00)</option>
+            <option>5º (04:00 - 05:30)</option>
+        </select>
+    </div>
+
+    <div class="cam-box">
+        <video id="webcam" autoplay playsinline></video>
+        <div class="line"></div>
+    </div>
+
+    <div id="status">SISTEMA PRONTO</div>
+
+    <button onclick="capturarCamera()" class="btn-main">REGISTRAR COM CÂMERA</button>
+    <button onclick="document.getElementById('fileInput').click()" class="btn-sec">CARREGAR DA GALERIA</button>
+    <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="uploadFoto(this)">
+
+    <div class="escala-preview">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h3 style="font-size:12px; color:#8892b0; margin: 0;">REGISTROS DO DIA:</h3>
+            <button onclick="limparTudo()" class="btn-clear" id="btnClear" style="display:none">Limpar Escala</button>
+        </div>
+        <div id="listaAcumulada">
+            <p style="font-size:10px; color:#4a5568; text-align: center; font-style: italic;">Nenhum registro até o momento.</p>
+        </div>
+        <button onclick="enviarWhatsApp()" id="btnFinal" class="btn-wa" style="display:none">GERAR PARTE COMPLETA (WHATSAPP)</button>
+    </div>
+</div>
+
+<canvas id="canvas" width="640" height="480" style="display:none"></canvas>
+
+<script>
+    // --- SUA CHAVE ATUALIZADA ---
+    const KEY = "AIzaSyDef7omHSeCQw4dPUYrsxwKywkR8ZF5k6Y";
+    
+    // --- LISTA DE ALUNOS DA 2ª CIA ---
+    const alunosDB = [{id:1,nome:"MÁRCIO SOUZA"},{id:5,nome:"SILVANA"},{id:7,nome:"ARCOVERDE"},{id:13,nome:"BRENDA"},{id:16,nome:"THIAGO TAVARES"},{id:21,nome:"MANOEL"},{id:25,nome:"DAVI OLIVEIRA"},{id:34,nome:"GIOVANNI"},{id:37,nome:"VALDECI"},{id:38,nome:"W. SILVA"},{id:42,nome:"CARLA ARAUJO"},{id:45,nome:"WALYSON"},{id:49,nome:"JEFFERSON SILVA"},{id:53,nome:"G. SILVA"},{id:58,nome:"WESLEY"},{id:63,nome:"PAULO"},{id:67,nome:"LAYANNE"},{id:69,nome:"FALCÃO"},{id:73,nome:"PEREIRA"},{id:79,nome:"DIOGENES"},{id:83,nome:"P. SOUZA"},{id:87,nome:"ARYCLAYTON"},{id:91,nome:"GESSICA"},{id:93,nome:"REVERTHON"},{id:98,nome:"EMANNUEL"},{id:102,nome:"ALLAN MARIANO"},{id:103,nome:"RAISSA SOARES"},{id:110,nome:"CÉSAR MEDEIROS"},{id:114,nome:"BARBALHO"},{id:118,nome:"DURVAL"},{id:122,nome:"BATISTA"},{id:128,nome:"ALEXANDRO GOMES"},{id:131,nome:"RENATA"},{id:133,nome:"ISRAEL"},{id:140,nome:"VICTOR COSTA"},{id:141,nome:"JULIANE CORDEIRO"},{id:147,nome:"JORGE FILHO"},{id:153,nome:"AFONSO"},{id:154,nome:"DAYANE"},{id:158,nome:"HEYVERSON"},{id:164,nome:"CIBELE"},{id:166,nome:"FELIPE FELIX"},{id:170,nome:"ANTONIO REIS"},{id:174,nome:"LIMA PAIVA"},{id:182,nome:"JOSINALDO"},{id:191,nome:"SELTON"},{id:2,nome:"RENATO"},{id:6,nome:"DANIELLE PRADO"},{id:9,nome:"R. FERREIRA"},{id:14,nome:"AMANDA COELHO"},{id:15,nome:"JUNIOR"},{id:20,nome:"LUAN PEREIRA"},{id:24,nome:"MATHEUS MESQUITA"},{id:30,nome:"M ALBUQUERQUE"},{id:33,nome:"KAROLINE ABREU"},{id:35,nome:"PAULINO"},{id:39,nome:"ELLIO"},{id:46,nome:"GRANGEIRO"},{id:50,nome:"QUEIROZ"},{id:54,nome:"FRANÇA"},{id:59,nome:"RAYANNE"},{id:60,nome:"S.GOMES"},{id:64,nome:"BONFIM"},{id:71,nome:"SERAFIM"},{id:74,nome:"GABRIEL"},{id:78,nome:"GISELE FERREIRA"},{id:80,nome:"JOSE"},{id:84,nome:"SIDNEI ARAÚJO"},{id:88,nome:"S. NETO"},{id:99,nome:"G. GOMES"},{id:105,nome:"JOSÉ NETO"},{id:108,nome:"HENRIQUE"},{id:113,nome:"AURÉLIO"},{id:119,nome:"VINÍCIUS SOUZA"},{id:123,nome:"GONZAGA"},{id:129,nome:"LUIZ NUNES"},{id:134,nome:"SAMEA FERRAZ"},{id:135,nome:"JOÃO HENRIQUE"},{id:142,nome:"JABNER"},{id:143,nome:"SAMARA MELO"},{id:152,nome:"MOURA"},{id:156,nome:"MONALIZA"},{id:161,nome:"JOSE ALISSON"},{id:165,nome:"GUSTAVO"},{id:168,nome:"LEONAM"},{id:172,nome:"FRANCISCO"},{id:180,nome:"NOBREGA"},{id:181,nome:"THAYNARA"},{id:190,nome:"JÚLIA"},{id:192,nome:"JEFFERSON GOMES"},{id:196,nome:"CARDOSO"},{id:3,nome:"FERNANDO"},{id:8,nome:"AUREA"},{id:10,nome:"VICTOR FERREIRA"},{id:17,nome:"MURILO"},{id:18,nome:"ARYANA"},{id:28,nome:"LEMOS"},{id:31,nome:"ALLATAS SOUSA"},{id:32,nome:"KAYO GABRIEL"},{id:36,nome:"M. FEITOSA"},{id:40,nome:"MARINHO"},{id:43,nome:"CINTIA SOUZA"},{id:47,nome:"MACEDO"},{id:66,nome:"JONATAS SANTOS"},{id:70,nome:"MEIRA"},{id:75,nome:"PEDRO"},{id:77,nome:"EDUARDA"},{id:81,nome:"COSTA"},{id:85,nome:"ANDERSON"},{id:89,nome:"SILVA"},{id:94,nome:"FERNANDA SOARES"},{id:96,nome:"ERIVELTON"},{id:106,nome:"LUCAS RANIELLE"},{id:107,nome:"LUCIANO"},{id:109,nome:"ERIKA DUARTE"},{id:111,nome:"FELIPE MORAIS"},{id:115,nome:"VINICIUS OLIVEIRA"},{id:125,nome:"MEDEIROS"},{id:127,nome:"CAIO GUIMARAES"},{id:136,nome:"PATRICIA"},{id:137,nome:"RAFAEL PEREIRA"},{id:138,nome:"ICARO"},{id:144,nome:"EDJANE"},{id:149,nome:"CAVALCANTI"},{id:151,nome:"OLIVEIRA JUNIOR"},{id:162,nome:"JESUS"},{id:171,nome:"JHONEY"},{id:175,nome:"LUIZ LEAL"},{id:177,nome:"DIONIZIO"},{id:179,nome:"DEBORA GOUVEIA"},{id:183,nome:"JULIO"},{id:184,nome:"ABRAÃO"},{id:185,nome:"RONILSON"},{id:187,nome:"BELEM"},{id:189,nome:"KAMYLA"},{id:193,nome:"JAILTON"},{id:197,nome:"ISRAEL OLIVEIRA"}];
+
+    let escalaDoDia = []; 
+    const video = document.getElementById('webcam');
+    const statusDiv = document.getElementById('status');
+
+    // Iniciar Câmera Traseira
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }).then(s => video.srcObject = s);
+
+    async function analisar(base64) {
+        const p = document.getElementById('posto').value;
+        const h = document.getElementById('horario').value;
+        statusDiv.innerHTML = `<span style="color:#fbbf24">IA ANALISANDO ${h}...</span>`;
+        
+        // URL v1beta otimizada para Gemini 2.0/2.1 Flash
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${KEY}`;
+        const prompt = `Analise a foto da troca de posto. Identifique os números nas palas dos bonés. Divida a imagem ao meio: ESQUERDA = saindo, DIREITA = entrando. Responda APENAS JSON: {"saindo": [números], "entrando": [números]}`;
+
+        try {
+            const res = await fetch(url, { method: "POST", body: JSON.stringify({ contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType: "image/jpeg", data: base64 } }] }] }) });
+            const data = await res.json();
+            const jsonText = data.candidates[0].content.parts[0].text.replace(/```json|```/g, "").trim();
+            const json = JSON.parse(jsonText);
+            
+            salvarNaEscala(json, p, h);
+        } catch (e) {
+            statusDiv.innerText = "Falha na análise. Verifique a iluminação.";
+        }
+    }
+
+    function salvarNaEscala(json, posto, horario) {
+        const format = (ns) => (ns || []).map(n => {
+            const a = alunosDB.find(x => x.id == parseInt(n));
+            return a ? `Nº ${n} ${a.nome}` : `Nº ${n} (DESCONHECIDO)`;
+        });
+
+        escalaDoDia.push({
+            posto: posto,
+            horario: horario,
+            saindo: format(json.saindo),
+            entrando: format(json.entrando)
+        });
+
+        atualizarUI();
+        statusDiv.innerText = "REGISTRO SALVO!";
+    }
+
+    function atualizarUI() {
+        const list = document.getElementById('listaAcumulada');
+        list.innerHTML = "";
+
+        escalaDoDia.forEach((reg, index) => {
+            list.innerHTML += `
+                <div class="escala-item">
+                    <span class="del-btn" onclick="removerItem(${index})">×</span>
+                    <b>${reg.posto}</b><br>
+                    <i>${reg.horario}</i><br>
+                    <span style="color:#f87171">⬅ SAIU:</span> ${reg.saindo.join(', ') || 'Sem registros'}<br>
+                    <span style="color:#64ffda">➡ ENTROU:</span> ${reg.entrando.join(', ') || 'Sem registros'}
+                </div>
+            `;
+        });
+
+        const show = escalaDoDia.length > 0;
+        document.getElementById('btnFinal').style.display = show ? 'block' : 'none';
+        document.getElementById('btnClear').style.display = show ? 'block' : 'none';
+    }
+
+    function removerItem(idx) {
+        escalaDoDia.splice(idx, 1);
+        atualizarUI();
+    }
+
+    function limparTudo() {
+        if(confirm("Deseja apagar toda a escala acumulada?")) {
+            escalaDoDia = [];
+            atualizarUI();
+            statusDiv.innerText = "ESCALA LIMPA";
+        }
+    }
+
+    function capturarCamera() {
+        const c = document.getElementById('canvas');
+        c.getContext('2d').drawImage(video, 0, 0, 640, 480);
+        analisar(c.toDataURL('image/jpeg').split(',')[1]);
+    }
+
+    function uploadFoto(input) {
+        if (!input.files[0]) return;
+        const reader = new FileReader();
+        reader.onload = () => analisar(reader.result.split(',')[1]);
+        reader.readAsDataURL(input.files[0]);
+    }
+
+    function enviarWhatsApp() {
+        let msg = `*🔰 RELATÓRIO DE ESCALA - QUARTO DE HORA 🔰*\n\n`;
+        const postos = [...new Set(escalaDoDia.map(r => r.posto))];
+        
+        postos.forEach(p => {
+            msg += `*📍 ${p}*\n`;
+            escalaDoDia.filter(r => r.posto === p).forEach(r => {
+                msg += `_${r.horario}_\n`;
+                msg += `⬅️ Saiu: ${r.saindo.join(', ') || '---'}\n`;
+                msg += `➡️ Entrou: ${r.entrando.join(', ') || '---'}\n\n`;
+            });
+            msg += `---\n`;
+        });
+
+        msg += `🛡️ _Sentinela AI - APMP_`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+</script>
+</body>
+</html>
