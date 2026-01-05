@@ -101,7 +101,18 @@
                             </div>
                             <div class="flex flex-wrap gap-2 filters-bar">
                                 <select v-model="ui.filters.pelotao" class="text-xs border rounded px-2 py-1.5 bg-white"><option value="">Pelotão: Todos</option><option v-for="p in uniquePelotoes" :value="p">{{p}}</option></select>
-                                <select v-model="ui.filters.plantao" class="text-xs border rounded px-2 py-1.5 bg-white"><option value="">Plantão: Todos</option><option value="FOXTROT">Foxtrot</option><option value="GOLF">Golf</option><option value="HOTEL">Hotel</option><option value="INDIA">India</option></select>
+                                <select v-model="ui.filters.plantao" class="text-xs border rounded px-2 py-1.5 bg-white">
+                                                                                                                            <option value="">Plantão: Todos</option>
+                                                                                                                            <option value="ALFA">Alfa</option>
+                                                                                                                            <option value="BRAVO">Bravo</option>
+                                                                                                                            <option value="CHARLIE">Charlie</option>
+                                                                                                                            <option value="DELTA">Delta</option>
+                                                                                                                            <option value="ECHO">Echo</option>
+                                                                                                                            <option value="FOXTROT">Foxtrot</option>
+                                                                                                                            <option value="GOLF">Golf</option>
+                                                                                                                            <option value="HOTEL">Hotel</option>
+                                                                                                                            <option value="INDIA">India</option>
+                                                                                                                        </select>
                                 <select v-model="ui.filters.alojamento" class="text-xs border rounded px-2 py-1.5 bg-white"><option value="">Alojamento: Todos</option><option value="Alpha">Alpha</option><option value="Bravo">Bravo</option><option value="Fem">Feminino</option></select>
                                 <button v-if="hasFilters" @click="clearFilters" class="text-xs text-red-500 font-bold px-2 py-1">Limpar</button>
                             </div>
@@ -208,5 +219,6 @@
 
 </body>
 </html>
+
 
 
