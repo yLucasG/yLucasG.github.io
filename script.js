@@ -10,14 +10,12 @@ const sbClient = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, 
 createApp({
     data() {
         return {
-            // ATUALIZADO: currentCia padrão agora é '1ª CIA'
             session: { isLoggedIn: false, pwd: '', currentCia: '1ª CIA', dataVersion: 0 },
             ui: { menuOpen: false, currentView: 'dashboard', search: '', viewMode: 'grid', filters: { pelotao: '', plantao: '', alojamento: '' } },
             students: [],
             isImprovingText: false,
-            lists: { officers: ["Cel PM Carneiro","Ten Cel PM Andreza","Maj PM Juliane Santana","Maj PM Emanuela","Cap PM Marlon","Cap PM Arantes","Cap PM Nascimento","1º Ten PM Otávio Neto","1º Ten PM Letícia","1º Ten PM Kemuel","2º Ten PM Ribeiro","2º Ten PM Paulo Lima","2º Ten PM Thaysa","2º Ten PM Pedro Lima","2º Ten PM Vasconcelos","2º Ten PM Brígida","2º Ten PM Gudemberg","2º Ten PM Melquezedeque","2º Ten PM Viviane","Outro"] },
+            lists: { officers: ["Cel PM Carneiro","Ten Cel PM Andreza","Maj PM Juliane Santana","Maj PM Emanuela","Cap PM Marlon","Cap PM Arantes","Cap PM Nascimento","1º Ten PM Otávio Neto","1º Ten PM Letícia","1º Ten PM Kemuel","1º Ten PM Tenório","2º Ten PM Ribeiro","2º Ten PM Paulo Lima","2º Ten PM Thaysa","2º Ten PM Pedro Lima","2º Ten PM Vasconcelos","2º Ten PM Brígida","2º Ten PM Gudemberg","2º Ten PM Melquezedeque","2º Ten PM Viviane","Outro"] },
             modals: { record: { show: false, student: null, category: 'FO' }, history: { show: false, student: null }, rewards: { show: false } },
-            // ATUALIZADO: Adicionado campo 'adjunto' no relatório
             forms: { record: { type: 'FO+', motivo: '', data: '', oficial: '', customOficial: '', sei: '' }, report: { date: new Date().toISOString().split('T')[0], auxiliar: '', adjunto: '', data: { punishments: [], neg: [], pos: [] } } }
         }
     },
@@ -89,7 +87,6 @@ createApp({
             }
             
             if (!data || data.length === 0) {
-                console.log("Banco vazio, iniciando reset...");
                 this.resetDatabase();
             } else {
                 this.students = data;
@@ -137,9 +134,9 @@ createApp({
             }
         },
 
-       // --- RESET DO BANCO ATUALIZADO (1ª CIA = ALFA..ECHO | 2ª CIA = FOX..INDIA) ---
+        // --- RESET DO BANCO ATUALIZADO (1ª CIA = ALFA..ECHO | 2ª CIA = FOX..INDIA) ---
         async resetDatabase() {
-            if(!confirm('ATENÇÃO: Isso vai apagar o banco atual e recarregar a lista com a NOVA ESTRUTURA (1ª CIA = 5 Plantões | 2ª CIA = 4 Plantões). Continuar?')) return;
+            if(!confirm('ATENÇÃO: Isso vai apagar o banco atual e recarregar a lista com a NOVA ESTRUTURA. Todos os lançamentos serão apagados. Continuar?')) return;
             
             // --- 1. DADOS DA NOVA 1ª CIA (Antiga 2ª CIA) - IDs 1 a 197 ---
             const rawCia1 = [
@@ -149,7 +146,6 @@ createApp({
                 {id:3,nome:"FERNANDO"},{id:8,nome:"AUREA"},{id:10,nome:"VICTOR FERREIRA"},{id:17,nome:"MURILO"},{id:18,nome:"ARYANA"},{id:28,nome:"LEMOS"},{id:31,nome:"ALLATAS SOUSA"},{id:32,nome:"KAYO GABRIEL"},{id:36,nome:"M. FEITOSA"},{id:40,nome:"MARINHO"},{id:43,nome:"CINTIA SOUZA"},{id:47,nome:"MACEDO"},{id:66,nome:"JONATAS SANTOS"},{id:70,nome:"MEIRA"},{id:75,nome:"PEDRO"},{id:77,nome:"EDUARDA"},{id:81,nome:"COSTA"},{id:85,nome:"ANDERSON"},{id:89,nome:"SILVA"},{id:94,nome:"FERNANDA SOARES"},{id:96,nome:"ERIVELTON"},{id:106,nome:"LUCAS RANIELLE"},{id:107,nome:"LUCIANO"},{id:109,nome:"ERIKA DUARTE"},{id:111,nome:"FELIPE MORAIS"},{id:115,nome:"VINICIUS OLIVEIRA"},{id:125,nome:"MEDEIROS"},{id:127,nome:"CAIO GUIMARAES"},{id:136,nome:"PATRICIA"},{id:137,nome:"RAFAEL PEREIRA"},{id:138,nome:"ICARO"},{id:144,nome:"EDJANE"},{id:149,nome:"CAVALCANTI"},{id:151,nome:"OLIVEIRA JUNIOR"},{id:162,nome:"JESUS"},{id:171,nome:"JHONEY"},{id:175,nome:"LUIZ LEAL"},{id:177,nome:"DIONIZIO"},{id:179,nome:"DEBORA GOUVEIA"},{id:183,nome:"JULIO"},{id:184,nome:"ABRAÃO"},{id:185,nome:"RONILSON"},{id:187,nome:"BELEM"},{id:189,nome:"KAMYLA"},{id:193,nome:"JAILTON"},{id:197,nome:"ISRAEL OLIVEIRA"}
             ];
 
-            // CONFIGURAÇÃO DOS PLANTÕES 1ª CIA
             const shiftsCia1 = {
                 'ALFA': [1,6,11,16,21,28,33,43,48,54,61,67,77,82,85,87,89,92,93,95,96,107,110,121,127,132,137,144,152,158,164,165,171,186,191,196,190],
                 'BRAVO': [2,7,12,17,24,29,39,44,57,62,68,73,78,83,88,98,99,103,111,112,114,115,119,122,128,133,138,148,153,161,166,172,177,179,181,182],
@@ -186,15 +182,14 @@ createApp({
                 {numero:171,nome:"MAXWEL"},{numero:172,nome:"WELTON"},{numero:173,nome:"HÉVILA"},{numero:174,nome:"ALEXANDRE"},{numero:175,nome:"EMERSON LOPES"},{numero:176,nome:"DIRLEYNNE ALVES"},{numero:177,nome:"ROSÁRIO JÚNIOR"},{numero:178,nome:"GABRIEL SILVA"},{numero:179,nome:"LEONARDO"},{numero:180,nome:"DANTAS"},
                 {numero:181,nome:"PABLO MACIEL"},{numero:182,nome:"BRÚNO BATISTA"},{numero:183,nome:"LÉIA"},{numero:184,nome:"PAULO AZEVÊDO"},{numero:185,nome:"VINÍCIUS KAIRÊ"},{numero:186,nome:"SAMUEL SILVA"},{numero:187,nome:"HERMESON FILHO"},{numero:188,nome:"ALBERTO"},{numero:189,nome:"PAULO NASCIMENTO"},{numero:190,nome:"LARISSA ALCANTARA"},
                 {numero:191,nome:"GOMES NASCIMENTO"},{numero:192,nome:"JOSÉ BARBOZA"},{numero:193,nome:"MARCIO LEITE"},{numero:194,nome:"VILAR"},{numero:195,nome:"JEFFERSON NUNES"}
-            ];
+            ].map(s => ({...s, id: 3000 + s.numero, cia: '2ª CIA', history: []}));
 
-            // CONFIGURAÇÃO DOS PLANTÕES 2ª CIA (Extraídos do PDF 'plantao26.pdf')
-            // IDs calculados como 3000 + numero
+            // IDs mapeados do PDF plantao26.pdf
             const shiftsCia2 = {
-                'FOXTROT': [3001, 3005, 3008, 3009, 3013, 3017, 3029, 3033, 3037, 3041, 3045, 3049, 3053, 3057, 3061, 3069, 3073, 3077, 3081, 3089, 3093, 3097, 3101, 3105, 3109, 3113, 3117, 3119, 3121, 3125, 3129, 3133, 3137, 3141, 3145, 3146, 3149, 3150, 3153, 3156, 3157, 3158, 3159, 3161, 3183, 3185, 3187, 3189, 3193],
+                'FOXTROT': [3001, 3005, 3008, 3009, 3013, 3017, 3029, 3033, 3037, 3041, 3045, 3049, 3053, 3057, 3061, 3069, 3073, 3077, 3081, 3089, 3093, 3097, 3101, 3105, 3109, 3113, 3117, 3119, 3121, 3125, 3129, 3133, 3137, 3141, 3145, 3146, 3149, 3150, 3153, 3156, 3157, 3158, 3161, 3183, 3185, 3187, 3189, 3193],
                 'GOLF':    [3002, 3006, 3010, 3014, 3018, 3019, 3025, 3026, 3030, 3034, 3038, 3042, 3046, 3050, 3054, 3058, 3062, 3068, 3070, 3074, 3078, 3079, 3082, 3086, 3090, 3094, 3098, 3102, 3106, 3110, 3111, 3114, 3118, 3122, 3126, 3134, 3138, 3143, 3147, 3154, 3163, 3165, 3166, 3171, 3181, 3186, 3188, 3190, 3194],
-                'INDIA':   [3003, 3007, 3011, 3015, 3022, 3023, 3027, 3031, 3035, 3039, 3043, 3047, 3051, 3055, 3059, 3063, 3065, 3067, 3071, 3075, 3083, 3084, 3087, 3091, 3095, 3099, 3103, 3104, 3107, 3115, 3123, 3127, 3130, 3131, 3139, 3140, 3142, 3148, 3151, 3155, 3162, 3164, 3167, 3168, 3173, 3176, 3179, 3182, 3195],
-                'HOTEL':   [3004, 3012, 3016, 3020, 3021, 3024, 3028, 3032, 3036, 3040, 3044, 3048, 3052, 3056, 3060, 3064, 3066, 3072, 3076, 3080, 3085, 3088, 3092, 3096, 3100, 3108, 3112, 3116, 3120, 3124, 3128, 3132, 3135, 3136, 3144, 3152, 3160, 3169, 3170, 3172, 3174, 3175, 3177, 3178, 3180, 3184, 3191, 3192]
+                'INDIA':   [3003, 3007, 3011, 3015, 3022, 3023, 3027, 3031, 3035, 3039, 3043, 3047, 3051, 3055, 3059, 3063, 3065, 3067, 3071, 3075, 3083, 3084, 3087, 3091, 3095, 3099, 3103, 3104, 3107, 3115, 3123, 3127, 3130, 3131, 3139, 3140, 3142, 3148, 3151, 3155, 3162, 3164, 3167, 3168, 3172, 3176, 3179, 3182, 3195],
+                'HOTEL':   [3004, 3012, 3016, 3020, 3021, 3024, 3028, 3032, 3036, 3040, 3044, 3048, 3052, 3056, 3060, 3064, 3066, 3072, 3076, 3080, 3085, 3088, 3092, 3096, 3100, 3108, 3112, 3116, 3120, 3124, 3128, 3132, 3135, 3136, 3144, 3152, 3160, 3169, 3170, 3173, 3174, 3175, 3177, 3178, 3180, 3184, 3191, 3192]
             };
 
             const cia2List = rawCia2.map(s => {
@@ -209,9 +204,18 @@ createApp({
             this.saveData();
             this.session.dataVersion++;
         },
-        assignAttributes(s) { 
+
+        assignAttributes(s) {
             const femNames = ['OLGA','MIRELLY','ANA','SILVANA','DANIELLE','AUREA','ISABELLA','BRENDA','AMANDA','ARYANA','FATIMA','KAROLINE','CINTIA','PRISCILA','LAYANNE','KAROLINNE','EDUARDA','GISELE','GESSICA','ALINE','FERNANDA','RAISSA','ERIKA','GILMARA','RENATA','SAMEA','PATRICIA','JULIANA','JULIANE','SAMARA','EDJANE','ROBERTA','MONALIZA','NATALIA','CIBELE','RHAYSA','DEBORA','THAYNARA','KAMYLA','JULIA','FABIANA','MAYRA','LARISSA','CAROLINE','CLAUDIA','LYSIA','SHIRLAYNE','TEREZA','MILENE','KALYNNE','WINNY','THAIS','BEATRIZ','CECÍLIA','WILLIANE','PRISCYLA','JANAINA','SURAMA','TÂMARA','HÉVILA','DIRLEYNNE','LÉIA','JAMILLE','FLAVIA','TACIANE','KARLA','IVHINNY'];
             const isFem = femNames.some(n => s.nome.includes(n));
+            
+            if(s.cia === '2ª CIA') {
+                s.canga_id = (s.numero % 2 !== 0) ? s.id + 1 : s.id - 1;
+            } else {
+                const cangaMap = { 1:7, 7:1, 34:36, 36:34, 53:93, 93:53, 108:172, 172:108, 147:185, 185:147, 192:147, 10:24, 24:10, 52:73, 73:52, 83:96, 96:83, 89:111, 111:89, 115:152, 152:115, 121:165, 165:121, 3:15, 15:3, 31:40, 40:31, 173:69, 69:173, 75:84, 84:75, 56:69, 9:110, 110:9, 28:118, 118:28, 54:132, 132:54, 63:140, 140:63, 82:88, 88:82, 162:82, 2:11, 11:2, 30:37, 37:30, 39:66, 66:39, 57:142, 142:57, 101:175, 175:101, 133:195, 195:133, 19:25, 25:19, 46:70, 70:46, 90:97, 97:90, 112:135, 135:112, 148:151, 151:148, 8:176, 176:8, 67:94, 94:67, 136:150, 150:136, 33:136, 12:42, 42:12, 68:103, 103:68, 134:154, 154:134, 179:134, 13:43, 43:13, 77:104, 104:77, 139:156, 156:139, 181:139 };
+                if(cangaMap[s.numero]) s.canga_id = s.id - s.numero + cangaMap[s.numero];
+            }
+
             if(isFem) s.alojamento = ['Carandiru', 'Apto 01', 'Apto 02', 'Apto 03'][s.numero % 4];
             else s.alojamento = (s.numero % 2 === 0) ? 'Aloj. Bravo' : 'Aloj. Alpha';
 
@@ -224,10 +228,9 @@ createApp({
         getCycleScore(s) { return this.getRawScore(s) - ((s.rewards_claimed || 0) * 5); },
         openModal(student, category) { this.modals.record.student = student; this.modals.record.category = category; const defaultType = category === 'FO' ? 'FO+' : 'MEDIDA_LEVE'; this.forms.record = { type: defaultType, motivo: '', data: new Date().toISOString().split('T')[0], oficial: '', sei: '' }; this.modals.record.show = true; },
         
-        // --- MÉTODO ATUALIZADO DE SALVAMENTO + PLANILHA ---
         async submitRecord() {
             // ⚠️ IMPORTANTE: COLE AQUI O LINK DA SUA PLANILHA (DO DEPLOY)
-            const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbzQpYQy4-yQzQpYQy4-yQzQpYQy4-yQzQpYQy4-yQzQpYQy4-yQzQpYQy4/exec'; // EXEMPLO - SUBSTITUA PELO SEU REAL
+            const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbzQpYQy4-yQzQpYQy4-yQzQpYQy4-yQzQpYQy4-yQzQpYQy4-yQzQpYQy4/exec'; 
 
             const s = this.modals.record.student;
             const finalOfficial = this.forms.record.oficial === 'Outro' ? this.forms.record.customOficial : this.forms.record.oficial;
