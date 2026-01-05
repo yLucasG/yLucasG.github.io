@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xerife 1º PEL - CFO</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .card { background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .checkbox-wrapper input:checked + div { background-color: #10b981; border-color: #10b981; }
+        .checkbox-wrapper input:checked + div svg { display: block; }
+    </style>
+</head>
+<body class="pb-20">
+
+    <header class="bg-slate-900 text-white p-6 rounded-b-3xl shadow-lg sticky top-0 z-50">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold">Xerife 1º PEL</h1>
+                <p class="text-slate-400 text-sm" id="current-date">Carregando data...</p>
+            </div>
+            <div class="bg-yellow-500 text-slate-900 font-bold px-3 py-1 rounded-full text-xs">
+                CFO 2026
+            </div>
+        </div>
+    </header>
+
+    <main class="p-4 max-w-md mx-auto space-y-6">
+
+        <section class="card p-4 border-l-4 border-blue-600">
+            <h2 class="text-lg font-bold text-slate-800 mb-3 flex items-center">
+                <i class="fa-solid fa-clock mr-2 text-blue-600"></i> QTS do Dia
+            </h2>
+            <div id="qts-container" class="space-y-2">
+                <p class="text-gray-500 text-sm italic">Verificando aulas...</p>
+            </div>
+        </section>
+
+        <section class="card p-4 border-l-4 border-red-600">
+            <h2 class="text-lg font-bold text-slate-800 mb-3 flex items-center">
+                <i class="fa-solid fa-user-shield mr-2 text-red-600"></i> Plantão 1º PEL
+            </h2>
+            
+            <label class="block text-sm font-medium text-gray-700 mb-1">Qual equipe está de serviço?</label>
+            <select id="team-selector" class="w-full p-2 border border-gray-300 rounded-lg mb-4 bg-gray-50 focus:ring-2 focus:ring-red-500 outline-none" onchange="renderRoster()">
+                <option value="">Selecione a Equipe...</option>
+                <option value="ALFA">Equipe ALFA</option>
+                <option value="BRAVO">Equipe BRAVO</option>
+                <option value="CHARLIE">Equipe CHARLIE</option>
+                <option value="DELTA">Equipe DELTA</option>
+                <option value="ECO">Equipe ECO</option>
+            </select>
+
+            <div id="roster-list" class="bg-red-50 p-3 rounded-lg hidden">
+                <h3 class="text-xs font-bold text-red-800 uppercase mb-2">Militares de serviço (Para Pecúlio):</h3>
+                <ul class="text-sm text-slate-700 space-y-1 list-disc pl-4" id="roster-items">
+                    </ul>
+            </div>
+        </section>
+
+        <section class="card p-4">
+            <h2 class="text-lg font-bold text-slate-800 mb-3 flex items-center">
+                <i class="fa-solid fa-clipboard-check mr-2 text-green-600"></i> Pecúlios & Missões
+            </h2>
+            
+            <div class="space-y-3" id="standard-missions">
+                </div>
+
+            <hr class="my-4 border-gray-200">
+
+            <h3 class="text-sm font-semibold text-gray-500 mb-2">Missões Extras</h3>
+            <div id="custom-missions" class="space-y-2 mb-3"></div>
+            
+            <div class="flex gap-2">
+                <input type="text" id="new-mission-input" placeholder="Nova missão (ex: Pegar a cana)" class="flex-1 p-2 border rounded-lg text-sm">
+                <button onclick="addCustomMission()" class="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm"><i class="fa-solid fa-plus"></i></button>
+            </div>
+        </section>
+        
+        <button onclick="resetDaily()" class="w-full py-3 text-sm text-gray-400 hover:text-red-500 transition-colors">
+            Resetar checklist para o dia seguinte
+        </button>
+
+    </main>
+
+    <script>
+        // --- DADOS DO PDF (Extraídos manualmente dos documentos fornecidos) ---
+        
+        // 1. ESCALA (Apenas alunos do 1º Pelotão por equipe)
+        const rosterData = {
+            "ALFA": ["01 Márcio Souza", "07 Arcoverde", "28 Lemos", "33 Karoline Abreu", "54 França", "67 Layanne", "82 Marcos Nascimento"],
+            "BRAVO": ["93 Reverthon", "110 Cesar Medeiros", "132 Sergio", "172 Francisco"],
+            "CHARLIE": ["08 Aurea", "09 R. Ferreira", "34 Giovanni", "36 M. Feitosa"],
+            "DELTA": ["63 Paulo", "94 Fernanda", "118 Durval", "108 Henrique", "140 Victor", "150 Roberta", "162 Jesus", "176 Rhaysa", "192 Jefferson"],
+            "ECO": ["53 G. Silva", "136 Patricia", "147 Jorge Filho", "185 Ronilson"]
+        };
+
+        // 2. QTS (Semana 32 - 05/01 a 09/01)
+        const qtsData = {
+            "2026-01-05": [
+                { time: "07:00", subject: "DPPPM (Cap Souza Silva)" },
+                { time: "08:50", subject: "APHT (Ten Fonseca/Sgt Maia)" },
+                { time: "10:50", subject: "EASPE (Maj Roberto)" },
+                { time: "13:40", subject: "APHT (Prática)" }
+            ],
+            "2026-01-06": [
+                { time: "07:00", subject: "MPC (Cel Benoni)" },
+                { time: "08:50", subject: "Disp. Coord. Aluno" },
+                { time: "10:50", subject: "PU (Ten Romero)" },
+                { time: "13:40", subject: "EASPE" }
+            ],
+            "2026-01-07": [
+                { time: "07:00", subject: "PU (Ten Romero)" },
+                { time: "08:50", subject: "Disp. Coord. Aluno" },
+                { time: "10:50", subject: "PU" },
+                { time: "13:40", subject: "INTSISP (Cap Alexandre)" }
+            ],
+            "2026-01-08": [
+                { time: "07:00", subject: "AV (Ten Sampaio)" },
+                { time: "08:50", subject: "MPC (Cel Benoni)" },
+                { time: "10:50", subject: "AV" },
+                { time: "13:40", subject: "POE (Cel Carneiro)" }
+            ],
+            "2026-01-09": [
+                { time: "07:00", subject: "POE (Cel Carneiro)" },
+                { time: "08:50", subject: "APHT" },
+                { time: "10:50", subject: "INTSISP" },
+                { time: "13:40", subject: "PA (Maj Gilvan)" }
+            ]
+        };
+
+        // --- LÓGICA DO APP ---
+
+        // Configuração Inicial
+        const today = new Date();
+        // Ajuste para simular a data se necessário, ou use new Date() real
+        // const today = new Date("2026-01-05T10:00:00"); 
+        
+        const dateStr = today.toISOString().split('T')[0];
+        const options = { weekday: 'long', day: 'numeric', month: 'long' };
+        document.getElementById('current-date').textContent = today.toLocaleDateString('pt-BR', options);
+
+        // Renderizar QTS
+        const qtsContainer = document.getElementById('qts-container');
+        const todaysClasses = qtsData[dateStr];
+
+        if (todaysClasses) {
+            qtsContainer.innerHTML = todaysClasses.map(cls => `
+                <div class="flex items-center justify-between bg-slate-50 p-2 rounded border border-slate-200">
+                    <span class="font-bold text-slate-700 text-sm">${cls.time}</span>
+                    <span class="text-sm text-slate-600 truncate ml-2">${cls.subject}</span>
+                </div>
+            `).join('');
+        } else {
+            qtsContainer.innerHTML = `<div class="text-sm text-gray-500">Sem QTS cadastrado para hoje (${dateStr}). Aproveite o administrativo.</div>`;
+        }
+
+        // Renderizar Missões Padrão
+        const standardMissionsList = [
+            "Pecúlio: Formatura Matinal",
+            "Reunião Xerife (Manhã)",
+            "Pecúlio: Aulas Manhã",
+            "Pecúlio: Formatura Almoço",
+            "Pecúlio: Aulas Tarde",
+            "Reunião Xerife (Tarde)",
+            "Pecúlio: Bandeira/Jantar"
+        ];
+
+        function renderCheckboxes() {
+            const container = document.getElementById('standard-missions');
+            const savedState = JSON.parse(localStorage.getItem('xerifeMissions') || '{}');
+
+            container.innerHTML = standardMissionsList.map((mission, index) => `
+                <label class="checkbox-wrapper flex items-center cursor-pointer p-2 hover:bg-gray-50 rounded transition">
+                    <input type="checkbox" class="hidden" 
+                        onchange="toggleMission('std_${index}')" 
+                        ${savedState['std_'+index] ? 'checked' : ''}>
+                    <div class="w-5 h-5 border-2 border-gray-300 rounded flex items-center justify-center mr-3 transition-colors bg-white">
+                        <svg class="w-3 h-3 text-white hidden fill-current" viewBox="0 0 20 20"><path d="M0 11l2-2 5 5L18 3l2 2L7 18z"/></svg>
+                    </div>
+                    <span class="text-slate-700 text-sm ${savedState['std_'+index] ? 'line-through text-gray-400' : ''}">${mission}</span>
+                </label>
+            `).join('');
+        }
+
+        // Renderizar Missões Extras
+        function renderCustomMissions() {
+            const container = document.getElementById('custom-missions');
+            const customs = JSON.parse(localStorage.getItem('xerifeCustoms') || '[]');
+            
+            if(customs.length === 0) container.innerHTML = "";
+
+            container.innerHTML = customs.map((mission, index) => `
+                 <div class="flex items-center justify-between p-2 bg-yellow-50 rounded border border-yellow-100">
+                    <span class="text-sm text-slate-800">${mission}</span>
+                    <button onclick="removeCustom(${index})" class="text-red-400 hover:text-red-600"><i class="fa-solid fa-trash text-xs"></i></button>
+                 </div>
+            `).join('');
+        }
+
+        // Renderizar Escala
+        function renderRoster() {
+            const team = document.getElementById('team-selector').value;
+            const listContainer = document.getElementById('roster-list');
+            const items = document.getElementById('roster-items');
+
+            // Salva a seleção
+            localStorage.setItem('selectedTeam', team);
+
+            if (!team) {
+                listContainer.classList.add('hidden');
+                return;
+            }
+
+            const members = rosterData[team];
+            listContainer.classList.remove('hidden');
+            
+            // Aqui é o "pulo do gato": Mostra apenas os alunos do 1º Pelotão que estão na equipe selecionada
+            // Isso facilita preencher o pecúlio pois você já sabe quem vai faltar na fileira
+            items.innerHTML = members.map(m => `<li>${m}</li>`).join('');
+        }
+
+        // Funções de Ação
+        function toggleMission(id) {
+            const savedState = JSON.parse(localStorage.getItem('xerifeMissions') || '{}');
+            savedState[id] = !savedState[id];
+            localStorage.setItem('xerifeMissions', JSON.stringify(savedState));
+            renderCheckboxes();
+        }
+
+        function addCustomMission() {
+            const input = document.getElementById('new-mission-input');
+            const val = input.value.trim();
+            if(!val) return;
+
+            const customs = JSON.parse(localStorage.getItem('xerifeCustoms') || '[]');
+            customs.push(val);
+            localStorage.setItem('xerifeCustoms', JSON.stringify(customs));
+            
+            input.value = "";
+            renderCustomMissions();
+        }
+
+        function removeCustom(index) {
+            const customs = JSON.parse(localStorage.getItem('xerifeCustoms') || '[]');
+            customs.splice(index, 1);
+            localStorage.setItem('xerifeCustoms', JSON.stringify(customs));
+            renderCustomMissions();
+        }
+
+        function resetDaily() {
+            if(confirm("Deseja limpar todos os checkboxes para começar o dia?")) {
+                localStorage.removeItem('xerifeMissions');
+                renderCheckboxes();
+            }
+        }
+
+        // Inicialização
+        const savedTeam = localStorage.getItem('selectedTeam');
+        if(savedTeam) {
+            document.getElementById('team-selector').value = savedTeam;
+            renderRoster();
+        }
+        
+        renderCheckboxes();
+        renderCustomMissions();
+
+    </script>
+</body>
+</html>
