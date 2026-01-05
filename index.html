@@ -49,12 +49,23 @@
                     <h1 class="font-bold text-xl tracking-wider">S.I.G.A.</h1>
                 </div>
                 <div class="px-6 py-6">
-                    <label class="text-[10px] text-gray-400 uppercase font-bold ml-1">CIA Ativa</label>
-                    <div class="mt-2 bg-military-800 rounded-lg p-1 flex border border-military-700">
-                        <button @click="changeCia('2ª CIA')" class="flex-1 py-2 text-xs font-bold rounded transition-all" :class="session.currentCia === '2ª CIA' ? 'bg-military-500 text-military-900' : 'text-gray-400'">2ª CIA</button>
-                        <button @click="changeCia('3ª CIA')" class="flex-1 py-2 text-xs font-bold rounded transition-all" :class="session.currentCia === '3ª CIA' ? 'bg-military-500 text-military-900' : 'text-gray-400'">3ª CIA</button>
-                    </div>
+                <label class="text-[10px] text-gray-400 uppercase font-bold ml-1">CIA Ativa</label>
+                <div class="mt-2 bg-military-800 rounded-lg p-1 flex border border-military-700">
+                    
+                    <button @click="changeCia('1ª CIA')" 
+                            class="flex-1 py-2 text-xs font-bold rounded transition-all" 
+                            :class="session.currentCia === '1ª CIA' ? 'bg-military-500 text-military-900' : 'text-gray-400'">
+                        1ª CIA
+                    </button>
+            
+                    <button @click="changeCia('2ª CIA')" 
+                            class="flex-1 py-2 text-xs font-bold rounded transition-all" 
+                            :class="session.currentCia === '2ª CIA' ? 'bg-military-500 text-military-900' : 'text-gray-400'">
+                        2ª CIA
+                    </button>
+            
                 </div>
+            </div>
                 <nav class="flex-1 px-4 space-y-1">
                     <button @click="navigate('dashboard')" class="w-full flex items-center gap-4 p-3 rounded-lg text-left" :class="ui.currentView === 'dashboard' ? 'bg-military-800 text-military-500' : 'text-gray-400 hover:bg-military-800'"><i class="ph-bold ph-chart-pie-slice text-xl"></i> Dashboard</button>
                     <button @click="navigate('students')" class="w-full flex items-center gap-4 p-3 rounded-lg text-left" :class="ui.currentView === 'students' ? 'bg-military-800 text-military-500' : 'text-gray-400 hover:bg-military-800'"><i class="ph-bold ph-users text-xl"></i> Efetivo</button>
@@ -219,6 +230,7 @@
 
 </body>
 </html>
+
 
 
 
