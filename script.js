@@ -10,21 +10,15 @@ const sbClient = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, 
 createApp({
     data() {
         return {
-            session: { isLoggedIn: false, pwd: '', currentCia: '2ª CIA', dataVersion: 0 },
+            // ATUALIZADO: currentCia padrão agora é '1ª CIA'
+            session: { isLoggedIn: false, pwd: '', currentCia: '1ª CIA', dataVersion: 0 },
             ui: { menuOpen: false, currentView: 'dashboard', search: '', viewMode: 'grid', filters: { pelotao: '', plantao: '', alojamento: '' } },
             students: [],
             isImprovingText: false,
             lists: { officers: ["Cel PM Carneiro","Ten Cel PM Andreza","Maj PM Juliane Santana","Maj PM Emanuela","Cap PM Marlon","Cap PM Arantes","Cap PM Nascimento","1º Ten PM Otávio Neto","1º Ten PM Letícia","1º Ten PM Kemuel","2º Ten PM Ribeiro","2º Ten PM Paulo Lima","2º Ten PM Thaysa","2º Ten PM Pedro Lima","2º Ten PM Vasconcelos","2º Ten PM Brígida","2º Ten PM Gudemberg","2º Ten PM Melquezedeque","2º Ten PM Viviane","Outro"] },
             modals: { record: { show: false, student: null, category: 'FO' }, history: { show: false, student: null }, rewards: { show: false } },
-            forms: { 
-                record: { type: 'FO+', motivo: '', data: '', oficial: '', customOficial: '', sei: '' }, 
-                report: { 
-                    date: new Date().toISOString().split('T')[0], 
-                    auxiliar: '', 
-                    adjunto: '', // ADICIONEI ISSO AQUI
-                    data: { punishments: [], neg: [], pos: [] } 
-                } 
-            }
+            // ATUALIZADO: Adicionado campo 'adjunto' no relatório
+            forms: { record: { type: 'FO+', motivo: '', data: '', oficial: '', customOficial: '', sei: '' }, report: { date: new Date().toISOString().split('T')[0], auxiliar: '', adjunto: '', data: { punishments: [], neg: [], pos: [] } } }
         }
     },
     computed: {
@@ -49,7 +43,6 @@ createApp({
             const processed = new Set();
             this.filteredStudents.forEach(s1 => {
                 if(processed.has(s1.id)) return;
-                // CORREÇÃO AQUI: Mudou de cangaId para canga_id
                 const s2 = all.find(s => s.id === s1.canga_id);
                 processed.add(s1.id);
                 if(s2) processed.add(s2.id);
@@ -112,7 +105,6 @@ createApp({
                     rewards_claimed: student.rewards_claimed 
                 }).eq('id', student.id);
             } else {
-                // Aqui o erro acontecia porque o objeto tinha 'cangaId' mas o banco queria 'canga_id'
                 const { error } = await sbClient.from('alunos').upsert(this.students);
                 if(error) {
                     console.error("Erro ao salvar:", error);
@@ -145,32 +137,35 @@ createApp({
             }
         },
 
+       // --- RESET DO BANCO ATUALIZADO (1ª CIA = ALFA..ECHO | 2ª CIA = FOX..INDIA) ---
         async resetDatabase() {
-            if(!confirm('ATENÇÃO: Isso vai apagar o banco atual e recarregar a lista padrão com os Plantões e Pelotões corretos. Continuar?')) return;
+            if(!confirm('ATENÇÃO: Isso vai apagar o banco atual e recarregar a lista com a NOVA ESTRUTURA (1ª CIA = 5 Plantões | 2ª CIA = 4 Plantões). Continuar?')) return;
             
-            // DADOS 2ª CIA
-            const cia2Input = [
-                {id:1,nome:"MÁRCIO SOUZA",pel:"1º PEL/2ª CIA",plant:"FOXTROT"},{id:5,nome:"SILVANA",pel:"5º PEL/2ª CIA",plant:"FOXTROT"},{id:7,nome:"ARCOVERDE",pel:"1º PEL/2ª CIA",plant:"FOXTROT"},{id:13,nome:"BRENDA",pel:"3º PEL/2ª CIA",plant:"FOXTROT"},{id:16,nome:"THIAGO TAVARES",pel:"4º PEL/2ª CIA",plant:"FOXTROT"},{id:21,nome:"MANOEL",pel:"5º PEL/2ª CIA",plant:"FOXTROT"},{id:25,nome:"DAVI OLIVEIRA",pel:"3º PEL/2ª CIA",plant:"FOXTROT"},{id:34,nome:"GIOVANNI",pel:"1º PEL/2ª CIA",plant:"FOXTROT"},{id:37,nome:"VALDECI",pel:"2º PEL/2ª CIA",plant:"FOXTROT"},{id:38,nome:"W. SILVA",pel:"4º PEL/2ª CIA",plant:"FOXTROT"},{id:42,nome:"CARLA ARAUJO",pel:"2º PEL/2ª CIA",plant:"FOXTROT"},{id:45,nome:"WALYSON",pel:"5º PEL/2ª CIA",plant:"FOXTROT"},{id:49,nome:"JEFFERSON SILVA",pel:"6º PEL/2ª CIA",plant:"FOXTROT"},{id:53,nome:"G. SILVA",pel:"1º PEL/2ª CIA",plant:"FOXTROT"},{id:58,nome:"WESLEY",pel:"5º PEL/2ª CIA",plant:"FOXTROT"},{id:63,nome:"PAULO",pel:"1º PEL/2ª CIA",plant:"FOXTROT"},{id:67,nome:"LAYANNE",pel:"1º PEL/2ª CIA",plant:"FOXTROT"},{id:69,nome:"FALCÃO",pel:"3º PEL/2ª CIA",plant:"FOXTROT"},{id:73,nome:"PEREIRA",pel:"2º PEL/2ª CIA",plant:"FOXTROT"},{id:79,nome:"DIOGENES",pel:"4º PEL/2ª CIA",plant:"FOXTROT"},{id:83,nome:"P. SOUZA",pel:"2º PEL/2ª CIA",plant:"FOXTROT"},{id:87,nome:"ARYCLAYTON",pel:"6º PEL/2ª CIA",plant:"FOXTROT"},{id:91,nome:"GESSICA",pel:"5º PEL/2ª CIA",plant:"FOXTROT"},{id:93,nome:"REVERTHON",pel:"1º PEL/2ª CIA",plant:"FOXTROT"},{id:98,nome:"EMANNUEL",pel:"4º PEL/2ª CIA",plant:"FOXTROT"},{id:102,nome:"ALLAN MARIANO",pel:"5º PEL/2ª CIA",plant:"FOXTROT"},{id:103,nome:"RAISSA SOARES",pel:"2º PEL/2ª CIA",plant:"FOXTROT"},{id:110,nome:"CÉSAR MEDEIROS",pel:"1º PEL/2ª CIA",plant:"FOXTROT"},{id:114,nome:"BARBALHO",pel:"5º PEL/2ª CIA",plant:"FOXTROT"},{id:118,nome:"DURVAL",pel:"1º PEL/2ª CIA",plant:"FOXTROT"},{id:122,nome:"BATISTA",pel:"4º PEL/2ª CIA",plant:"FOXTROT"},{id:128,nome:"ALEXANDRO GOMES",pel:"4º PEL/2ª CIA",plant:"FOXTROT"},{id:131,nome:"RENATA",pel:"6º PEL/2ª CIA",plant:"FOXTROT"},{id:133,nome:"ISRAEL",pel:"2º PEL/2ª CIA",plant:"FOXTROT"},{id:140,nome:"VICTOR COSTA",pel:"1º PEL/2ª CIA",plant:"FOXTROT"},{id:141,nome:"JULIANE CORDEIRO",pel:"4º PEL/2ª CIA",plant:"FOXTROT"},{id:147,nome:"JORGE FILHO",pel:"1º PEL/2ª CIA",plant:"FOXTROT"},{id:153,nome:"AFONSO",pel:"3º PEL/2ª CIA",plant:"FOXTROT"},{id:154,nome:"DAYANE",pel:"2º PEL/2ª CIA",plant:"FOXTROT"},{id:158,nome:"HEYVERSON",pel:"5º PEL/2ª CIA",plant:"FOXTROT"},{id:164,nome:"CIBELE",pel:"6º PEL/2ª CIA",plant:"FOXTROT"},{id:166,nome:"FELIPE FELIX",pel:"3º PEL/2ª CIA",plant:"FOXTROT"},{id:170,nome:"ANTONIO REIS",pel:"4º PEL/2ª CIA",plant:"FOXTROT"},{id:174,nome:"LIMA PAIVA",pel:"6º PEL/2ª CIA",plant:"FOXTROT"},{id:182,nome:"JOSINALDO",pel:"4º PEL/2ª CIA",plant:"FOXTROT"},{id:191,nome:"SELTON",pel:"4º PEL/2ª CIA",plant:"FOXTROT"},
-                {id:2,nome:"RENATO",pel:"2º PEL/2ª CIA",plant:"GOLF"},{id:6,nome:"DANIELLE PRADO",pel:"6º PEL/2ª CIA",plant:"GOLF"},{id:9,nome:"R. FERREIRA",pel:"1º PEL/2ª CIA",plant:"GOLF"},{id:14,nome:"AMANDA COELHO",pel:"4º PEL/2ª CIA",plant:"GOLF"},{id:15,nome:"JUNIOR",pel:"3º PEL/2ª CIA",plant:"GOLF"},{id:20,nome:"LUAN PEREIRA",pel:"4º PEL/2ª CIA",plant:"GOLF"},{id:24,nome:"MATHEUS MESQUITA",pel:"2º PEL/2ª CIA",plant:"GOLF"},{id:30,nome:"M ALBUQUERQUE",pel:"2º PEL/2ª CIA",plant:"GOLF"},{id:33,nome:"KAROLINE ABREU",pel:"1º PEL/2ª CIA",plant:"GOLF"},{id:35,nome:"PAULINO",pel:"6º PEL/2ª CIA",plant:"GOLF"},{id:39,nome:"ELLIO",pel:"2º PEL/2ª CIA",plant:"GOLF"},{id:46,nome:"GRANGEIRO",pel:"3º PEL/2ª CIA",plant:"GOLF"},{id:50,nome:"QUEIROZ",pel:"6º PEL/2ª CIA",plant:"GOLF"},{id:54,nome:"FRANÇA",pel:"1º PEL/2ª CIA",plant:"GOLF"},{id:59,nome:"RAYANNE",pel:"6º PEL/2ª CIA",plant:"GOLF"},{id:60,nome:"S.GOMES",pel:"6º PEL/2ª CIA",plant:"GOLF"},{id:64,nome:"BONFIM",pel:"6º PEL/2ª CIA",plant:"GOLF"},{id:71,nome:"SERAFIM",pel:"4º PEL/2ª CIA",plant:"GOLF"},{id:74,nome:"GABRIEL",pel:"6º PEL/2ª CIA",plant:"GOLF"},{id:78,nome:"GISELE FERREIRA",pel:"4º PEL/2ª CIA",plant:"GOLF"},{id:80,nome:"JOSE",pel:"5º PEL/2ª CIA",plant:"GOLF"},{id:84,nome:"SIDNEI ARAÚJO",pel:"3º PEL/2ª CIA",plant:"GOLF"},{id:88,nome:"S. NETO",pel:"1º PEL/2ª CIA",plant:"GOLF"},{id:99,nome:"G. GOMES",pel:"4º PEL/2ª CIA",plant:"GOLF"},{id:105,nome:"JOSÉ NETO",pel:"5º PEL/2ª CIA",plant:"GOLF"},{id:108,nome:"HENRIQUE",pel:"1º PEL/2ª CIA",plant:"GOLF"},{id:113,nome:"AURÉLIO",pel:"4º PEL/2ª CIA",plant:"GOLF"},{id:119,nome:"VINÍCIUS SOUZA",pel:"2º PEL/2ª CIA",plant:"GOLF"},{id:123,nome:"GONZAGA",pel:"5º PEL/2ª CIA",plant:"GOLF"},{id:129,nome:"LUIZ NUNES",pel:"5º PEL/2ª CIA",plant:"GOLF"},{id:134,nome:"SAMEA FERRAZ",pel:"2º PEL/2ª CIA",plant:"GOLF"},{id:135,nome:"JOÃO HENRIQUE",pel:"3º PEL/2ª CIA",plant:"GOLF"},{id:142,nome:"JABNER",pel:"2º PEL/2ª CIA",plant:"GOLF"},{id:143,nome:"SAMARA MELO",pel:"5º PEL/2ª CIA",plant:"GOLF"},{id:152,nome:"MOURA",pel:"2º PEL/2ª CIA",plant:"GOLF"},{id:156,nome:"MONALIZA",pel:"3º PEL/2ª CIA",plant:"GOLF"},{id:161,nome:"JOSE ALISSON",pel:"6º PEL/2ª CIA",plant:"GOLF"},{id:165,nome:"GUSTAVO",pel:"2º PEL/2ª CIA",plant:"GOLF"},{id:168,nome:"LEONAM",pel:"5º PEL/2ª CIA",plant:"GOLF"},{id:172,nome:"FRANCISCO",pel:"1º PEL/2ª CIA",plant:"GOLF"},{id:180,nome:"NOBREGA",pel:"5º PEL/2ª CIA",plant:"GOLF"},{id:181,nome:"THAYNARA",pel:"3º PEL/2ª CIA",plant:"GOLF"},{id:190,nome:"JÚLIA",pel:"5º PEL/2ª CIA",plant:"GOLF"},{id:192,nome:"JEFFERSON GOMES",pel:"1º PEL/2ª CIA",plant:"GOLF"},{id:196,nome:"CARDOSO",pel:"6º PEL/2ª CIA",plant:"GOLF"},
-                // INDIA
-                {id:4,nome:"ROBERTO FREITAS",pel:"4º PEL/2ª CIA",plant:"INDIA"},{id:11,nome:"ORLANDO",pel:"2º PEL/2ª CIA",plant:"INDIA"},{id:12,nome:"ISABELLA",pel:"2º PEL/2ª CIA",plant:"INDIA"},{id:19,nome:"ALENCAR",pel:"3º PEL/2ª CIA",plant:"INDIA"},{id:26,nome:"MARCOLINO",pel:"4º PEL/2ª CIA",plant:"INDIA"},{id:27,nome:"FATIMA AGUIAR",pel:"6º PEL/2ª CIA",plant:"INDIA"},{id:29,nome:"MACIEL",pel:"6º PEL/2ª CIA",plant:"INDIA"},{id:41,nome:"MALAQUIAS",pel:"4º PEL/2ª CIA",plant:"INDIA"},{id:44,nome:"PRISCILA CORREIA",pel:"4º PEL/2ª CIA",plant:"INDIA"},{id:48,nome:"ELVIS",pel:"5º PEL/2ª CIA",plant:"INDIA"},{id:52,nome:"RUBSLEY",pel:"2º PEL/2ª CIA",plant:"INDIA"},{id:57,nome:"SANTANA",pel:"2º PEL/2ª CIA",plant:"INDIA"},{id:61,nome:"FIRMINO",pel:"4º PEL/2ª CIA",plant:"INDIA"},{id:62,nome:"LUCAS MAGALHÃES",pel:"5º PEL/2ª CIA",plant:"INDIA"},{id:68,nome:"KAROLINNE MOREIRA",pel:"2º PEL/2ª CIA",plant:"INDIA"},{id:72,nome:"NONATO",pel:"5º PEL/2ª CIA",plant:"INDIA"},{id:76,nome:"FERREIRA",pel:"4º PEL/2ª CIA",plant:"INDIA"},{id:82,nome:"MARCOS NASCIMENTO",pel:"1º PEL/2ª CIA",plant:"INDIA"},{id:86,nome:"FERNANDO CRUZ",pel:"5º PEL/2ª CIA",plant:"INDIA"},{id:90,nome:"RAFAEL BEZERRA",pel:"3º PEL/2ª CIA",plant:"INDIA"},{id:92,nome:"ALINE",pel:"6º PEL/2ª CIA",plant:"INDIA"},{id:95,nome:"BRUNO",pel:"5º PEL/2ª CIA",plant:"INDIA"},{id:97,nome:"ITALO",pel:"3º PEL/2ª CIA",plant:"INDIA"},{id:100,nome:"RENAN",pel:"6º PEL/2ª CIA",plant:"INDIA"},{id:112,nome:"MARQUES",pel:"3º PEL/2ª CIA",plant:"INDIA"},{id:116,nome:"SANTIAGO",pel:"6º PEL/2ª CIA",plant:"INDIA"},{id:120,nome:"EGITO",pel:"3º PEL/2ª CIA",plant:"INDIA"},{id:121,nome:"JOÃO NASCIMENTO",pel:"2º PEL/2ª CIA",plant:"INDIA"},{id:126,nome:"GILMARA",pel:"5º PEL/2ª CIA",plant:"INDIA"},{id:130,nome:"PAULO ROBERTO",pel:"6º PEL/2ª CIA",plant:"INDIA"},{id:132,nome:"SERGIO",pel:"1º PEL/2ª CIA",plant:"INDIA"},{id:139,nome:"JULIANA GONDIM",pel:"3º PEL/2ª CIA",plant:"INDIA"},{id:145,nome:"HIGOR ALVES",pel:"5º PEL/2ª CIA",plant:"INDIA"},{id:146,nome:"PEREIRA MORAIS",pel:"6º PEL/2ª CIA",plant:"INDIA"},{id:148,nome:"OLAVO",pel:"3º PEL/2ª CIA",plant:"INDIA"},{id:150,nome:"ROBERTA",pel:"1º PEL/2ª CIA",plant:"INDIA"},{id:157,nome:"VALADARES",pel:"3º PEL/2ª CIA",plant:"INDIA"},{id:163,nome:"NATALIA",pel:"5º PEL/2ª CIA",plant:"INDIA"},{id:169,nome:"MATHEUS BARROS",pel:"6º PEL/2ª CIA",plant:"INDIA"},{id:173,nome:"IURY",pel:"3º PEL/2ª CIA",plant:"INDIA"},{id:176,nome:"RHAYSA",pel:"1º PEL/2ª CIA",plant:"INDIA"},{id:178,nome:"HIAGO",pel:"4º PEL/2ª CIA",plant:"INDIA"},{id:186,nome:"SOUTO",pel:"3º PEL/2ª CIA",plant:"INDIA"},{id:188,nome:"MAXEMBERG",pel:"3º PEL/2ª CIA",plant:"INDIA"},{id:194,nome:"KLEVER",pel:"5º PEL/2ª CIA",plant:"INDIA"},{id:195,nome:"PETTERSON",pel:"2º PEL/2ª CIA",plant:"INDIA"},
-                // HOTEL
-                {id:3,nome:"FERNANDO",pel:"3º PEL/2ª CIA",plant:"HOTEL"},{id:8,nome:"AUREA",pel:"1º PEL/2ª CIA",plant:"HOTEL"},{id:10,nome:"VICTOR FERREIRA",pel:"2º PEL/2ª CIA",plant:"HOTEL"},{id:17,nome:"MURILO",pel:"5º PEL/2ª CIA",plant:"HOTEL"},{id:18,nome:"ARYANA",pel:"5º PEL/2ª CIA",plant:"HOTEL"},{id:28,nome:"LEMOS",pel:"1º PEL/2ª CIA",plant:"HOTEL"},{id:31,nome:"ALLATAS SOUSA",pel:"3º PEL/2ª CIA",plant:"HOTEL"},{id:32,nome:"KAYO GABRIEL",pel:"5º PEL/2ª CIA",plant:"HOTEL"},{id:36,nome:"M. FEITOSA",pel:"1º PEL/2ª CIA",plant:"HOTEL"},{id:40,nome:"MARINHO",pel:"3º PEL/2ª CIA",plant:"HOTEL"},{id:43,nome:"CINTIA SOUZA",pel:"3º PEL/2ª CIA",plant:"HOTEL"},{id:47,nome:"MACEDO",pel:"4º PEL/2ª CIA",plant:"HOTEL"},{id:66,nome:"JONATAS SANTOS",pel:"2º PEL/2ª CIA",plant:"HOTEL"},{id:70,nome:"MEIRA",pel:"3º PEL/2ª CIA",plant:"HOTEL"},{id:75,nome:"PEDRO",pel:"3º PEL/2ª CIA",plant:"HOTEL"},{id:77,nome:"EDUARDA",pel:"3º PEL/2ª CIA",plant:"HOTEL"},{id:81,nome:"COSTA",pel:"6º PEL/2ª CIA",plant:"HOTEL"},{id:85,nome:"ANDERSON",pel:"4º PEL/2ª CIA",plant:"HOTEL"},{id:89,nome:"SILVA",pel:"2º PEL/2ª CIA",plant:"HOTEL"},{id:94,nome:"FERNANDA SOARES",pel:"1º PEL/2ª CIA",plant:"HOTEL"},{id:96,nome:"ERIVELTON",pel:"2º PEL/2ª CIA",plant:"HOTEL"},{id:106,nome:"LUCAS RANIELLE",pel:"2º PEL/2ª CIA",plant:"HOTEL"},{id:107,nome:"LUCIANO",pel:"6º PEL/2ª CIA",plant:"HOTEL"},{id:109,nome:"ERIKA DUARTE",pel:"4º PEL/2ª CIA",plant:"HOTEL"},{id:111,nome:"FELIPE MORAIS",pel:"2º PEL/2ª CIA",plant:"HOTEL"},{id:115,nome:"VINICIUS OLIVEIRA",pel:"2º PEL/2ª CIA",plant:"HOTEL"},{id:125,nome:"MEDEIROS",pel:"3º PEL/2ª CIA",plant:"HOTEL"},{id:127,nome:"CAIO GUIMARAES",pel:"6º PEL/2ª CIA",plant:"HOTEL"},{id:136,nome:"PATRICIA",pel:"1º PEL/2ª CIA",plant:"HOTEL"},{id:137,nome:"RAFAEL PEREIRA",pel:"6º PEL/2ª CIA",plant:"HOTEL"},{id:138,nome:"ICARO",pel:"5º PEL/2ª CIA",plant:"HOTEL"},{id:144,nome:"EDJANE",pel:"6º PEL/2ª CIA",plant:"HOTEL"},{id:149,nome:"CAVALCANTI",pel:"6º PEL/2ª CIA",plant:"HOTEL"},{id:151,nome:"OLIVEIRA JUNIOR",pel:"5º PEL/2ª CIA",plant:"HOTEL"},{id:162,nome:"JESUS",pel:"1º PEL/2ª CIA",plant:"HOTEL"},{id:171,nome:"JHONEY",pel:"5º PEL/2ª CIA",plant:"HOTEL"},{id:175,nome:"LUIZ LEAL",pel:"2º PEL/2ª CIA",plant:"HOTEL"},{id:177,nome:"DIONIZIO",pel:"4º PEL/2ª CIA",plant:"HOTEL"},{id:179,nome:"DEBORA GOUVEIA",pel:"2º PEL/2ª CIA",plant:"HOTEL"},{id:183,nome:"JULIO",pel:"5º PEL/2ª CIA",plant:"HOTEL"},{id:184,nome:"ABRAÃO",pel:"6º PEL/2ª CIA",plant:"HOTEL"},{id:185,nome:"RONILSON",pel:"1º PEL/2ª CIA",plant:"HOTEL"},{id:187,nome:"BELEM",pel:"4º PEL/2ª CIA",plant:"HOTEL"},{id:189,nome:"KAMYLA",pel:"4º PEL/2ª CIA",plant:"HOTEL"},{id:193,nome:"JAILTON",pel:"6º PEL/2ª CIA",plant:"HOTEL"},{id:197,nome:"ISRAEL OLIVEIRA",pel:"4º PEL/2ª CIA",plant:"HOTEL"}
+            // --- 1. DADOS DA NOVA 1ª CIA (Antiga 2ª CIA) - IDs 1 a 197 ---
+            const rawCia1 = [
+                {id:1,nome:"MÁRCIO SOUZA"},{id:5,nome:"SILVANA"},{id:7,nome:"ARCOVERDE"},{id:13,nome:"BRENDA"},{id:16,nome:"THIAGO TAVARES"},{id:21,nome:"MANOEL"},{id:25,nome:"DAVI OLIVEIRA"},{id:34,nome:"GIOVANNI"},{id:37,nome:"VALDECI"},{id:38,nome:"W. SILVA"},{id:42,nome:"CARLA ARAUJO"},{id:45,nome:"WALYSON"},{id:49,nome:"JEFFERSON SILVA"},{id:53,nome:"G. SILVA"},{id:58,nome:"WESLEY"},{id:63,nome:"PAULO"},{id:67,nome:"LAYANNE"},{id:69,nome:"FALCÃO"},{id:73,nome:"PEREIRA"},{id:79,nome:"DIOGENES"},{id:83,nome:"P. SOUZA"},{id:87,nome:"ARYCLAYTON"},{id:91,nome:"GESSICA"},{id:93,nome:"REVERTHON"},{id:98,nome:"EMANNUEL"},{id:102,nome:"ALLAN MARIANO"},{id:103,nome:"RAISSA SOARES"},{id:110,nome:"CÉSAR MEDEIROS"},{id:114,nome:"BARBALHO"},{id:118,nome:"DURVAL"},{id:122,nome:"BATISTA"},{id:128,nome:"ALEXANDRO GOMES"},{id:131,nome:"RENATA"},{id:133,nome:"ISRAEL"},{id:140,nome:"VICTOR COSTA"},{id:141,nome:"JULIANE CORDEIRO"},{id:147,nome:"JORGE FILHO"},{id:153,nome:"AFONSO"},{id:154,nome:"DAYANE"},{id:158,nome:"HEYVERSON"},{id:164,nome:"CIBELE"},{id:166,nome:"FELIPE FELIX"},{id:170,nome:"ANTONIO REIS"},{id:174,nome:"LIMA PAIVA"},{id:182,nome:"JOSINALDO"},{id:191,nome:"SELTON"},
+                {id:2,nome:"RENATO"},{id:6,nome:"DANIELLE PRADO"},{id:9,nome:"R. FERREIRA"},{id:14,nome:"AMANDA COELHO"},{id:15,nome:"JUNIOR"},{id:20,nome:"LUAN PEREIRA"},{id:24,nome:"MATHEUS MESQUITA"},{id:30,nome:"M ALBUQUERQUE"},{id:33,nome:"KAROLINE ABREU"},{id:35,nome:"PAULINO"},{id:39,nome:"ELLIO"},{id:46,nome:"GRANGEIRO"},{id:50,nome:"QUEIROZ"},{id:54,nome:"FRANÇA"},{id:59,nome:"RAYANNE"},{id:60,nome:"S.GOMES"},{id:64,nome:"BONFIM"},{id:71,nome:"SERAFIM"},{id:74,nome:"GABRIEL"},{id:78,nome:"GISELE FERREIRA"},{id:80,nome:"JOSE"},{id:84,nome:"SIDNEI ARAÚJO"},{id:88,nome:"S. NETO"},{id:99,nome:"G. GOMES"},{id:105,nome:"JOSÉ NETO"},{id:108,nome:"HENRIQUE"},{id:113,nome:"AURÉLIO"},{id:119,nome:"VINÍCIUS SOUZA"},{id:123,nome:"GONZAGA"},{id:129,nome:"LUIZ NUNES"},{id:134,nome:"SAMEA FERRAZ"},{id:135,nome:"JOÃO HENRIQUE"},{id:142,nome:"JABNER"},{id:143,nome:"SAMARA MELO"},{id:152,nome:"MOURA"},{id:156,nome:"MONALIZA"},{id:161,nome:"JOSE ALISSON"},{id:165,nome:"GUSTAVO"},{id:168,nome:"LEONAM"},{id:172,nome:"FRANCISCO"},{id:180,nome:"NOBREGA"},{id:181,nome:"THAYNARA"},{id:190,nome:"JÚLIA"},{id:192,nome:"JEFFERSON GOMES"},{id:196,nome:"CARDOSO"},
+                {id:4,nome:"ROBERTO FREITAS"},{id:11,nome:"ORLANDO"},{id:12,nome:"ISABELLA"},{id:19,nome:"ALENCAR"},{id:26,nome:"MARCOLINO"},{id:27,nome:"FATIMA AGUIAR"},{id:29,nome:"MACIEL"},{id:41,nome:"MALAQUIAS"},{id:44,nome:"PRISCILA CORREIA"},{id:48,nome:"ELVIS"},{id:52,nome:"RUBSLEY"},{id:57,nome:"SANTANA"},{id:61,nome:"FIRMINO"},{id:62,nome:"LUCAS MAGALHÃES"},{id:68,nome:"KAROLINNE MOREIRA"},{id:72,nome:"NONATO"},{id:76,nome:"FERREIRA"},{id:82,nome:"MARCOS NASCIMENTO"},{id:86,nome:"FERNANDO CRUZ"},{id:90,nome:"RAFAEL BEZERRA"},{id:92,nome:"ALINE"},{id:95,nome:"BRUNO"},{id:97,nome:"ITALO"},{id:100,nome:"RENAN"},{id:112,nome:"MARQUES"},{id:116,nome:"SANTIAGO"},{id:120,nome:"EGITO"},{id:121,nome:"JOÃO NASCIMENTO"},{id:126,nome:"GILMARA"},{id:130,nome:"PAULO ROBERTO"},{id:132,nome:"SERGIO"},{id:139,nome:"JULIANA GONDIM"},{id:145,nome:"HIGOR ALVES"},{id:146,nome:"PEREIRA MORAIS"},{id:148,nome:"OLAVO"},{id:150,nome:"ROBERTA"},{id:157,nome:"VALADARES"},{id:163,nome:"NATALIA"},{id:169,nome:"MATHEUS BARROS"},{id:173,nome:"IURY"},{id:176,nome:"RHAYSA"},{id:178,nome:"HIAGO"},{id:186,nome:"SOUTO"},{id:188,nome:"MAXEMBERG"},{id:194,nome:"KLEVER"},{id:195,nome:"PETTERSON"},
+                {id:3,nome:"FERNANDO"},{id:8,nome:"AUREA"},{id:10,nome:"VICTOR FERREIRA"},{id:17,nome:"MURILO"},{id:18,nome:"ARYANA"},{id:28,nome:"LEMOS"},{id:31,nome:"ALLATAS SOUSA"},{id:32,nome:"KAYO GABRIEL"},{id:36,nome:"M. FEITOSA"},{id:40,nome:"MARINHO"},{id:43,nome:"CINTIA SOUZA"},{id:47,nome:"MACEDO"},{id:66,nome:"JONATAS SANTOS"},{id:70,nome:"MEIRA"},{id:75,nome:"PEDRO"},{id:77,nome:"EDUARDA"},{id:81,nome:"COSTA"},{id:85,nome:"ANDERSON"},{id:89,nome:"SILVA"},{id:94,nome:"FERNANDA SOARES"},{id:96,nome:"ERIVELTON"},{id:106,nome:"LUCAS RANIELLE"},{id:107,nome:"LUCIANO"},{id:109,nome:"ERIKA DUARTE"},{id:111,nome:"FELIPE MORAIS"},{id:115,nome:"VINICIUS OLIVEIRA"},{id:125,nome:"MEDEIROS"},{id:127,nome:"CAIO GUIMARAES"},{id:136,nome:"PATRICIA"},{id:137,nome:"RAFAEL PEREIRA"},{id:138,nome:"ICARO"},{id:144,nome:"EDJANE"},{id:149,nome:"CAVALCANTI"},{id:151,nome:"OLIVEIRA JUNIOR"},{id:162,nome:"JESUS"},{id:171,nome:"JHONEY"},{id:175,nome:"LUIZ LEAL"},{id:177,nome:"DIONIZIO"},{id:179,nome:"DEBORA GOUVEIA"},{id:183,nome:"JULIO"},{id:184,nome:"ABRAÃO"},{id:185,nome:"RONILSON"},{id:187,nome:"BELEM"},{id:189,nome:"KAMYLA"},{id:193,nome:"JAILTON"},{id:197,nome:"ISRAEL OLIVEIRA"}
             ];
-            
-            // MAPEAR 2ª CIA (CORREÇÃO DE PELOTÃO E PLANTÃO)
-            const cia2List = cia2Input.map(s => ({
-                id: s.id,
-                numero: s.id,
-                nome: s.nome,
-                cia: '2ª CIA',
-                pelotao: s.pel,     
-                plantao: s.plant,   
-                history: []
-            }));
 
-            // DADOS 3ª CIA
-            const cia3 = [
+            // CONFIGURAÇÃO DOS PLANTÕES 1ª CIA
+            const shiftsCia1 = {
+                'ALFA': [1,6,11,16,21,28,33,43,48,54,61,67,77,82,85,87,89,92,93,95,96,107,110,121,127,132,137,144,152,158,164,165,171,186,191,196,190],
+                'BRAVO': [2,7,12,17,24,29,39,44,57,62,68,73,78,83,88,98,99,103,111,112,114,115,119,122,128,133,138,148,153,161,166,172,177,179,181,182],
+                'CHARLIE': [3,8,13,18,25,30,34,40,45,50,58,63,69,74,79,84,90,94,105,108,120,123,129,139,143,150,156,163,154,173,184,187,183,194],
+                'DELTA': [4,9,14,19,31,32,35,36,41,46,52,59,64,70,72,75,80,100,113,118,125,130,131,135,134,149,162,168,178,188,189,197],
+                'ECHO': [5,10,15,20,26,27,37,38,42,47,49,53,60,66,71,76,81,86,91,97,102,109,116,126,136,141,142,146,147,151,157,170,175,180,185,195]
+            };
+
+            const cia1List = rawCia1.map(s => {
+                let plantao = 'INDEFINIDO';
+                for (const [p, ids] of Object.entries(shiftsCia1)) { if (ids.includes(s.id)) plantao = p; }
+                return { id: s.id, numero: s.id, nome: s.nome, cia: '1ª CIA', pelotao: `${(s.id % 6) + 1}º PEL/1ª CIA`, plantao: plantao, history: [] };
+            });
+
+            // --- 2. DADOS DA NOVA 2ª CIA (Antiga 3ª CIA) - IDs 3001 a 3195 ---
+            const rawCia2 = [
                 {numero:1,nome:"HELLTON FERNANDES"},{numero:2,nome:"OLGA"},{numero:3,nome:"MIRELLY"},{numero:4,nome:"ANA SILVA"},{numero:5,nome:"GEORGE"},{numero:6,nome:"CAMPOS"},{numero:7,nome:"ALDO SILVA"},{numero:8,nome:"JEFFERSON FRANCISCO"},{numero:9,nome:"VERAS"},{numero:10,nome:"ERICK"},
                 {numero:11,nome:"KALYNNE GOMES"},{numero:12,nome:"MELO"},{numero:13,nome:"JONAS"},{numero:14,nome:"WINNY"},{numero:15,nome:"TAYNÃ RAMALHO"},{numero:16,nome:"FLÁVIO CARVALHO"},{numero:17,nome:"FILIPE NÓBREGA"},{numero:18,nome:"FERNANDA BISPO"},{numero:19,nome:"THAIS FIGUEIREDO"},{numero:20,nome:"TIBURCIO"},
                 {numero:21,nome:"SAMPAIO"},{numero:22,nome:"WILLIAN SANTOS"},{numero:23,nome:"RODOLFO MOURA"},{numero:24,nome:"MOYSÉS"},{numero:25,nome:"CAROLINE QUEIROZ"},{numero:26,nome:"ANDRE"},{numero:27,nome:"CLAUDIA"},{numero:28,nome:"BRANDÃO"},{numero:29,nome:"LYSIA"},{numero:30,nome:"RODRIGUES"},
@@ -191,26 +186,30 @@ createApp({
                 {numero:171,nome:"MAXWEL"},{numero:172,nome:"WELTON"},{numero:173,nome:"HÉVILA"},{numero:174,nome:"ALEXANDRE"},{numero:175,nome:"EMERSON LOPES"},{numero:176,nome:"DIRLEYNNE ALVES"},{numero:177,nome:"ROSÁRIO JÚNIOR"},{numero:178,nome:"GABRIEL SILVA"},{numero:179,nome:"LEONARDO"},{numero:180,nome:"DANTAS"},
                 {numero:181,nome:"PABLO MACIEL"},{numero:182,nome:"BRÚNO BATISTA"},{numero:183,nome:"LÉIA"},{numero:184,nome:"PAULO AZEVÊDO"},{numero:185,nome:"VINÍCIUS KAIRÊ"},{numero:186,nome:"SAMUEL SILVA"},{numero:187,nome:"HERMESON FILHO"},{numero:188,nome:"ALBERTO"},{numero:189,nome:"PAULO NASCIMENTO"},{numero:190,nome:"LARISSA ALCANTARA"},
                 {numero:191,nome:"GOMES NASCIMENTO"},{numero:192,nome:"JOSÉ BARBOZA"},{numero:193,nome:"MARCIO LEITE"},{numero:194,nome:"VILAR"},{numero:195,nome:"JEFFERSON NUNES"}
-            ].map(s => ({...s, id: 3000 + s.numero, cia: '3ª CIA', history: []}));
+            ];
+
+            // CONFIGURAÇÃO DOS PLANTÕES 2ª CIA (Extraídos do PDF 'plantao26.pdf')
+            // IDs calculados como 3000 + numero
+            const shiftsCia2 = {
+                'FOXTROT': [3001, 3005, 3008, 3009, 3013, 3017, 3029, 3033, 3037, 3041, 3045, 3049, 3053, 3057, 3061, 3069, 3073, 3077, 3081, 3089, 3093, 3097, 3101, 3105, 3109, 3113, 3117, 3119, 3121, 3125, 3129, 3133, 3137, 3141, 3145, 3146, 3149, 3150, 3153, 3156, 3157, 3158, 3159, 3161, 3183, 3185, 3187, 3189, 3193],
+                'GOLF':    [3002, 3006, 3010, 3014, 3018, 3019, 3025, 3026, 3030, 3034, 3038, 3042, 3046, 3050, 3054, 3058, 3062, 3068, 3070, 3074, 3078, 3079, 3082, 3086, 3090, 3094, 3098, 3102, 3106, 3110, 3111, 3114, 3118, 3122, 3126, 3134, 3138, 3143, 3147, 3154, 3163, 3165, 3166, 3171, 3181, 3186, 3188, 3190, 3194],
+                'INDIA':   [3003, 3007, 3011, 3015, 3022, 3023, 3027, 3031, 3035, 3039, 3043, 3047, 3051, 3055, 3059, 3063, 3065, 3067, 3071, 3075, 3083, 3084, 3087, 3091, 3095, 3099, 3103, 3104, 3107, 3115, 3123, 3127, 3130, 3131, 3139, 3140, 3142, 3148, 3151, 3155, 3162, 3164, 3167, 3168, 3173, 3176, 3179, 3182, 3195],
+                'HOTEL':   [3004, 3012, 3016, 3020, 3021, 3024, 3028, 3032, 3036, 3040, 3044, 3048, 3052, 3056, 3060, 3064, 3066, 3072, 3076, 3080, 3085, 3088, 3092, 3096, 3100, 3108, 3112, 3116, 3120, 3124, 3128, 3132, 3135, 3136, 3144, 3152, 3160, 3169, 3170, 3172, 3174, 3175, 3177, 3178, 3180, 3184, 3191, 3192]
+            };
+
+            const cia2List = rawCia2.map(s => {
+                const realId = 3000 + s.numero;
+                let plantao = 'INDEFINIDO';
+                for (const [p, ids] of Object.entries(shiftsCia2)) { if (ids.includes(realId)) plantao = p; }
+                return { id: realId, numero: s.numero, nome: s.nome, cia: '2ª CIA', pelotao: `${((s.numero - 1) % 6) + 1}º PEL/2ª CIA`, plantao: plantao, history: [] };
+            });
             
-            [...cia2List, ...cia3].forEach(s => this.assignAttributes(s));
-            this.students = [...cia2List, ...cia3];
+            [...cia1List, ...cia2List].forEach(s => this.assignAttributes(s));
+            this.students = [...cia1List, ...cia2List];
             this.saveData();
             this.session.dataVersion++;
         },
-
-        assignAttributes(s) {
-            if(s.cia === '3ª CIA') {
-                const shifts = ['INDIA', 'FOXTROT', 'GOLF', 'HOTEL'];
-                s.plantao = shifts[s.numero % 4];
-                s.pelotao = `${((s.numero - 1) % 6) + 1}º PEL/3ª CIA`;
-                s.canga_id = (s.numero % 2 !== 0) ? s.id + 1 : s.id - 1;
-            } else {
-                const cangaMap = { 1:7, 7:1, 34:36, 36:34, 53:93, 93:53, 108:172, 172:108, 147:185, 185:147, 192:147, 10:24, 24:10, 52:73, 73:52, 83:96, 96:83, 89:111, 111:89, 115:152, 152:115, 121:165, 165:121, 3:15, 15:3, 31:40, 40:31, 173:69, 69:173, 75:84, 84:75, 56:69, 9:110, 110:9, 28:118, 118:28, 54:132, 132:54, 63:140, 140:63, 82:88, 88:82, 162:82, 2:11, 11:2, 30:37, 37:30, 39:66, 66:39, 57:142, 142:57, 101:175, 175:101, 133:195, 195:133, 19:25, 25:19, 46:70, 70:46, 90:97, 97:90, 112:135, 135:112, 148:151, 151:148, 8:176, 176:8, 67:94, 94:67, 136:150, 150:136, 33:136, 12:42, 42:12, 68:103, 103:68, 134:154, 154:134, 179:134, 13:43, 43:13, 77:104, 104:77, 139:156, 156:139, 181:139 };
-                // CORREÇÃO: Usar canga_id para bater com banco de dados
-                if(cangaMap[s.numero]) s.canga_id = s.id - s.numero + cangaMap[s.numero];
-            }
-            
+        assignAttributes(s) { 
             const femNames = ['OLGA','MIRELLY','ANA','SILVANA','DANIELLE','AUREA','ISABELLA','BRENDA','AMANDA','ARYANA','FATIMA','KAROLINE','CINTIA','PRISCILA','LAYANNE','KAROLINNE','EDUARDA','GISELE','GESSICA','ALINE','FERNANDA','RAISSA','ERIKA','GILMARA','RENATA','SAMEA','PATRICIA','JULIANA','JULIANE','SAMARA','EDJANE','ROBERTA','MONALIZA','NATALIA','CIBELE','RHAYSA','DEBORA','THAYNARA','KAMYLA','JULIA','FABIANA','MAYRA','LARISSA','CAROLINE','CLAUDIA','LYSIA','SHIRLAYNE','TEREZA','MILENE','KALYNNE','WINNY','THAIS','BEATRIZ','CECÍLIA','WILLIANE','PRISCYLA','JANAINA','SURAMA','TÂMARA','HÉVILA','DIRLEYNNE','LÉIA','JAMILLE','FLAVIA','TACIANE','KARLA','IVHINNY'];
             const isFem = femNames.some(n => s.nome.includes(n));
             if(isFem) s.alojamento = ['Carandiru', 'Apto 01', 'Apto 02', 'Apto 03'][s.numero % 4];
@@ -224,74 +223,67 @@ createApp({
         getRawScore(s) { if(!s.history) return 0; return s.history.reduce((acc, curr) => (curr.type && curr.type.includes('FO+')) ? acc + 1 : ((curr.type && curr.type.includes('FO-')) ? acc - 1 : acc), 0); },
         getCycleScore(s) { return this.getRawScore(s) - ((s.rewards_claimed || 0) * 5); },
         openModal(student, category) { this.modals.record.student = student; this.modals.record.category = category; const defaultType = category === 'FO' ? 'FO+' : 'MEDIDA_LEVE'; this.forms.record = { type: defaultType, motivo: '', data: new Date().toISOString().split('T')[0], oficial: '', sei: '' }; this.modals.record.show = true; },
+        
+        // --- MÉTODO ATUALIZADO DE SALVAMENTO + PLANILHA ---
         async submitRecord() {
-    // ⚠️
-    const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbwyCpKaxAPjK6n1WAht85o1BzbMbQ0b-wiR9GJwdypPRefCv3egDux-sThYPiXsddsrDg/exec'; 
+            // ⚠️ IMPORTANTE: COLE AQUI O LINK DA SUA PLANILHA (DO DEPLOY)
+            const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbzQpYQy4-yQzQpYQy4-yQzQpYQy4-yQzQpYQy4-yQzQpYQy4-yQzQpYQy4/exec'; // EXEMPLO - SUBSTITUA PELO SEU REAL
 
-    const s = this.modals.record.student;
-    const finalOfficial = this.forms.record.oficial === 'Outro' ? this.forms.record.customOficial : this.forms.record.oficial;
-    
-    // Objeto do registro
-    const newEntry = { 
-        type: this.forms.record.tipo, 
-        motivo: this.forms.record.motivo, 
-        data: this.forms.record.data, 
-        oficial: finalOfficial, 
-        sei: this.forms.record.sei, 
-        timestamp: Date.now() 
-    };
+            const s = this.modals.record.student;
+            const finalOfficial = this.forms.record.oficial === 'Outro' ? this.forms.record.customOficial : this.forms.record.oficial;
+            
+            const newEntry = { 
+                type: this.forms.record.tipo, 
+                motivo: this.forms.record.motivo, 
+                data: this.forms.record.data, 
+                oficial: finalOfficial, 
+                sei: this.forms.record.sei, 
+                timestamp: Date.now() 
+            };
 
-    // 1. Formata a data (DD/MM/AAAA) para a Planilha ficar bonita
-    let dataFormatada = newEntry.data;
-    if(newEntry.data && newEntry.data.includes('-')) {
-        const partes = newEntry.data.split('-');
-        dataFormatada = `${partes[2]}/${partes[1]}/${partes[0]}`;
-    }
+            let dataFormatada = newEntry.data;
+            if(newEntry.data && newEntry.data.includes('-')) {
+                const partes = newEntry.data.split('-');
+                dataFormatada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+            }
 
-    // 2. Salva no Supabase (Banco do Site)
-    // Adicionamos try/catch para garantir que erros aqui não travem o resto
-    try {
-        s.history = [...(s.history || []), newEntry];
-        await this.saveData(s);
-        console.log("✅ Salvo no Supabase com sucesso.");
-    } catch (err) {
-        console.error("❌ Erro ao salvar no Supabase:", err);
-        alert("Erro ao salvar no banco de dados.");
-        return; // Para tudo se o banco falhar
-    }
-    
-    // 3. Envia para o Google Planilhas
-    console.log("📤 Enviando para Planilha...");
-    
-    const dadosParaPlanilha = {
-        data: dataFormatada,
-        nome: s.nome,
-        numero: s.numero, // Pode ir vazio se não tiver, mas ajuda a identificar
-        tipo: newEntry.type,
-        motivo: newEntry.motivo,
-        sei: newEntry.sei || "",
-        oficial: newEntry.oficial
-    };
+            try {
+                s.history = [...(s.history || []), newEntry];
+                await this.saveData(s);
+                console.log("✅ Salvo no Supabase com sucesso.");
+            } catch (err) {
+                console.error("❌ Erro ao salvar no Supabase:", err);
+                alert("Erro ao salvar no banco de dados.");
+                return;
+            }
+            
+            console.log("📤 Enviando para Planilha...");
+            
+            const dadosParaPlanilha = {
+                data: dataFormatada,
+                nome: s.nome,
+                numero: s.numero, 
+                tipo: newEntry.type,
+                motivo: newEntry.motivo,
+                sei: newEntry.sei || "",
+                oficial: newEntry.oficial
+            };
 
-    // TRUQUE: Usamos 'text/plain' para evitar erro de CORS (Preflight)
-    fetch(GOOGLE_SHEET_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(dadosParaPlanilha)
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log("✅ Resposta da Planilha:", data);
-        if(data.status === 'sucesso') {
-             // Opcional: Avisar o usuário discretamente ou só manter no log
-        }
-    })
-    .catch(err => console.error("❌ Erro ao enviar para Planilha:", err));
+            fetch(GOOGLE_SHEET_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(dadosParaPlanilha)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("✅ Resposta da Planilha:", data);
+            })
+            .catch(err => console.error("❌ Erro ao enviar para Planilha:", err));
 
-    // Fecha o modal e avisa
-    this.modals.record.show = false;
-    alert("Registro salvo!");
-},
+            this.modals.record.show = false;
+            alert("Registro salvo!");
+        },
+
         openRewardsModal() { this.modals.rewards.show = true; },
         openHistory(s) { this.modals.history.student = s; this.modals.history.show = true; },
         generateReport() { const date = this.forms.report.date; const list = this.students.filter(s => s.cia === this.session.currentCia); const pun = [], neg = [], pos = []; list.forEach(s => { if(!s.history) return; s.history.forEach(h => { if(h.data === date) { const item = { studentName: s.nome, typeLabel: this.getEventLabel(h.type), reason: h.motivo, officer: h.oficial, sei: h.sei }; if(h.type.includes('FO+')) pos.push(item); else if(h.type.includes('FO-')) neg.push(item); else if(!h.type.includes('ELOGIO')) pun.push(item); } }); }); this.forms.report.data = { punishments: pun, neg, pos }; },
@@ -301,50 +293,41 @@ createApp({
         getEventLabel(type) { if(!type) return '-'; const labels = { 'FO+': 'FO (+)', 'FO-': 'FO (-)', 'PUNICAO': 'Punição', 'MEDIDA_LEVE': 'M. Educativa (L)', 'MEDIDA_MEDIA': 'M. Educativa (M)', 'MEDIDA_GRAVE': 'M. Educativa (G)', 'ELOGIO': 'Elogio' }; return labels[type] || type; },
         formatDate(d) { if(!d) return '-'; const [y,m,d2] = d.split('-'); return `${d2}/${m}/${y}`; },
 
+        async enviarRelatorioWhatsApp() {
+            if (!this.forms.report.auxiliar || !this.forms.report.adjunto) {
+                alert("Por favor, preencha o nome do Auxiliar e do Adjunto na tela antes de enviar.");
+                return;
+            }
 
+            const oficialDia = prompt("Nome do Oficial de Dia:", "2º TEN QOAPM BRÍGIDA");
+            if (!oficialDia) return;
+            
+            const auxiliarNome = this.forms.report.auxiliar.toUpperCase();
+            const adjuntoNome = this.forms.report.adjunto.toUpperCase();
 
-        // Adicione isso junto aos outros methods
-// Substitua o método enviarRelatorioWhatsApp antigo por este:
+            const hoje = this.forms.report.date;
+            const fosDoDia = [];
+            const punicoesDoDia = [];
 
-async enviarRelatorioWhatsApp() {
-    // 1. Validação Simples
-    if (!this.forms.report.auxiliar || !this.forms.report.adjunto) {
-        alert("Por favor, preencha o nome do Auxiliar e do Adjunto na tela antes de enviar.");
-        return;
-    }
-
-    const oficialDia = prompt("Nome do Oficial de Dia:", "2º TEN QOAPM BRÍGIDA");
-    if (!oficialDia) return;
-    
-    // Pega os nomes direto dos campos que você digitou na tela
-    const auxiliarNome = this.forms.report.auxiliar.toUpperCase();
-    const adjuntoNome = this.forms.report.adjunto.toUpperCase();
-
-    // 2. Coleta Fatos e Punições
-    const hoje = this.forms.report.date; // Usa a data selecionada na tela, não necessariamente "hoje"
-    const fosDoDia = [];
-    const punicoesDoDia = [];
-
-    this.students.forEach(aluno => {
-        if (aluno.history) {
-            aluno.history.forEach(reg => {
-                if (reg.data === hoje) {
-                    const textoReg = `* ${aluno.numero} ${aluno.nome}: ${reg.motivo} (Of. ${reg.oficial})`;
-                    if (reg.type.includes('FO+')) fosDoDia.push(textoReg);
-                    else punicoesDoDia.push(textoReg);
+            this.students.forEach(aluno => {
+                if (aluno.history) {
+                    aluno.history.forEach(reg => {
+                        if (reg.data === hoje) {
+                            const textoReg = `* ${aluno.numero} ${aluno.nome}: ${reg.motivo} (Of. ${reg.oficial})`;
+                            if (reg.type.includes('FO+')) fosDoDia.push(textoReg);
+                            else punicoesDoDia.push(textoReg);
+                        }
+                    });
                 }
             });
-        }
-    });
 
-    const listaFos = fosDoDia.length ? fosDoDia.join('\n') : "* Sem alterações.";
-    const listaPunicoes = punicoesDoDia.length ? punicoesDoDia.join('\n') : "* Sem alterações.";
-    const efetivo = this.students.filter(s => s.cia === this.session.currentCia).length;
+            const listaFos = fosDoDia.length ? fosDoDia.join('\n') : "* Sem alterações.";
+            const listaPunicoes = punicoesDoDia.length ? punicoesDoDia.join('\n') : "* Sem alterações.";
+            const efetivo = this.students.filter(s => s.cia === this.session.currentCia).length;
 
-    // 3. Monta o Relatório com os Novos Postos e Espaços em Branco
-    const relatorio = `*🔰 SDS – PMPE – DGA – DEIP – APMP 🔰*
+            const relatorio = `*🔰 SDS – PMPE – DGA – DEIP – APMP 🔰*
 
-*RELATÓRIO DE PASSAGEM DE SERVIÇO DO AUXILIAR DO OFICIAL DE DIA – 1ª CIA*
+*RELATÓRIO DE PASSAGEM DE SERVIÇO DO AUXILIAR DO OFICIAL DE DIA – ${this.session.currentCia}*
 
 📌 Oficial de Dia: ${oficialDia}
 📌 Auxiliar do Oficial de Dia: ${auxiliarNome}
@@ -464,11 +447,10 @@ Adjunto ao Auxiliar
 
 🛡 “Nossa Presença, Sua Segurança.”`;
 
-    // 4. Enviar
-    const textoCodificado = encodeURIComponent(relatorio);
-    const url = `https://api.whatsapp.com/send?text=${textoCodificado}`;
-    window.open(url, '_blank');
-}
+            const textoCodificado = encodeURIComponent(relatorio);
+            const url = `https://api.whatsapp.com/send?text=${textoCodificado}`;
+            window.open(url, '_blank');
+        }
     },
     mounted() { 
         if(localStorage.getItem('SIGA_DB_MASTER_V35_CONNECTED')) {
@@ -477,10 +459,3 @@ Adjunto ao Auxiliar
         }
     }
 }).mount('#app');
-
-
-
-
-
-
-
