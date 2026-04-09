@@ -408,7 +408,8 @@
         const SUPABASE_URL = 'https://xulngtoekmlnxnixqkkk.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1bG5ndG9la21sbnhuaXhxa2trIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3NDI2NzgsImV4cCI6MjA5MTMxODY3OH0.PQ3Y1lJkFUihlskSeDhbqSqlcm8fKPLB4ebg9njn1-s';
         
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                // Mude para 'db' para evitar conflito com a biblioteca
+        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         createApp({
             data() {
@@ -471,7 +472,7 @@
                     } else { this.loginError = true; this.loginErrorMsg = 'Senha incorreta.'; }
                 },
                 async loadData() {
-                    const { data, error } = await supabaseClient.from('cadetes').select('*').order('id', { ascending: true });
+                    const { data, error } = await db.from('cadetes').select('*').order('id', { ascending: true });
                     if (error) { alert('Erro conexão: ' + error.message); return; }
                     this.students = data.map(s => ({...s, history: s.history || []}));
                 },
@@ -482,14 +483,14 @@
                     this.isMobileMenuOpen = false;
                 },
                 async saveStudentData(student) {
-                    const { error } = await supabase.from('cadetes').update({ history: student.history, rewards_claimed: student.rewards_claimed }).eq('id', student.id);
+                    const { error } = await db.from('cadetes').update({ history: student.history, rewards_claimed: student.rewards_claimed }).eq('id', student.id);
                     if (error) alert('Erro ao salvar: ' + error.message);
                 },
                 async seedDatabase() {
                     if(!confirm('Isso apagará o banco e criará 192 alunos. Continuar?')) return;
                     this.loading = true;
                     const initialList = this.initialDB();
-                    const { error } = await supabase.from('cadetes').insert(initialList);
+                    const { error } = await db.from('cadetes').insert(initialList);
                     if (error) alert('Erro: ' + error.message);
                     else { alert('Sucesso!'); await this.loadData(); }
                     this.loading = false;
