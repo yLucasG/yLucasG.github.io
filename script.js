@@ -1,8 +1,8 @@
 const { createApp, reactive } = Vue;
 
 // --- CONFIGURAÇÃO DO SUPABASE ---
-const SUPABASE_URL = 'https://iogtissohqhgxiskzgvc.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlvZ3Rpc3NvaHFoZ3hpc2t6Z3ZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1MDAwNTEsImV4cCI6MjA3ODA3NjA1MX0.4Fj05iwaUNDpdDaAch-dGp5TUtcumV72uzpIovQeCbg';
+const SUPABASE_URL = 'https://xulngtoekmlnxnixqkkk.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1bG5ndG9la21sbnhuaXhxa2trIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3NDI2NzgsImV4cCI6MjA5MTMxODY3OH0.PQ3Y1lJkFUihlskSeDhbqSqlcm8fKPLB4ebg9njn1-s';
 
 // Inicializa o cliente
 const sbClient = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
