@@ -272,6 +272,8 @@ createApp({
                 oficial: newEntry.oficial
             };
 
+            console.log("📦 DADOS ENVIADOS PARA O GOOGLE:", dadosParaPlanilha);
+
             fetch(GOOGLE_SHEET_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
