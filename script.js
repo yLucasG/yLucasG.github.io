@@ -230,7 +230,7 @@ createApp({
         
         async submitRecord() {
             // ⚠️ IMPORTANTE: COLE AQUI O LINK DA SUA PLANILHA (DO DEPLOY)
-            const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbzQpYQy4-yQzQpYQy4-yQzQpYQy4-yQzQpYQy4-yQzQpYQy4-yQzQpYQy4/exec'; 
+            const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycby7m4vpFrjkUZwhj0iyXF_xBo8r492Puf9Ey5lv4DTvgBKGw71K-k7HM-WZ0mT0NJmL/exec'; 
 
             const s = this.modals.record.student;
             const finalOfficial = this.forms.record.oficial === 'Outro' ? this.forms.record.customOficial : this.forms.record.oficial;
