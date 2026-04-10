@@ -14,7 +14,7 @@ createApp({
             ui: { menuOpen: false, currentView: 'dashboard', search: '', viewMode: 'grid', filters: { pelotao: '', plantao: '', alojamento: '' } },
             students: [],
             isImprovingText: false,
-            lists: { officers: ["Cel PM Carneiro","Ten Cel PM Andreza","Maj PM Juliane Santana","Maj PM Emanuela","Cap PM Marlon","Cap PM Arantes","Cap PM Nascimento","1º Ten PM Otávio Neto","1º Ten PM Letícia","1º Ten PM Kemuel","1º Ten PM Tenório","2º Ten PM Ribeiro","2º Ten PM Paulo Lima","2º Ten PM Thaysa","2º Ten PM Pedro Lima","2º Ten PM Vasconcelos","2º Ten PM Brígida","2º Ten PM Gudemberg","2º Ten PM Melquezedeque","2º Ten PM Viviane","Outro"] },
+            lists: { officers: ["Cel PM Carneiro","Ten Cel PM Andreza","Ten Cel PM Thiaggo","Maj PM Juliane Santana","Cap PM Marlon","Cap PM Arantes","Cap PM Nascimento","1º Ten PM Otávio Neto","1º Ten PM Letícia","1º Ten PM Kemuel","1º Ten PM Tenório","2º Ten PM Ribeiro","2º Ten PM Paulo Lima","2º Ten PM Thaysa","2º Ten PM Pedro Lima","2º Ten PM Vasconcelos","2º Ten PM Brígida","2º Ten PM Gudemberg","2º Ten PM Melquezedeque","2º Ten PM Viviane","Outro"] },
             modals: { record: { show: false, student: null, category: 'FO' }, history: { show: false, student: null }, rewards: { show: false } },
             forms: { record: { type: 'FO+', motivo: '', data: '', oficial: '', customOficial: '', sei: '' }, report: { date: new Date().toISOString().split('T')[0], auxiliar: '', adjunto: '', data: { punishments: [], neg: [], pos: [] } } }
         }
@@ -236,7 +236,7 @@ createApp({
             const finalOfficial = this.forms.record.oficial === 'Outro' ? this.forms.record.customOficial : this.forms.record.oficial;
             
             const newEntry = { 
-                type: this.forms.record.tipo, 
+                type: this.forms.record.type, 
                 motivo: this.forms.record.motivo, 
                 data: this.forms.record.data, 
                 oficial: finalOfficial, 
