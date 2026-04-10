@@ -208,7 +208,7 @@
         <div v-if="modals.record.show" class="fixed inset-0 bg-black bg-opacity-60 z-[200] flex items-center justify-center p-4"><div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in"><div class="p-4 flex justify-between items-center text-white" :class="modals.record.category === 'FO' ? 'bg-military-900' : 'bg-red-700'"><h3 class="font-bold flex items-center gap-2">Registrar {{ modals.record.category === 'FO' ? 'FO' : 'Punição' }}</h3><button @click="modals.record.show = false"><i class="ph-bold ph-x text-xl"></i></button></div><form @submit.prevent="submitRecord" class="p-6 space-y-4"><p class="text-sm font-bold text-gray-800">{{ modals.record.student?.nome }}</p><select v-model="forms.record.tipo" class="w-full border p-2 rounded"><optgroup label="Fatos Observados" v-if="modals.record.category === 'FO'"><option value="FO+">FO+</option><option value="FO-">FO-</option></optgroup><optgroup label="Sanções Disciplinares" v-if="modals.record.category === 'PUNICAO'"><option value="MEDIDA_LEVE">Medida Educativa (Leve)</option><option value="MEDIDA_MEDIA">Medida Educativa (Média)</option><option value="MEDIDA_GRAVE">Medida Educativa (Grave)</option><option value="PUNICAO">Punição (Extraclasse)</option></optgroup></select>
                 <div class="relative">
                     <textarea v-model="forms.record.motivo" rows="3" class="w-full border p-2 rounded pr-24" placeholder="Motivo (ex: aluno chegou atrasado)"></textarea>
-                    <button 
+                    <!-- <button 
                         @click.prevent="melhorarTextoComIA" 
                         class="absolute right-2 bottom-2 bg-indigo-600 text-white text-[10px] px-2 py-1 rounded hover:bg-indigo-700 flex items-center gap-1 shadow-sm transition-all"
                         :class="{'opacity-50 cursor-wait': isImprovingText}"
@@ -217,7 +217,7 @@
                     >
                         <i class="ph-bold" :class="isImprovingText ? 'ph-spinner animate-spin' : 'ph-magic-wand'"></i>
                         {{ isImprovingText ? 'Gerando...' : 'Melhorar Texto' }}
-                    </button>
+                    </button> -->
                 </div>
                 <div class="grid grid-cols-2 gap-2"><input type="date" v-model="forms.record.data" class="border p-2 rounded"><select v-model="forms.record.oficial" class="border p-2 rounded"><option v-for="o in lists.officers" :value="o">{{o}}</option></select></div><input v-if="forms.record.oficial === 'Outro'" type="text" v-model="forms.record.customOficial" placeholder="Nome Oficial" class="w-full border p-2 rounded"><input type="text" v-model="forms.record.sei" placeholder="Nº SEI (Opcional)" class="w-full border p-2 rounded"><button class="w-full bg-military-900 text-white py-3 rounded font-bold">SALVAR</button></form></div></div>
         
