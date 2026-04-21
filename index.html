@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Manual de Identidade Visual - ASP PM HENRIQUE</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Montserrat:wght@300;400;700&display=swap');
+
+        /* Regra essencial para PDF: Garante que as margens e o fundo sejam preenchidos */
+        @page {
+            size: A4;
+            margin: 10mm;
+            background-color: #e5e7eb;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            color: #333;
+            background-color: #e5e7eb; 
+            margin: 0;
+            padding: 0;
+            /* Removido flexbox do body para compatibilidade perfeita com PDF */
+        }
+
+        .infographic-container {
+            background-color: #ffffff;
+            width: 100%;
+            max-width: 1100px;
+            margin: 0 auto; /* Centraliza o container sem usar flex no body */
+            border-radius: 12px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            overflow: hidden;
+            display: block;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%); 
+            color: #f3f4f6;
+            padding: 40px;
+            text-align: center;
+            border-bottom: 6px solid #4b5563;
+        }
+
+        .header h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 32pt;
+            margin: 0;
+            letter-spacing: 4px;
+        }
+
+        .header p {
+            font-size: 14pt;
+            letter-spacing: 6px;
+            font-weight: 300;
+            margin-top: 10px;
+            color: #9ca3af;
+            text-transform: uppercase;
+        }
+
+        /* Trocado grid por flex para garantir alinhamento no WeasyPrint/PDF */
+        .content-grid {
+            display: flex;
+            gap: 25px;
+            padding: 35px;
+        }
+
+        .column {
+            flex: 1;
+            width: 48%;
+        }
+
+        .card {
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px; 
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            page-break-inside: avoid; /* Evita que o card seja cortado na metade da página */
+        }
+
+        .card h2 {
+            font-family: 'Cinzel', serif;
+            color: #1f2937;
+            border-bottom: 2px solid #d1d5db;
+            padding-bottom: 12px;
+            margin-top: 0;
+            font-size: 16pt;
+        }
+
+        .logo-display {
+            text-align: center;
+            padding: 15px 0;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+
+        .logo-text-placeholder {
+            font-family: 'Cinzel', serif;
+            font-size: 60pt;
+            color: #111827;
+            line-height: 1;
+            margin: 20px 0;
+        }
+
+        .logo-sub-placeholder {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14pt;
+            letter-spacing: 4px;
+            color: #4b5563;
+            margin-bottom: 20px;
+        }
+
+        .colors {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .color-box {
+            width: 30%;
+            text-align: center;
+            font-size: 9pt;
+            color: #4b5563;
+        }
+
+        .color-swatch {
+            height: 45px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            border: 1px solid #cbd5e1;
+        }
+
+        .typography {
+            margin-top: 25px;
+        }
+        
+        .type-sample {
+            background: #ffffff;
+            padding: 12px;
+            border: 1px dashed #9ca3af;
+            border-radius: 4px;
+            margin-top: 10px;
+            text-align: center;
+            color: #1f2937;
+        }
+
+        .tech-specs {
+            margin-top: 15px;
+            font-size: 10pt;
+            line-height: 1.6;
+        }
+
+        .tech-specs ul {
+            padding-left: 20px;
+            color: #4b5563;
+        }
+
+        .tech-specs li {
+            margin-bottom: 10px;
+        }
+
+        .download-btn {
+            display: block;
+            width: calc(100% - 24px);
+            text-align: center;
+            background-color: #1f2937; 
+            color: #ffffff;
+            padding: 12px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 12px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background-color: #f3f4f6;
+            font-size: 10pt;
+            color: #6b7280;
+            border-top: 1px solid #e5e7eb;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="infographic-container">
+        <div class="header">
+            <h1>Identidade Visual</h1>
+            <p>ASP PM HENRIQUE — 2026</p>
+        </div>
+
+        <div class="content-grid">
+            <!-- Coluna Esquerda -->
+            <div class="column">
+                <div class="card">
+                    <h2>Assinatura Oficial</h2>
+                    <div class="logo-display">
+                        <img src="logoDouradaSemFundo.png" style="max-width: 140px; box-shadow: none; border-radius: 0;">
+                    </div>
+                    <p style="font-size: 10pt; color: #6b7280; margin-top: 15px; line-height: 1.4; text-align: center;">Monograma desenvolvido com elementos que remetem à força e solidez. Design objetivo, sem excesso de ornamentos.</p>
+                </div>
+
+                <div class="card" style="margin-top: 25px;">
+                    <h2>Arquivos Fonte (Drive)</h2>
+                    <p style="font-size: 9pt; color: #6b7280; margin-bottom: 15px;">Acesse os links para baixar os materiais de produção:</p>
+                    <a href="https://drive.google.com/file/d/1ggrHeS35GeXIojGT49FCkCv-6g-n_Hiw/view?usp=drive_link" class="download-btn" target="_blank" rel="noopener noreferrer">Baixar Logo Henrique (PNG)</a>
+                    <a href="https://drive.google.com/drive/folders/1vTRqOPqkrtoSR_kQgaxZ9zml-TqbjI8z?usp=sharing" class="download-btn" target="_blank" rel="noopener noreferrer">Drive completo dos arquivos</a>  
+                </div>
+
+                <div class="card" style="margin-top: 25px;">
+                    <h2>Paleta & Tipografia</h2>
+                    <div class="colors">
+                        <div class="color-box">
+                            <div class="color-swatch" style="background-color: #111827;"></div>
+                            <strong>#111827</strong><br>Preto Tático
+                        </div>
+                        <div class="color-box">
+                            <div class="color-swatch" style="background-color: #4b5563;"></div>
+                            <strong>#4B5563</strong><br>Aço Escovado
+                        </div>
+                        <div class="color-box">
+                            <div class="color-swatch" style="background-color: #f3f4f6;"></div>
+                            <strong>#F3F4F6</strong><br>Cinza Gelo
+                        </div>
+                    </div>
+                    <div class="typography">
+                        <div class="type-sample" style="font-family: 'Cinzel', serif; font-size: 15pt; font-weight: bold;">Cinzel Bold</div>
+                        <div class="type-sample" style="font-family: 'Montserrat', sans-serif; font-size: 11pt; text-transform: uppercase; letter-spacing: 2px;">Montserrat Regular</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coluna Direita -->
+            <div class="column">
+                <div class="card">
+                    <h2>Aplicação Prática (Mockup)</h2>
+                    <div class="logo-display" style="padding: 0; overflow: hidden; border: none;">
+                        <img src="Henrique.png" alt="Mockup Copo e Kit Henrique" style="width: 100%; height: auto; display: block;">
+                    </div>
+                    <p style="font-size: 10pt; color: #6b7280; margin-top: 15px; line-height: 1.4; text-align: center;">Visualização sugerida para a aplicação no kit. O design austero reforça o caráter e a força da graduação.</p>
+                </div>
+
+                <div class="card" style="margin-top: 25px;">
+                    <h2>Diretrizes Técnicas</h2>
+                    <div class="tech-specs">
+                        <ul>
+                            <li><strong>Gravação em Metal:</strong> Obras lineares e sem gradientes. Usar Preto Puro (K=100) vetorizado (Curvas).</li>
+                            <li><strong>Hierarquia de Gravação:</strong><br>1. Monograma "H"<br>2. ASP PM HENRIQUE<br>3. ASPIRANTE 2026</li>
+                            <li><strong>Alinhamento:</strong> Elementos perfeitamente simétricos e centralizados na peça.</li>
+                            <li><strong>Ajustes de Fonte:</strong> Aplicar <i>letter-spacing</i> de 4px a 6px na fonte secundária para assegurar legibilidade em gravações a laser profundas.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            Design de Identidade Visual • ASP PM HENRIQUE • Formatura 2026
+        </div>
+    </div>
+
+</body>
+</html>
